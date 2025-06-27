@@ -23,7 +23,7 @@ const AdminDashboard = () => {
         {/* cards */}
         <div className="flex flex-wrap justify-around mt-14">
           {items.map((item, index) => (
-            <div className="flex flex-col justify-between items-center border p-1 mb-4 mr-4 h-40 w-60">
+            <div key={index} className="flex flex-col justify-between items-center border p-1 mb-4 mr-4 h-40 w-60">
               <div className="text-2xl text-center">{item.name}</div>
               <div className="text-5xl mb-8">{item.count}</div>
             </div>
