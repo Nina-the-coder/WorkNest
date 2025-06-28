@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import axios from "axios";
 
 const EmployeeManagement = () => {
   const [formData, setFormData] = useState({
@@ -10,27 +11,86 @@ const EmployeeManagement = () => {
     status: "active",
   });
 
+  const [employees, setEmployees] = useState([]);
+  
+  const fetchEmployees = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/admin/employees"
+      );
+      setEmployees(res.data);
+    } catch (err) {
+      console.error("Error fetching employees from the db : ...", err);
+    }
+  };
+
+  useEffect(() => {
+
+    fetchEmployees();
+  }, []);
+
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
   };
-  
+
   const handleAddNewEmployee = () => {
     console.log("Add New Employee");
     setModal(true);
   };
-  
-  const handleSave = (e) => {
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    console.log("Employee Added");
-    console.log(formData);
-    setModal(false);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        "http://localhost:5000/api/admin/employees",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      await fetchEmployees();
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        role: "employee",
+        status: "active",
+      });
+
+      console.log("Employee added successfully to the DB:", res.data);
+      setModal(false);
+    } catch (err) {
+      console.error(
+        "Error adding employees to the DB:",
+        err.response?.data || err.message
+      );
+    }
+  };
+
+  const handleEditEmployee = (e) => {
+    console.log("editing the employee", e);
+  };
+
+  const handleDeleteEmployee = (e) => {
+    console.log("deleting the employee", e);
   };
 
   const handleCancel = () => {
     console.log("cancelled");
+    setFormData({
+        name: "",
+        email: "",
+        password: "",
+        role: "employee",
+        status: "active",
+      });
     setModal(false);
   };
 
@@ -93,6 +153,7 @@ const EmployeeManagement = () => {
                 className="border w-1/3 bg-white p-0.5"
                 id="role"
                 name="role"
+                value={formData.role}
                 onChange={handleChange}
               >
                 <option value="admin">Admin</option>
@@ -106,6 +167,7 @@ const EmployeeManagement = () => {
                 className="border w-1/3 bg-white p-0.5"
                 id="status"
                 name="status"
+                value={formData.status}
                 onChange={handleChange}
               >
                 <option value="active">Active</option>
@@ -147,7 +209,49 @@ const EmployeeManagement = () => {
         </div>
 
         {/* container */}
-        <div className="w-11/12 bg-gray-400 h-100"></div>
+        <div className="w-200 mr-100 h-120 overflow-auto flex flex-col gap-4 justify-evenly items-center p-6 border bg-gray-500">
+          {/* cards */}
+          {employees.map((emp) => (
+            <div
+              key={emp.empId}
+              className="w-[100%] h-fit border bg-white flex"
+            >
+              {/* left */}
+              <div className="flex flex-col w-[75%] p-2">
+                <div className="flex gap-12 items-center mb-2">
+                  <div className="text-2xl">{emp.empId}</div>
+                  <div
+                    className={`text-xl ${
+                      emp.status === "active" ? "bg-yellow-300" : "bg-red-300"
+                    } p-0.5 px-4 rounded-xl`}
+                  >
+                    {emp.status}
+                  </div>
+                  <div className="text-xl bg-green-300 p-0.5 px-4 rounded-xl">
+                    {emp.role}
+                  </div>
+                </div>
+                <div className="text-lg">Name: {emp.name}</div>
+                <div className="text-lg">Email: {emp.email}</div>
+              </div>
+              {/* right */}
+              <div className="flex items-center">
+                <button
+                  onClick={handleEditEmployee}
+                  className="border p-2 w-25 text-lg hover:cursor-pointer"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={handleDeleteEmployee}
+                  className="border p-2 w-25 mx-4 text-lg hover:cursor-pointer"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

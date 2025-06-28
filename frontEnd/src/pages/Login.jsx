@@ -33,12 +33,8 @@ const Login = () => {
       );
       console.log(res.data); // 👀 Check this in the browser console
 
-      try {
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-      } catch (err) {
-        console.error("Error saving to localStorage", err);
-      }
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
       if (res.data.user.role === "admin") {
         navigate("/admin/dashboard");

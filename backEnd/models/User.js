@@ -23,13 +23,24 @@ const userSchema = new mongoose.Schema({
         enum: ["admin", "employee"],
         default: "employee"
     },
-    phone: {
+    status: {
         type: String,
-        maxLength: 10
+        enum: ["active", "inactive"],
+        default: "active"
     },
-    designation: {
-        type: String
+    // phone: {
+    //     type: String,
+    //     maxLength: 10
+    // },
+    // designation: {
+    //     type: String  
+    // },
+    empId: {
+        type: String,
+        unique: true,
+        sparse: true
     },
+    
     createdAt: {
         type: Date,
         default: Date.now
