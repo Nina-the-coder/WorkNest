@@ -1,0 +1,43 @@
+const mongoose = require("mongoose");
+
+const TaskSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    assignedTo: {
+      type: String,
+      required: true,
+    },
+    assignedToName: { type: String },
+    assignedBy: {
+      type: String,
+      default: "admin",
+    },
+
+    status: {
+      type: String,
+      enum: ["pending", "in-progress", "done"],
+      default: "pending",
+    },
+    dueDate: {
+      type: Date,
+      required: true,
+    },
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high"],
+      default: "medium",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.model("Task", TaskSchema);

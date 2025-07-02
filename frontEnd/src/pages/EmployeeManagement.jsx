@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const EmployeeManagement = () => {
   const [formData, setFormData] = useState({
@@ -12,12 +13,10 @@ const EmployeeManagement = () => {
   });
 
   const [employees, setEmployees] = useState([]);
-  
+
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/admin/employees"
-      );
+      const res = await axios.get(`${BASE_URL}/api/admin/employees`);
       setEmployees(res.data);
     } catch (err) {
       console.error("Error fetching employees from the db : ...", err);
@@ -25,7 +24,6 @@ const EmployeeManagement = () => {
   };
 
   useEffect(() => {
-
     fetchEmployees();
   }, []);
 
@@ -46,7 +44,7 @@ const EmployeeManagement = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "http://localhost:5000/api/admin/employees",
+        `${BASE_URL}/api/admin/employees`,
         formData,
         {
           headers: {
@@ -85,12 +83,12 @@ const EmployeeManagement = () => {
   const handleCancel = () => {
     console.log("cancelled");
     setFormData({
-        name: "",
-        email: "",
-        password: "",
-        role: "employee",
-        status: "active",
-      });
+      name: "",
+      email: "",
+      password: "",
+      role: "employee",
+      status: "active",
+    });
     setModal(false);
   };
 

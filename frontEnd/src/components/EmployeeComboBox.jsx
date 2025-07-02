@@ -1,52 +1,72 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-const EmployeeComboBox = () => {
-  const employees = ["John Doe", "Jane Smith", "Ravi Kumar", "Aisha Khan"];
-  
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+const EmployeeComboBox = ({ selected, onSelect }) => {
+  const [employees, setEmployees] = useState([]);
   const [inputValue, setInputValue] = useState("");
-  const [filteredEmployees, setFilteredEmployees] = useState(employees);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await axios.get(`${BASE_URL}/api/admin/employees`);
+        setEmployees(res.data);
+        setFilteredEmployees(res.data);
+      } catch (err) {
+        console.error("Error fetching employees from the db: ", err);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
 
   const handleChange = (e) => {
     const value = e.target.value;
     setInputValue(value);
-    setFilteredEmployees(
-      employees.filter((emp) =>
-        emp.toLowerCase().includes(value.toLowerCase())
-      )
-    );
+
+    const filtered = employees.filter((emp) => {
+      const nameMatch = emp.name.toLowerCase().includes(value.toLowerCase());
+      const idMatch = emp.empId?.toLowerCase().includes(value.toLowerCase());
+      return nameMatch || idMatch;
+    });
+
+    setFilteredEmployees(filtered);
     setShowDropdown(true);
   };
 
-  const handleSelect = (value) => {
-    setInputValue(value);
+  const handleSelect = (emp) => {
+    setInputValue(`${emp.name} (${emp.empId})`);
     setShowDropdown(false);
+    if (onSelect) onSelect(emp);
   };
 
   return (
     <div className="relative w-full mb-4">
-      <label htmlFor="employee" className="w-full text-lg">
+      <label htmlFor="assignedTo" className="w-full text-lg">
         Employee
       </label>
       <input
         type="text"
-        id="employee"
-        name="employee"
+        id="assignedTo"
+        name="assignedTo"
         value={inputValue}
         onChange={handleChange}
         onFocus={() => setShowDropdown(true)}
         className="border w-full p-0.5 rounded bg-white"
-        placeholder="Type or select an employee"
+        placeholder="Type name or empId"
       />
       {showDropdown && filteredEmployees.length > 0 && (
         <ul className="absolute z-10 bg-white border w-full max-h-40 overflow-y-auto shadow">
           {filteredEmployees.map((emp, index) => (
             <li
-              key={index}
-              onClick={() => handleSelect(emp)}
+              key={emp.empId || index}
+              onClick={() => handleSelect({ name: emp.name, empId: emp.empId })}
               className="p-2 hover:bg-gray-100 cursor-pointer"
             >
-              {emp}
+              {emp.name} ({emp.empId})
             </li>
           ))}
         </ul>
