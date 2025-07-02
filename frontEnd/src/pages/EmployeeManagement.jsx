@@ -11,8 +11,10 @@ const EmployeeManagement = () => {
     role: "employee",
     status: "active",
   });
-
   const [employees, setEmployees] = useState([]);
+  const [modal, setModal] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [editEmpId, setEditEmpId] = useState(null);
 
   const fetchEmployees = async () => {
     try {
@@ -43,16 +45,31 @@ const EmployeeManagement = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post(
-        `${BASE_URL}/api/admin/employees`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      if (isEdit) {
+        await axios.put(
+          `${BASE_URL}/api/admin/employees/${editEmpId}`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("employee updated successfully");
+      } else {
+        const res = await axios.post(
+          `${BASE_URL}/api/admin/employees`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("Employee added successfully to the DB:", res.data);
+      }
+
       await fetchEmployees();
       setFormData({
         name: "",
@@ -62,7 +79,6 @@ const EmployeeManagement = () => {
         status: "active",
       });
 
-      console.log("Employee added successfully to the DB:", res.data);
       setModal(false);
     } catch (err) {
       console.error(
@@ -72,12 +88,31 @@ const EmployeeManagement = () => {
     }
   };
 
-  const handleEditEmployee = (e) => {
-    console.log("editing the employee", e);
+  const handleEditEmployee = (emp) => {
+    console.log("editing the employee", emp);
+    setIsEdit(true);
+    setEditEmpId(emp.empId);
+    setFormData({
+      name: emp.name,
+      email: emp.email,
+      password: "",
+      role: emp.role,
+      status: emp.status,
+    });
+    setModal(true);
   };
 
-  const handleDeleteEmployee = (e) => {
-    console.log("deleting the employee", e);
+  const handleDeleteEmployee = async (empId) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete employee ${empId}?`
+    );
+    if (!confirmDelete) return;
+    try {
+      await axios.delete(`${BASE_URL}/api/admin/employees/${empId}`);
+      await fetchEmployees();
+    } catch (err) {
+      console.error("Error deleting employee:...", err);
+    }
   };
 
   const handleCancel = () => {
@@ -91,8 +126,6 @@ const EmployeeManagement = () => {
     });
     setModal(false);
   };
-
-  const [modal, setModal] = useState(false);
 
   return (
     <div className="flex min-h-screen">
@@ -109,7 +142,7 @@ const EmployeeManagement = () => {
         {/* modal */}
         {modal && (
           <div className="w-100 h-fit mt-16 p-8 border bg-gray-300">
-            <div className="text-3xl mb-8 ml-4">Add New Employee</div>
+            <div className="text-3xl mb-8 ml-4">{isEdit ? "Edit Employee" : "Add New Employee"}</div>
             <form>
               <label htmlFor="name" className="w-full text-lg">
                 Name
@@ -118,6 +151,7 @@ const EmployeeManagement = () => {
                 type="text"
                 id="name"
                 name="name"
+                value={formData.name}
                 onChange={handleChange}
                 className="border w-full p-0.5 rounded-xs mb-4 bg-white"
               />
@@ -129,6 +163,7 @@ const EmployeeManagement = () => {
                 type="text"
                 id="email"
                 name="email"
+                value={formData.email}
                 onChange={handleChange}
                 className="border w-full p-0.5 rounded-xs mb-4 bg-white"
               />
@@ -140,6 +175,7 @@ const EmployeeManagement = () => {
                 type="password"
                 id="password"
                 name="password"
+                value={formData.password}
                 onChange={handleChange}
                 className="border w-full p-0.5 rounded-xs mb-8 bg-white"
               />
@@ -207,7 +243,7 @@ const EmployeeManagement = () => {
         </div>
 
         {/* container */}
-        <div className="w-200 mr-100 h-120 overflow-auto flex flex-col gap-4 justify-evenly items-center p-6 border bg-gray-500">
+        <div className="w-200 mr-100 max-h-120 overflow-auto flex flex-col gap-4 justify-evenly items-center p-6 border bg-gray-500">
           {/* cards */}
           {employees.map((emp) => (
             <div
@@ -235,13 +271,13 @@ const EmployeeManagement = () => {
               {/* right */}
               <div className="flex items-center">
                 <button
-                  onClick={handleEditEmployee}
+                  onClick={() => handleEditEmployee(emp)}
                   className="border p-2 w-25 text-lg hover:cursor-pointer"
                 >
                   Edit
                 </button>
                 <button
-                  onClick={handleDeleteEmployee}
+                  onClick={() => handleDeleteEmployee(emp.empId)}
                   className="border p-2 w-25 mx-4 text-lg hover:cursor-pointer"
                 >
                   Delete

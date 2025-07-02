@@ -8,7 +8,6 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    role: "employee",
   });
 
   const [error, setError] = useState("");
@@ -81,21 +80,6 @@ const Login = () => {
               value={formData.password}
               onChange={handleChange}
             ></input>
-
-            <label htmlFor="role" className="w-full">
-              Role
-            </label>
-            <select
-              id="role"
-              name="role"
-              className="w-full border mb-4 p-0.5"
-              placeholder="Select a role"
-              value={formData.role}
-              onChange={handleChange}
-            >
-              <option value="employee">Employee</option>
-              <option value="admin">Admin</option>
-            </select>
 
             {error && <div className="text-red-500 mb-2 text-sm">{error}</div>}
 

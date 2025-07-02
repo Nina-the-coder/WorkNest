@@ -14,8 +14,11 @@ const TaskManagement = () => {
     status: "pending",
     priority: "medium",
   });
-
   const [tasks, setTasks] = useState([]);
+  const [modal, setModal] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [editTaskId, setEditTaskId] = useState(null);
+
   const fetchTasks = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/api/admin/tasks`);
@@ -51,7 +54,25 @@ const TaskManagement = () => {
       return;
     }
     try {
-      const res = await axios.post(`${BASE_URL}/api/admin/tasks`, formData);
+      const token = localStorage.getItem("token");
+      if (isEdit) {
+        await axios.put(`${BASE_URL}/api/admin/tasks/${editTaskId}`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("task updated successfullly");
+      } else {
+        const res = await axios.post(`${BASE_URL}/api/admin/tasks`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        console.log("Sending Task: ", res.data);
+      }
+
+      await fetchTasks();
       setFormData({
         assignedTo: "",
         assignedToName: "", // NEW FIELD
@@ -61,10 +82,7 @@ const TaskManagement = () => {
         status: "pending",
         priority: "medium",
       });
-      console.log("Sending Task: ", formData);
-      console.log(res.data);
       setModal(false);
-      await fetchTasks();
     } catch (err) {
       console.error(
         "Error adding Task to the DB: ",
@@ -73,12 +91,30 @@ const TaskManagement = () => {
     }
   };
 
-  const handleEditTask = (e) => {
-    console.log("editing the task", e);
+  const handleEditTask = (task) => {
+    console.log("editing the task", task);
+    setIsEdit(true);
+    setEditTaskId(task.taskId);
+    setFormData({
+      assignedTo: task.assignedTo,
+      assignedToName: task.assignedToName,
+      title: task.title,
+      description: task.description,
+      dueDate: new Date(task.dueDate).toISOString().split("T")[0], // formats to YYYY-MM-DD
+      status: task.status,
+      priority: task.priority,
+    });
+    setModal(true);
   };
 
-  const handleDeleteTask = (e) => {
-    console.log("deleting the task", e);
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await axios.delete(`${BASE_URL}/api/admin/tasks/${taskId}`);
+      await fetchTasks();
+      console.log("task deleted successfully");
+    } catch (err) {
+      console.error("Error deleting the task>>>", err);
+    }
   };
 
   const handleCancel = () => {
@@ -95,8 +131,6 @@ const TaskManagement = () => {
     console.log("cancelled");
     setModal(false);
   };
-
-  const [modal, setModal] = useState(false);
 
   return (
     <div className="flex min-h-screen">
@@ -131,6 +165,7 @@ const TaskManagement = () => {
                 type="text"
                 id="title"
                 name="title"
+                value={formData.title}
                 onChange={handleChange}
                 className="border w-full p-0.5 rounded-xs mb-4 bg-white"
               />
@@ -142,6 +177,7 @@ const TaskManagement = () => {
                 type="text"
                 id="description"
                 name="description"
+                value={formData.description}
                 onChange={handleChange}
                 className="border w-full h-20 p-0.5 rounded-xs mb-4 bg-white"
               />
@@ -153,6 +189,7 @@ const TaskManagement = () => {
                 type="date"
                 id="dueDate"
                 name="dueDate"
+                value={formData.dueDate}
                 onChange={handleChange}
                 className="border w-full mb-10 bg-white p-0.5"
               />
@@ -222,7 +259,7 @@ const TaskManagement = () => {
         </div>
 
         {/* container */}
-        <div className="w-300 border bg-gray-400 h-fit flex flex-wrap pt-8">
+        <div className="w-300 border max-h-120 overflow-auto bg-gray-400 h-fit flex flex-wrap pt-8">
           {tasks.map((task, index) => (
             <div
               key={index}
@@ -275,16 +312,21 @@ const TaskManagement = () => {
               </div>
               {/* bottom */}
               <div className="align-baseline flex justify-evenly my-2">
-                <button onClick={handleEditTask} className="border p-2 w-30">
+                <button
+                  onClick={() => handleEditTask(task)}
+                  className="border p-2 w-30"
+                >
                   Edit
                 </button>
-                <button onClick={handleDeleteTask} className="border p-2 w-30">
+                <button
+                  onClick={() => handleDeleteTask(task.taskId)}
+                  className="border p-2 w-30"
+                >
                   Delete
                 </button>
               </div>
             </div>
           ))}
-          {/* cards */}
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Task = require("../models/Task");
+const getNextSequence = require("../utils/getNextSequence");
 
 exports.addEmployee = async (req, res) => {
   try {
@@ -9,8 +10,8 @@ exports.addEmployee = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: "Email already exists..." });
     }
-    const employeeCount = await User.countDocuments();
-    const newEmpId = `EMP${String(employeeCount + 1).padStart(3, "0")}`;
+    const nextEmpNumber = await getNextSequence("empId");
+    const newEmpId = `EMP${String(nextEmpNumber).padStart(3, "0")}`;
 
     const newUser = new User({
       name,
@@ -42,11 +43,54 @@ exports.getAllEmployees = async (req, res) => {
   }
 };
 
+exports.deleteEmployee = async (req, res) => {
+  try {
+    const { empId } = req.params;
+    await User.deleteOne({ empId });
+    res.status(200).json({ message: "Employee deleted successfully" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error deleting employee", error: err.message });
+  }
+};
+
+exports.updateEmployee = async (req, res) => {
+  try {
+    const { empId } = req.params;
+    const { name, email, password, role, status } = req.body;
+
+    const updatedData = { name, email, role, status };
+    if (password) updatedData.password = password;
+
+    const updatedUser = await User.findOneAndUpdate({ empId }, updatedData, {
+      new: true,
+    });
+    res.status(200).json({ message: "Employee Updated", user: updatedUser });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error in updating the employee", error: err.message });
+  }
+};
+
 exports.addTask = async (req, res) => {
   try {
-    const { assignedTo, assignedToName, title, description, dueDate, status, priority } =
-      req.body;
+    const {
+      assignedTo,
+      assignedToName,
+      title,
+      description,
+      dueDate,
+      status,
+      priority,
+    } = req.body;
+
+    const nextTaskNumber = await getNextSequence("taskId");
+    const TaskId = `TSK${String(nextTaskNumber).padStart(3, "0")}`;
+
     const newTask = new Task({
+      taskId: TaskId,
       title,
       description,
       assignedTo,
@@ -72,5 +116,55 @@ exports.getAllTasks = async (req, res) => {
     res
       .status(500)
       .json({ message: "Failed to fetch employees", error: err.message });
+  }
+};
+
+exports.deleteTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const deleted = await Task.deleteOne({ taskId });
+
+    if (deleted.deletedCount === 0) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+    res.status(200).json({ message: "Task deleted successfully" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error in deleting the task", error: err.message });
+  }
+};
+
+exports.updateTasks = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const {
+      assignedTo,
+      assignedToName,
+      title,
+      description,
+      dueDate,
+      status,
+      priority,
+    } = req.body;
+
+    const updatedData = {
+      assignedTo,
+      assignedToName,
+      title,
+      description,
+      dueDate,
+      status,
+      priority,
+    };
+
+    const updatedTask = await Task.findOneAndUpdate({ taskId }, updatedData, {
+      new: true,
+    });
+    res.status(200).json({ message: "Task Updated", task: updatedTask });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error in updating the task", error: err.message });
   }
 };
