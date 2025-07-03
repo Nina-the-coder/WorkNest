@@ -19,7 +19,6 @@ const TaskSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    assignedToName: { type: String },
     assignedBy: {
       type: String,
       default: "admin",

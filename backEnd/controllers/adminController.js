@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Task = require("../models/Task");
 const getNextSequence = require("../utils/getNextSequence");
+const bcrypt = require('bcrypt');
 
 exports.addEmployee = async (req, res) => {
   try {
@@ -60,17 +61,26 @@ exports.updateEmployee = async (req, res) => {
     const { empId } = req.params;
     const { name, email, password, role, status } = req.body;
 
-    const updatedData = { name, email, role, status };
-    if (password) updatedData.password = password;
+    const user = await User.findOne({ empId });
+    if (!user) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
 
-    const updatedUser = await User.findOneAndUpdate({ empId }, updatedData, {
-      new: true,
-    });
-    res.status(200).json({ message: "Employee Updated", user: updatedUser });
+    // Update only fields that exist in req.body
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (role) user.role = role;
+    if (status) user.status = status;
+    if (password) user.password = password; // will be hashed by pre('save')
+
+    await user.save(); // triggers pre-save hook
+
+    res.status(200).json({ message: "Employee Updated", user });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error in updating the employee", error: err.message });
+    res.status(500).json({
+      message: "Error in updating the employee",
+      error: err.message,
+    });
   }
 };
 
@@ -78,7 +88,6 @@ exports.addTask = async (req, res) => {
   try {
     const {
       assignedTo,
-      assignedToName,
       title,
       description,
       dueDate,
@@ -94,7 +103,6 @@ exports.addTask = async (req, res) => {
       title,
       description,
       assignedTo,
-      assignedToName,
       dueDate,
       status,
       priority,
@@ -140,7 +148,6 @@ exports.updateTasks = async (req, res) => {
     const { taskId } = req.params;
     const {
       assignedTo,
-      assignedToName,
       title,
       description,
       dueDate,
@@ -150,7 +157,6 @@ exports.updateTasks = async (req, res) => {
 
     const updatedData = {
       assignedTo,
-      assignedToName,
       title,
       description,
       dueDate,

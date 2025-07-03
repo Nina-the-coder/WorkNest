@@ -7,7 +7,6 @@ const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 const TaskManagement = () => {
   const [formData, setFormData] = useState({
     assignedTo: "",
-    assignedToName: "", // NEW FIELD
     title: "",
     description: "",
     dueDate: "",
@@ -15,21 +14,37 @@ const TaskManagement = () => {
     priority: "medium",
   });
   const [tasks, setTasks] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [modal, setModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editTaskId, setEditTaskId] = useState(null);
 
-  const fetchTasks = async () => {
+  const fetchData = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/admin/tasks`);
-      setTasks(res.data);
+      const [taskRes, empRes] = await Promise.all([
+        axios.get(`${BASE_URL}/api/admin/tasks`),
+        axios.get(`${BASE_URL}/api/admin/employees`),
+      ]);
+
+      const employeeMap = {};
+      empRes.data.forEach((emp) => {
+        employeeMap[emp.empId] = emp.name;
+      });
+
+      const updatedTasks = taskRes.data.map((task) => ({
+        ...task,
+        assignedToName: employeeMap[task.assignedTo] || "Unknown",
+      }));
+
+      setEmployees(empRes.data);
+      setTasks(updatedTasks);
     } catch (err) {
-      console.error("Error fetching tasks from the db :...", err);
+      console.error("Error fetching tasks or employees", err);
     }
   };
 
   useEffect(() => {
-    fetchTasks();
+    fetchData();
   }, []);
 
   const handleChange = (e) => {
@@ -62,6 +77,7 @@ const TaskManagement = () => {
           },
         });
         console.log("task updated successfullly");
+        setIsEdit(false);
       } else {
         const res = await axios.post(`${BASE_URL}/api/admin/tasks`, formData, {
           headers: {
@@ -72,10 +88,9 @@ const TaskManagement = () => {
         console.log("Sending Task: ", res.data);
       }
 
-      await fetchTasks();
+      await fetchData();
       setFormData({
         assignedTo: "",
-        assignedToName: "", // NEW FIELD
         title: "",
         description: "",
         dueDate: "",
@@ -97,7 +112,6 @@ const TaskManagement = () => {
     setEditTaskId(task.taskId);
     setFormData({
       assignedTo: task.assignedTo,
-      assignedToName: task.assignedToName,
       title: task.title,
       description: task.description,
       dueDate: new Date(task.dueDate).toISOString().split("T")[0], // formats to YYYY-MM-DD
@@ -110,7 +124,7 @@ const TaskManagement = () => {
   const handleDeleteTask = async (taskId) => {
     try {
       await axios.delete(`${BASE_URL}/api/admin/tasks/${taskId}`);
-      await fetchTasks();
+      await fetchData();
       console.log("task deleted successfully");
     } catch (err) {
       console.error("Error deleting the task>>>", err);
@@ -120,7 +134,6 @@ const TaskManagement = () => {
   const handleCancel = () => {
     setFormData({
       assignedTo: "",
-      assignedToName: "", // NEW FIELD
       title: "",
       description: "",
       dueDate: "",
@@ -130,6 +143,8 @@ const TaskManagement = () => {
 
     console.log("cancelled");
     setModal(false);
+    setIsEdit(false);
+    setEditTaskId(null);
   };
 
   return (
@@ -147,13 +162,15 @@ const TaskManagement = () => {
         {/* modal */}
         {modal && (
           <div className="w-100 h-fit mt-16 p-8 bg-gray-300">
+            <div className="text-3xl mb-8 ml-4">
+              {isEdit ? "Edit Task" : "Add New Task"}
+            </div>
             <form>
               <EmployeeComboBox
                 onSelect={(emp) =>
                   setFormData((prev) => ({
                     ...prev,
                     assignedTo: emp.empId,
-                    assignedToName: emp.name,
                   }))
                 }
               />

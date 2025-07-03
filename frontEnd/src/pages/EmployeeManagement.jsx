@@ -43,19 +43,31 @@ const EmployeeManagement = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!formData.name || !formData.email || (!isEdit && !formData.password)) {
+      alert("Please fill all required fields");
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       if (isEdit) {
+        const updatedFormData = { ...formData };
+        if (!formData.password) {
+          delete updatedFormData.password;
+        }
+
         await axios.put(
           `${BASE_URL}/api/admin/employees/${editEmpId}`,
-          formData,
+          updatedFormData,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        console.log("employee updated successfully");
+        console.log("Employee updated successfully");
+        setIsEdit(false);
+        setEditEmpId(null);
       } else {
         const res = await axios.post(
           `${BASE_URL}/api/admin/employees`,
@@ -125,6 +137,8 @@ const EmployeeManagement = () => {
       status: "active",
     });
     setModal(false);
+    setIsEdit(false);
+    setEditEmpId(null);
   };
 
   return (
@@ -142,7 +156,9 @@ const EmployeeManagement = () => {
         {/* modal */}
         {modal && (
           <div className="w-100 h-fit mt-16 p-8 border bg-gray-300">
-            <div className="text-3xl mb-8 ml-4">{isEdit ? "Edit Employee" : "Add New Employee"}</div>
+            <div className="text-3xl mb-8 ml-4">
+              {isEdit ? "Edit Employee" : "Add New Employee"}
+            </div>
             <form>
               <label htmlFor="name" className="w-full text-lg">
                 Name
