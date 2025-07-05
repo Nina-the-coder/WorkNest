@@ -29,6 +29,7 @@ const jwt = require("jsonwebtoken");
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log("Login Request Body:", req.body);
 
     //checking if user exists
     const user = await User.findOne({ email });
