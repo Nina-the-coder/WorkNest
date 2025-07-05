@@ -14,7 +14,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/employee", employeeRoutes);
+app.use("/api/employee", employeeRoutes); 
 
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
