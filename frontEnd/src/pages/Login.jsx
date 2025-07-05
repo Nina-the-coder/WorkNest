@@ -49,48 +49,46 @@ const Login = () => {
 
   return (
     <>
-      <div className="navbar h-15 p-1.5 w-full ">
-        <img className="h-full" src={Worknestlogo} />
-      </div>
-
-      <div className="main flex flex-col justify-center items-center mt-8">
-        <div className="login h-fit w-100 p-8 mt-8 border-2 rounded-lg">
-          <div className="text-3xl mt-4 mb-8 text-center">Login</div>
-          <form onSubmit={handleLogin}>
-            <label htmlFor="email" className="w-full">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              className="w-full border mb-4 p-0.5"
-              type="text"
-              value={formData.email}
-              onChange={handleChange}
-            ></input>
-
-            <label htmlFor="password" className="w-full">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              className="w-full border mb-4 p-0.5"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-            ></input>
-
-            {error && <div className="text-red-500 mb-2 text-sm">{error}</div>}
-
-            <button
-              disabled={loading}
-              className="w-full h-10 text-white bg-gray-700 mt-4 hover:bg-gray-800 cursor-pointer "
-              type="submit"
-            >
-              {loading ? "Logging in..." : "Login"}
-            </button>
-          </form>
+      <div className="bg-slate-900 h-screen">
+        <div className="navbar h-15 p-1.5 w-full bg-slate-300">
+          <img className="h-full" src={Worknestlogo} />
+        </div>
+        <div className="main flex flex-col justify-center items-center mt-8">
+          <div className="login h-fit w-100 p-8 mt-8 rounded-lg bg-slate-800">
+            <div className="text-3xl mt-4 mb-8 text-center text-white">Login</div>
+            <form onSubmit={handleLogin}>
+              <label htmlFor="email" className="w-full text-slate-300">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                className="w-full border mb-4 p-0.5 bg-slate-200"
+                type="text"
+                value={formData.email}
+                onChange={handleChange}
+              ></input>
+              <label htmlFor="password" className="w-full text-slate-300">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                className="w-full border mb-4 p-0.5 bg-slate-200"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+              ></input>
+              {error && <div className="text-rose-500 mb-2 text-sm">{error}</div>}
+              <button
+                disabled={loading}
+                className="w-full h-10 text-white text-lg bg-indigo-800 mt-4 hover:bg-indigo-900 cursor-pointer "
+                type="submit"
+              >
+                {loading ? "Logging in..." : "Login"}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </>

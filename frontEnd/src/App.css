@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+:root {
+  --russian-violet: #0b0033;
+  --papaya: #FFEFD3;
+  --emerald: #23ce6b;
+  --cool-gray: #7e7f9a;
+  --mountbatten-pink: #af7595;
+}

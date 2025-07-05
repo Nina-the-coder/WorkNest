@@ -152,17 +152,17 @@ const TaskManagement = () => {
       <Sidebar />
 
       {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col items-center">
+      <div className="ml-64 w-full p-4 flex flex-col items-center bg-slate-900">
         {/* header */}
-        <div className="w-full flex justify-between">
+        <div className="w-full flex justify-between text-white">
           <div className="text-3xl">Task Management</div>
           <div className="text-3xl pr-4">Admin</div>
         </div>
 
         {/* modal */}
         {modal && (
-          <div className="w-100 h-fit mt-16 p-8 bg-gray-300">
-            <div className="text-3xl mb-8 ml-4">
+          <div className="w-100 h-fit mt-16 p-8 bg-slate-800">
+            <div className="text-3xl mb-8 ml-4 text-white">
               {isEdit ? "Edit Task" : "Add New Task"}
             </div>
             <form>
@@ -175,7 +175,7 @@ const TaskManagement = () => {
                 }
               />
 
-              <label htmlFor="title" className="w-full text-lg">
+              <label htmlFor="title" className="w-full text-lg text-slate-200">
                 Task Title
               </label>
               <input
@@ -184,10 +184,10 @@ const TaskManagement = () => {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-white"
+                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
               />
 
-              <label htmlFor="description" className="w-full text-lg">
+              <label htmlFor="description" className="w-full text-lg text-slate-200">
                 Description
               </label>
               <textarea
@@ -196,10 +196,10 @@ const TaskManagement = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                className="border w-full h-20 p-0.5 rounded-xs mb-4 bg-white"
+                className="border w-full h-20 p-0.5 rounded-xs mb-4 bg-slate-200"
               />
 
-              <label htmlFor="dueDate" className="w-full text-lg">
+              <label htmlFor="dueDate" className="w-full text-lg text-slate-200">
                 Due Date
               </label>
               <input
@@ -208,10 +208,10 @@ const TaskManagement = () => {
                 name="dueDate"
                 value={formData.dueDate}
                 onChange={handleChange}
-                className="border w-full mb-10 bg-white p-0.5"
+                className="border w-full mb-10 bg-slate-200 p-0.5"
               />
 
-              <label htmlFor="status" className="text-lg">
+              <label htmlFor="status" className="text-lg text-slate-200">
                 Status
               </label>
               <select
@@ -219,14 +219,14 @@ const TaskManagement = () => {
                 id="status"
                 onChange={handleChange}
                 value={formData.status}
-                className="w-1/4 ml-2 mr-8 p-0.5 bg-white border"
+                className="w-1/4 ml-2 mr-8 p-0.5 bg-slate-200 border"
               >
                 <option value="pending">Pending</option>
                 <option value="in-progress">In progress</option>
                 <option value="done">Done</option>
               </select>
 
-              <label htmlFor="priority" className="text-lg">
+              <label htmlFor="priority" className="text-lg text-slate-200">
                 Priority
               </label>
               <select
@@ -234,7 +234,7 @@ const TaskManagement = () => {
                 id="priority"
                 onChange={handleChange}
                 value={formData.priority}
-                className="w-1/4 ml-2 p-0.5 bg-white border"
+                className="w-1/4 ml-2 p-0.5 bg-slate-200 border"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -244,14 +244,14 @@ const TaskManagement = () => {
               <div className="flex justify-around items-center mt-4">
                 <button
                   onClick={handleCancel}
-                  className="mt-8 p-2 px-10 border hover:cursor-pointer bg-white"
+                  className="mt-8 p-2 px-10 hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   onClick={handleSave}
-                  className="mt-8 p-2 px-10 border hover:cursor-pointer bg-white"
+                  className="mt-8 p-2 px-10 hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
                 >
                   Save
                 </button>
@@ -261,32 +261,32 @@ const TaskManagement = () => {
         )}
 
         {/* Search Bar and CTA button */}
-        <div className="flex justify-between my-16 px-10 h-20 w-full">
+        {!modal && (<div className="flex justify-between my-16 px-10 h-20 w-full">
           <div className="h-full w-3/4 items-center flex">
-            <input type="text" className="border h-10 w-3/4" />
+            <input type="text" className="border h-10 w-3/4 bg-white" />
           </div>
           <div className="h-full w-1/4 items-center flex">
             <button
-              className="border w-full p-8 text-2xl rounded-xl"
+              className="w-full p-8 text-2xl rounded-xl text-white bg-indigo-800 hover:cursor-pointer hover:bg-indigo-900"
               onClick={handleAddNewTask}
             >
               Add new Task
             </button>
           </div>
-        </div>
+        </div>)}
 
         {/* container */}
-        <div className="w-300 border max-h-120 overflow-auto bg-gray-400 h-fit flex flex-wrap pt-8">
+        {!modal && (<div className="w-300 border max-h-120 overflow-auto h-fit flex flex-wrap pt-8">
           {tasks.map((task, index) => (
             <div
               key={index}
-              className="w-[45%] h-80 bg-white mb-8 ml-8 p-2 flex justify-between flex-col"
+              className="w-[45%] h-80 bg-slate-800 mb-8 ml-8 p-2 flex justify-between flex-col"
             >
               {/* top */}
               <div className="overflow-auto">
                 <div className="flex mb-2">
-                  <div className="text-xl font-bold">{task.title}</div>
-                  <div className="text-lg ml-8 w-[35%] font-sans">
+                  <div className="text-xl font-bold text-white">{task.title}</div>
+                  <div className="text-lg ml-8 w-[35%] font-sans text-slate-300">
                     {`${task.assignedToName} (${task.assignedTo})`}
                   </div>
                 </div>
@@ -294,10 +294,10 @@ const TaskManagement = () => {
                   <div
                     className={`text-xl p-0.5 px-4 ${
                       task.status === "pending"
-                        ? "bg-yellow-300"
+                        ? "bg-rose-500"
                         : task.status === "in-progress"
-                        ? "bg-blue-300"
-                        : "bg-green-300"
+                        ? "bg-amber-500"
+                        : "bg-emerald-500"
                     } rounded-xl`}
                   >
                     {task.status}
@@ -305,15 +305,15 @@ const TaskManagement = () => {
                   <div
                     className={`text-xl p-0.5 px-4 ${
                       task.priority === "high"
-                        ? "bg-red-300"
+                        ? "bg-rose-500"
                         : task.priority === "medium"
-                        ? "bg-orange-300"
+                        ? "bg-amber-500"
                         : "bg-yellow-300"
                     } rounded-xl`}
                   >
                     {task.priority}
                   </div>
-                  <div className="text-xl p-0.5 px-4">
+                  <div className="text-xl p-0.5 px-4 text-white">due: 
                     {new Date(task.dueDate)
                       .toLocaleDateString("en-GB", {
                         day: "numeric",
@@ -323,7 +323,7 @@ const TaskManagement = () => {
                       .toUpperCase()}
                   </div>
                 </div>
-                <div className="text-justify p-2 mt-2 text-lg">
+                <div className="text-justify p-2 mt-2 text-lg text-slate-300">
                   {task.description}
                 </div>
               </div>
@@ -331,20 +331,20 @@ const TaskManagement = () => {
               <div className="align-baseline flex justify-evenly my-2">
                 <button
                   onClick={() => handleEditTask(task)}
-                  className="border p-2 w-30"
+                  className="p-2 w-30 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDeleteTask(task.taskId)}
-                  className="border p-2 w-30"
+                  className="p-2 w-30 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
                 >
                   Delete
                 </button>
               </div>
             </div>
           ))}
-        </div>
+        </div>)}
       </div>
     </div>
   );

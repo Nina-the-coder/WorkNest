@@ -15,7 +15,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="w-64 bg-white border-r min-h-screen fixed">
+    <div className="w-64 border-r min-h-screen fixed bg-slate-300">
       {/* logo */}
       <div className="p-2 pr-10">
         <img src={WorkNestLogo} />
@@ -24,7 +24,7 @@ const Sidebar = () => {
       {/* elements */}
       <nav className="flex flex-col gap-3 mt-6">
         {items.map((item, index) => (
-          <Link key={index} to={item.path} className={`text-xl pl-5 mx-2 py-1 rounded-2xl ${item.path === location.pathname && 'bg-green-300'}`}>
+          <Link key={index} to={item.path} className={`text-xl pl-5 mx-2 py-1 rounded-2xl ${item.path === location.pathname && 'bg-emerald-500'}`}>
             {item.name}
           </Link>
         ))}

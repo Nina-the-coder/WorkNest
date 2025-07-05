@@ -45,7 +45,7 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
 
   return (
     <div className="relative w-full mb-4">
-      <label htmlFor="assignedTo" className="w-full text-lg">
+      <label htmlFor="assignedTo" className="w-full text-lg text-slate-200">
         Employee
       </label>
       <input
@@ -55,7 +55,7 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
         value={inputValue}
         onChange={handleChange}
         onFocus={() => setShowDropdown(true)}
-        className="border w-full p-0.5 rounded bg-white"
+        className="border w-full p-0.5 rounded bg-slate-200"
         placeholder="Type name or empId"
       />
       {showDropdown && filteredEmployees.length > 0 && (

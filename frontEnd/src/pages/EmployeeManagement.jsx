@@ -146,21 +146,21 @@ const EmployeeManagement = () => {
       <Sidebar />
 
       {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col items-center">
+      <div className="ml-64 w-full p-4 flex flex-col items-center bg-slate-900">
         {/* header */}
-        <div className="w-full flex justify-between">
+        <div className="w-full flex justify-between text-white">
           <div className="text-3xl">Employee Management</div>
           <div className="text-3xl pr-4">Admin</div>
         </div>
 
         {/* modal */}
         {modal && (
-          <div className="w-100 h-fit mt-16 p-8 border bg-gray-300">
-            <div className="text-3xl mb-8 ml-4">
+          <div className="w-100 h-fit mt-16 p-8 border bg-slate-800">
+            <div className="text-3xl mb-8 ml-4 text-white">
               {isEdit ? "Edit Employee" : "Add New Employee"}
             </div>
             <form>
-              <label htmlFor="name" className="w-full text-lg">
+              <label htmlFor="name" className="w-full text-lg text-slate-200">
                 Name
               </label>
               <input
@@ -169,10 +169,10 @@ const EmployeeManagement = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-white"
+                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
               />
 
-              <label htmlFor="email" className="w-full text-lg">
+              <label htmlFor="email" className="w-full text-lg text-slate-200">
                 Email
               </label>
               <input
@@ -181,10 +181,13 @@ const EmployeeManagement = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-white"
+                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
               />
 
-              <label htmlFor="password" className="w-full text-lg">
+              <label
+                htmlFor="password"
+                className="w-full text-lg text-slate-200"
+              >
                 Password
               </label>
               <input
@@ -193,14 +196,14 @@ const EmployeeManagement = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-8 bg-white"
+                className="border w-full p-0.5 rounded-xs mb-8 bg-slate-200"
               />
 
-              <label htmlFor="role" className="text-lg mr-1.5">
+              <label htmlFor="role" className="text-lg mr-1.5 text-slate-200">
                 Role
               </label>
               <select
-                className="border w-1/3 bg-white p-0.5"
+                className="border w-1/3 bg-slate-200 p-0.5"
                 id="role"
                 name="role"
                 value={formData.role}
@@ -210,11 +213,14 @@ const EmployeeManagement = () => {
                 <option value="employee">Employee</option>
               </select>
 
-              <label htmlFor="status" className="text-lg ml-4 mr-1.5">
+              <label
+                htmlFor="status"
+                className="text-lg ml-4 mr-1.5 text-slate-200"
+              >
                 Status
               </label>
               <select
-                className="border w-1/3 bg-white p-0.5"
+                className="border w-1/3 bg-slate-200 p-0.5"
                 id="status"
                 name="status"
                 value={formData.status}
@@ -227,14 +233,14 @@ const EmployeeManagement = () => {
               <div className="mt-8 flex justify-around items-center">
                 <button
                   onClick={handleCancel}
-                  className="mt-8 p-2 px-10 border hover:cursor-pointer bg-white"
+                  className="mt-8 p-2 px-10 w-30 text-white text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   onClick={handleSave}
-                  className="mt-8 p-2 px-10 border hover:cursor-pointer bg-white"
+                  className="mt-8 p-2 px-10 w-30 text-white text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900"
                 >
                   Save
                 </button>
@@ -244,64 +250,68 @@ const EmployeeManagement = () => {
         )}
 
         {/* Search Bar and CTA button */}
-        <div className="flex justify-between my-16 px-10 h-20 w-full">
-          <div className="h-full w-3/4 items-center flex">
-            <input type="text" className="border h-10 w-3/4" />
+        {!modal && (
+          <div className="flex justify-between my-16 px-10 h-20 w-full">
+            <div className="h-full w-3/4 items-center flex">
+              <input type="text" className="border h-10 w-3/4 bg-white" />
+            </div>
+            <div className="h-full w-1/4 items-center flex">
+              <button
+                className="border border-slate-800 p-8 w-full text-2xl rounded-xl text-white bg-indigo-800 hover:cursor-pointer hover:bg-indigo-900"
+                onClick={handleAddNewEmployee}
+              >
+                Add new Employee
+              </button>
+            </div>
           </div>
-          <div className="h-full w-1/4 items-center flex">
-            <button
-              className="border p-8 w-full text-2xl rounded-xl"
-              onClick={handleAddNewEmployee}
-            >
-              Add new Employee
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* container */}
-        <div className="w-200 mr-100 max-h-120 overflow-auto flex flex-col gap-4 justify-evenly items-center p-6 border bg-gray-500">
-          {/* cards */}
-          {employees.map((emp) => (
-            <div
-              key={emp.empId}
-              className="w-[100%] h-fit border bg-white flex"
-            >
-              {/* left */}
-              <div className="flex flex-col w-[75%] p-2">
-                <div className="flex gap-12 items-center mb-2">
-                  <div className="text-2xl">{emp.empId}</div>
-                  <div
-                    className={`text-xl ${
-                      emp.status === "active" ? "bg-yellow-300" : "bg-red-300"
-                    } p-0.5 px-4 rounded-xl`}
-                  >
-                    {emp.status}
+        {!modal && (
+          <div className="w-200 mr-100 max-h-120 overflow-auto flex flex-col gap-4 justify-evenly items-center p-6 border">
+            {/* cards */}
+            {employees.map((emp) => (
+              <div
+                key={emp.empId}
+                className="w-[100%] h-fit border bg-slate-800 flex"
+              >
+                {/* left */}
+                <div className="flex flex-col w-[75%] p-2">
+                  <div className="flex gap-12 items-center mb-2">
+                    <div className="text-2xl text-white">{emp.empId}</div>
+                    <div
+                      className={`text-xl ${
+                        emp.status === "active" ? "bg-amber-500" : "bg-rose-500 text-black"
+                      } p-0.5 px-4 rounded-xl`}
+                    >
+                      {emp.status}
+                    </div>
+                    <div className="text-xl bg-emerald-500 p-0.5 px-4 rounded-xl">
+                      {emp.role}
+                    </div>
                   </div>
-                  <div className="text-xl bg-green-300 p-0.5 px-4 rounded-xl">
-                    {emp.role}
-                  </div>
+                  <div className="text-lg text-slate-300">Name: {emp.name}</div>
+                  <div className="text-lg text-slate-300">Email: {emp.email}</div>
                 </div>
-                <div className="text-lg">Name: {emp.name}</div>
-                <div className="text-lg">Email: {emp.email}</div>
+                {/* right */}
+                <div className="flex items-center">
+                  <button
+                    onClick={() => handleEditEmployee(emp)}
+                    className="p-2 w-25 text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
+                    >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteEmployee(emp.empId)}
+                    className="p-2 w-25 mx-4 text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
+                   >
+                    Delete
+                  </button>
+                </div>
               </div>
-              {/* right */}
-              <div className="flex items-center">
-                <button
-                  onClick={() => handleEditEmployee(emp)}
-                  className="border p-2 w-25 text-lg hover:cursor-pointer"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteEmployee(emp.empId)}
-                  className="border p-2 w-25 mx-4 text-lg hover:cursor-pointer"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

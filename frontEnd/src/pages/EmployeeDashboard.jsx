@@ -73,10 +73,12 @@ const EmployeeDashboard = () => {
     <div>
       <Navbar />
       {/* main */}
-      <div className="flex flex-wrap justify-evenly">
-        <div className="w-200 h-120 border mt-12 p-4">
+      <div className="flex flex-wrap justify-evenly bg-slate-900">
+
+        {/* tasks */}
+        <div className="w-200 h-120 mt-12 p-4 bg-slate-800 text-white">
           <div className="h-10 text-2xl">My Tasks</div>
-          <div className="h-100 w-full overflow-auto">
+          <div className="h-100 w-full overflow-auto text-black">
             {/* card */}
             {tasks.map((task) => {
               return (
@@ -85,10 +87,10 @@ const EmployeeDashboard = () => {
                   onClick={() => handleUpdateTaskStatus(task)}
                   className={`w-full ${
                     task.status === "done"
-                      ? "bg-green-200 hover:bg-green-300 cursor-pointer"
+                      ? "bg-emerald-500 hover:bg-emerald-400 cursor-pointer"
                       : task.status === "in-progress"
-                      ? "bg-blue-300 hover:bg-blue-400 cursor-pointer"
-                      : "bg-red-300 hover:bg-red-400 cursor-pointer"
+                      ? "bg-amber-500 hover:bg-amber-400 cursor-pointer"
+                      : "bg-rose-500 hover:bg-rose-400 cursor-pointer"
                   } min-h-40 border mb-4`}
                 >
                   {/* upper */}
@@ -102,7 +104,7 @@ const EmployeeDashboard = () => {
                         e.stopPropagation();
                         handleDeleteTask(task.taskId);
                       }}
-                      className="border-b border-l border-black p-0.5 px-4 ml-4 max-h-8 bg-gray-500 hover:bg-gray-800 text-white"
+                      className="border-b border-l border-black p-0.5 px-4 ml-4 max-h-8 bg-indigo-800 hover:bg-indigo-900 text-white"
                     >
                       Delete
                     </button>
@@ -133,13 +135,19 @@ const EmployeeDashboard = () => {
             })}
           </div>
         </div>
-        <div className="w-140 h-100 border mt-12 p-4">
+
+        {/* notifications */}
+        <div className="w-140 h-100 mt-12 p-4 bg-slate-800 text-white">
           <div>Notification</div>
         </div>
-        <div className="w-170 h-100 border mt-12 p-4">
+
+        {/* quotations */}
+        <div className="w-170 h-100 mt-12 p-4 bg-slate-800 text-white">
           <div>My Quotations</div>
         </div>
-        <div className="w-170 h-100 border mt-12 p-4">
+
+        {/* orders */}
+        <div className="w-170 h-100 mt-12 p-4 bg-slate-800 text-white">
           <div>Confirmed Orders</div>
         </div>
       </div>
