@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Worknestlogo from "../assets/WorkNestLogo.jpg";
+// import Worknestlogo from "../assets/WorkNestLogo.jpg";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 
@@ -53,7 +53,7 @@ const Login = () => {
     <>
       <div className="bg-slate-900 h-screen">
         <div className="navbar h-15 p-1.5 w-full bg-slate-300">
-          <img className="h-full" src={Worknestlogo} />
+          {/* <img className="h-full" src={Worknestlogo} /> */}
         </div>
         <div className="main flex flex-col justify-center items-center mt-8">
           <div className="login h-fit w-100 p-8 mt-8 rounded-lg bg-slate-800">
