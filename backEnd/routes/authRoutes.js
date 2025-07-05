@@ -1,12 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const {loginUser} = require("../controllers/authController");
+const User = require('../models/User');
+const bcrypt = require('bcrypt');
 
 // login
 router.post("/login", loginUser);
-
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
 
 router.post('/seed-admin', async (req, res) => {
   try {
