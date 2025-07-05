@@ -13,7 +13,7 @@ function App() {
       <Router>
         <Routes>
           {/* Public Route */}
-          <Route path="/login" element={<Login />}></Route>
+          <Route path="/" element={<Login />}></Route>
 
           {/* Admin Route */}
           <Route
