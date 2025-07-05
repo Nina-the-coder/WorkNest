@@ -47,6 +47,10 @@ const EmployeeManagement = () => {
       alert("Please fill all required fields");
       return;
     }
+    if (formData.password && formData.password.length < 6) {
+      alert("Password must be at least 6 characters long");
+      return;
+    }
 
     try {
       const token = localStorage.getItem("token");
@@ -281,7 +285,9 @@ const EmployeeManagement = () => {
                     <div className="text-2xl text-white">{emp.empId}</div>
                     <div
                       className={`text-xl ${
-                        emp.status === "active" ? "bg-amber-500" : "bg-rose-500 text-black"
+                        emp.status === "active"
+                          ? "bg-amber-500"
+                          : "bg-rose-500 text-black"
                       } p-0.5 px-4 rounded-xl`}
                     >
                       {emp.status}
@@ -291,20 +297,22 @@ const EmployeeManagement = () => {
                     </div>
                   </div>
                   <div className="text-lg text-slate-300">Name: {emp.name}</div>
-                  <div className="text-lg text-slate-300">Email: {emp.email}</div>
+                  <div className="text-lg text-slate-300">
+                    Email: {emp.email}
+                  </div>
                 </div>
                 {/* right */}
                 <div className="flex items-center">
                   <button
                     onClick={() => handleEditEmployee(emp)}
                     className="p-2 w-25 text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
-                    >
+                  >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeleteEmployee(emp.empId)}
                     className="p-2 w-25 mx-4 text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
-                   >
+                  >
                     Delete
                   </button>
                 </div>

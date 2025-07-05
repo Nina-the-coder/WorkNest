@@ -8,7 +8,7 @@ const CounterSchema = new mongoose.Schema({
   },
   seq: {
     type: Number,
-    default: 0,
+    default: 100,
   },
 });
 
