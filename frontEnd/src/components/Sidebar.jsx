@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import WorkNestLogo from "../assets/WorkNestLogo.jpg";
+// import WorkNestLogo from "../assets/WorkNestLogo.jpg";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -18,7 +18,7 @@ const Sidebar = () => {
     <div className="w-64 border-r min-h-screen fixed bg-slate-300">
       {/* logo */}
       <div className="p-2 pr-10">
-        <img src={WorkNestLogo} />
+        {/* <img src={WorkNestLogo} /> */}
       </div>
 
       {/* elements */}

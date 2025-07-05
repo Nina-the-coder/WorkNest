@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import workNestLogo from "../assets/WorkNestLogo.jpg";
+// import workNestLogo from "../assets/WorkNestLogo.jpg";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -12,7 +12,7 @@ const Navbar = () => {
   }, []);
   return (
     <div className="h-15 flex justify-between bg-slate-300">
-      <img className="h-full" src={workNestLogo} alt="WorkNest" />
+      {/* <img className="h-full" src={workNestLogo} alt="WorkNest" /> */}
       {user && <div className="text-3xl flex justify-center items-center mr-30">
         Welcome Back, {user.name}
       </div>}
