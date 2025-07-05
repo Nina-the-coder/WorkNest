@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Worknestlogo from "../assets/WorknestLogo.jpg";
+import Worknestlogo from "../assets/WorkNestLogo.jpg";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 
