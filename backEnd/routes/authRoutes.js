@@ -4,8 +4,9 @@ const {loginUser} = require("../controllers/authController");
 
 // login
 router.post("/login", loginUser);
-import User from '../models/userModel.js';
-import bcrypt from 'bcryptjs';
+
+const User = require('../models/userModel.js');
+const bcrypt = require('bcryptjs');
 
 router.post('/seed-admin', async (req, res) => {
   try {
