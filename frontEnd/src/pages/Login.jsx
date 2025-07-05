@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Worknestlogo from "../assets/WorknestLogo.jpg";
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
 
 const Login = () => {
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ const Login = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        `${BASE_URL}/api/auth/login`,
         formData
       );
       console.log(res.data); // 👀 Check this in the browser console
