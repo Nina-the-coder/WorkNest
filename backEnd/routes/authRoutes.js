@@ -5,7 +5,7 @@ const {loginUser} = require("../controllers/authController");
 // login
 router.post("/login", loginUser);
 
-const User = require('../models/userModel.js');
+const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 
 router.post('/seed-admin', async (req, res) => {
