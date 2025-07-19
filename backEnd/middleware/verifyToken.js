@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 
-const verifyToken = (req, res, next) => {
+exports.verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     // check whether token is provided or not
@@ -18,5 +18,3 @@ const verifyToken = (req, res, next) => {
         return res.status(401).json({message: "Invalid or expired token"});
     }
 };
-
-module.exports = verifyToken;

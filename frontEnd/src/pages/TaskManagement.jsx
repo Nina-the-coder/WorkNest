@@ -18,6 +18,10 @@ const TaskManagement = () => {
   const [modal, setModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editTaskId, setEditTaskId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("");
+  const [error, setError] = useState("");
 
   const fetchData = async () => {
     try {
@@ -78,6 +82,7 @@ const TaskManagement = () => {
         });
         console.log("task updated successfullly");
         setIsEdit(false);
+        setEditTaskId(null);
       } else {
         const res = await axios.post(`${BASE_URL}/api/admin/tasks`, formData, {
           headers: {
@@ -99,10 +104,9 @@ const TaskManagement = () => {
       });
       setModal(false);
     } catch (err) {
-      console.error(
-        "Error adding Task to the DB: ",
-        err.response?.data || err.message
-      );
+      const message =
+        err.response?.data?.message || "An error occurred while saving task.";
+      setError(message);
     }
   };
 
@@ -147,6 +151,24 @@ const TaskManagement = () => {
     setEditTaskId(null);
   };
 
+  const filteredTasks = tasks.filter((task) => {
+    const matchesTask =
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.assignedTo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.assignedToName.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesFilter =
+      statusFilter === "" ||
+      task.status.toLowerCase() === statusFilter.toLowerCase();
+
+    const matchesPriority =
+      priorityFilter === "" ||
+      task.priority.toLowerCase() === priorityFilter.toLowerCase();
+
+    return matchesTask && matchesFilter && matchesPriority;
+  });
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
@@ -187,7 +209,10 @@ const TaskManagement = () => {
                 className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
               />
 
-              <label htmlFor="description" className="w-full text-lg text-slate-200">
+              <label
+                htmlFor="description"
+                className="w-full text-lg text-slate-200"
+              >
                 Description
               </label>
               <textarea
@@ -199,7 +224,10 @@ const TaskManagement = () => {
                 className="border w-full h-20 p-0.5 rounded-xs mb-4 bg-slate-200"
               />
 
-              <label htmlFor="dueDate" className="w-full text-lg text-slate-200">
+              <label
+                htmlFor="dueDate"
+                className="w-full text-lg text-slate-200"
+              >
                 Due Date
               </label>
               <input
@@ -240,7 +268,9 @@ const TaskManagement = () => {
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
               </select>
-
+              {error && (
+                <div className="text-rose-500 mb-2 text-sm mt-4">{error}</div>
+              )}
               <div className="flex justify-around items-center mt-4">
                 <button
                   onClick={handleCancel}
@@ -261,90 +291,131 @@ const TaskManagement = () => {
         )}
 
         {/* Search Bar and CTA button */}
-        {!modal && (<div className="flex justify-between my-16 px-10 h-20 w-full">
-          <div className="h-full w-3/4 items-center flex">
-            <input type="text" className="border h-10 w-3/4 bg-white" />
+        {!modal && (
+          <div className="flex my-16 px-10 h-20 w-full">
+            <div className="h-full w-1/2 items-center flex">
+              <input
+                type="text"
+                className="h-10 w-3/4 bg-white px-2"
+                placeholder="Search tasks by title, description, employee"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <select
+                name=""
+                id=""
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-10 border-l bg-white hover:cursor-pointer px-2"
+              >
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="in-progress">In-Progress</option>
+                <option value="done">Done</option>
+              </select>
+              <select
+                name=""
+                id=""
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="h-10 border-l bg-white hover:cursor-pointer px-2"
+              >
+                <option value="">All Priority</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div className="h-full w-1/4 items-center flex ml-20">
+              <button
+                className="w-full p-8 text-2xl rounded-xl text-white bg-indigo-800 hover:cursor-pointer hover:bg-indigo-900"
+                onClick={handleAddNewTask}
+              >
+                Add new Task
+              </button>
+            </div>
           </div>
-          <div className="h-full w-1/4 items-center flex">
-            <button
-              className="w-full p-8 text-2xl rounded-xl text-white bg-indigo-800 hover:cursor-pointer hover:bg-indigo-900"
-              onClick={handleAddNewTask}
-            >
-              Add new Task
-            </button>
-          </div>
-        </div>)}
+        )}
 
         {/* container */}
-        {!modal && (<div className="w-300 border max-h-120 overflow-auto h-fit flex flex-wrap pt-8">
-          {tasks.map((task, index) => (
-            <div
-              key={index}
-              className="w-[45%] h-80 bg-slate-800 mb-8 ml-8 p-2 flex justify-between flex-col"
-            >
-              {/* top */}
-              <div className="overflow-auto">
-                <div className="flex mb-2">
-                  <div className="text-xl font-bold text-white">{task.title}</div>
-                  <div className="text-lg ml-8 w-[35%] font-sans text-slate-300">
-                    {`${task.assignedToName} (${task.assignedTo})`}
-                  </div>
-                </div>
-                <div className="flex justify-evenly">
-                  <div
-                    className={`text-xl p-0.5 px-4 ${
-                      task.status === "pending"
-                        ? "bg-rose-500"
-                        : task.status === "in-progress"
-                        ? "bg-amber-500"
-                        : "bg-emerald-500"
-                    } rounded-xl`}
-                  >
-                    {task.status}
-                  </div>
-                  <div
-                    className={`text-xl p-0.5 px-4 ${
-                      task.priority === "high"
-                        ? "bg-rose-500"
-                        : task.priority === "medium"
-                        ? "bg-amber-500"
-                        : "bg-yellow-300"
-                    } rounded-xl`}
-                  >
-                    {task.priority}
-                  </div>
-                  <div className="text-xl p-0.5 px-4 text-white">due: 
-                    {new Date(task.dueDate)
-                      .toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })
-                      .toUpperCase()}
-                  </div>
-                </div>
-                <div className="text-justify p-2 mt-2 text-lg text-slate-300">
-                  {task.description}
-                </div>
-              </div>
-              {/* bottom */}
-              <div className="align-baseline flex justify-evenly my-2">
-                <button
-                  onClick={() => handleEditTask(task)}
-                  className="p-2 w-30 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
+        {!modal && (
+          <div className="w-300 max-h-120 overflow-auto h-fit flex flex-wrap pt-8 text-white">
+            {filteredTasks.length === 0 ? (
+              <div className="ml-40">No Task found</div>
+            ) : (
+              filteredTasks.map((task, index) => (
+                <div
+                  key={index}
+                  className="w-[45%] h-80 bg-slate-800 mb-8 ml-8 p-2 flex justify-between flex-col"
                 >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteTask(task.taskId)}
-                  className="p-2 w-30 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>)}
+                  {/* top */}
+                  <div className="overflow-auto">
+                    <div className="flex mb-2">
+                      <div className="text-xl font-bold text-white">
+                        {task.title}
+                      </div>
+                      <div className="text-lg ml-8 w-[35%] font-sans text-slate-300">
+                        {`${task.assignedToName} (${task.assignedTo})`}
+                      </div>
+                    </div>
+                    <div className="flex justify-evenly">
+                      <div
+                        className={`text-xl p-0.5 px-4 ${
+                          task.status === "pending"
+                            ? "bg-rose-500"
+                            : task.status === "in-progress"
+                            ? "bg-amber-500"
+                            : "bg-emerald-500"
+                        } rounded-xl`}
+                      >
+                        {task.status}
+                      </div>
+                      <div
+                        className={`text-xl p-0.5 px-4 ${
+                          task.priority === "high"
+                            ? "bg-rose-500"
+                            : task.priority === "medium"
+                            ? "bg-amber-500"
+                            : "bg-yellow-300"
+                        } rounded-xl`}
+                      >
+                        {task.priority}
+                      </div>
+                      <div className="text-xl p-0.5 px-4 text-white">
+                        due:
+                        {new Date(task.dueDate)
+                          .toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                          .toUpperCase()}
+                      </div>
+                    </div>
+                    <div className="text-justify p-2 mt-2 text-lg text-slate-300">
+                      {task.description}
+                    </div>
+                  </div>
+                  {/* bottom */}
+                  <div className="align-baseline flex justify-evenly my-2">
+                    <button
+                      onClick={() => handleEditTask(task)}
+                      className="p-2 w-30 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTask(task.taskId)}
+                      className="p-2 w-30 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

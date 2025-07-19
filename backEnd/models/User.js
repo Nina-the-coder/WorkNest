@@ -28,10 +28,10 @@ const userSchema = new mongoose.Schema({
         enum: ["active", "inactive"],
         default: "active"
     },
-    // phone: {
-    //     type: String,
-    //     maxLength: 10
-    // },
+    phone: {
+        type: String,
+        maxLength: 10
+    },
     // designation: {
     //     type: String  
     // },

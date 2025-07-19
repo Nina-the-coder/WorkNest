@@ -23,7 +23,6 @@ const TaskSchema = new mongoose.Schema(
       type: String,
       default: "admin",
     },
-
     status: {
       type: String,
       enum: ["pending", "in-progress", "done"],

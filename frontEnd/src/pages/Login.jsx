@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-// import Worknestlogo from "../assets/WorkNestLogo.jpg";
+import Worknestlogo from "../assets/WorkNestLogo.jpg";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,9 +10,9 @@ const Login = () => {
     email: "",
     password: "",
   });
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -28,10 +27,7 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await axios.post(
-        `${BASE_URL}/api/auth/login`,
-        formData
-      );
+      const res = await axios.post(`${BASE_URL}/api/auth/login`, formData);
       console.log(res.data); // 👀 Check this in the browser console
 
       localStorage.setItem("token", res.data.token);
@@ -53,11 +49,13 @@ const Login = () => {
     <>
       <div className="bg-slate-900 h-screen">
         <div className="navbar h-15 p-1.5 w-full bg-slate-300">
-          {/* <img className="h-full" src={Worknestlogo} /> */}
+          <img className="h-full" src={Worknestlogo} />
         </div>
         <div className="main flex flex-col justify-center items-center mt-8">
           <div className="login h-fit w-100 p-8 mt-8 rounded-lg bg-slate-800">
-            <div className="text-3xl mt-4 mb-8 text-center text-white">Login</div>
+            <div className="text-3xl mt-4 mb-8 text-center text-white">
+              Login
+            </div>
             <form onSubmit={handleLogin}>
               <label htmlFor="email" className="w-full text-slate-300">
                 Email
@@ -73,15 +71,27 @@ const Login = () => {
               <label htmlFor="password" className="w-full text-slate-300">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                className="w-full border mb-4 p-0.5 bg-slate-200"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-              ></input>
-              {error && <div className="text-rose-500 mb-2 text-sm">{error}</div>}
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  className="w-full border mb-4 p-0.5 bg-slate-200 pr-16"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-0 top-4 -translate-y-1/2 px-2 py-1 text-sm bg-slate-300 hover:cursor-pointer hover:bg-slate-400"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+
+              {error && (
+                <div className="text-rose-500 mb-2 text-sm">{error}</div>
+              )}
               <button
                 disabled={loading}
                 className="w-full h-10 text-white text-lg bg-indigo-800 mt-4 hover:bg-indigo-900 cursor-pointer "
