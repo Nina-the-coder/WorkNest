@@ -149,7 +149,8 @@ const ProductManagement = () => {
   const filteredProducts = products.filter((product) => {
     const matchesProduct =
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase());
+      product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.productId.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesProduct;
   });

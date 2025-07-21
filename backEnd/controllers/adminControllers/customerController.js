@@ -3,13 +3,12 @@ const getNextSequence = require("../../utils/getNextSequence");
 
 exports.addCustomer = async (req, res) => {
   try {
-    const { name, address, contact, gst, email, status, companyType } =
+    const { name, address, contact, gst, email, status, companyType, addedBy } =
       req.body;
 
     const nextCustomerNumber = await getNextSequence("customerId");
-    const CustomerId = `CUST${String(nextCustomerNumber).padStart(0, 3)}`;
+    const CustomerId = `CUST${String(nextCustomerNumber).padStart(3, "0")}`;
 
-    const addedBy = req.user?.name || "admin"; // depends on your auth middleware
     const newCustomer = new Customer({
       customerId: CustomerId,
       name,

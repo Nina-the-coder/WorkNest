@@ -11,7 +11,7 @@ const Navbar = () => {
     }
   }, []);
   return (
-    <div className="h-15 flex justify-between bg-slate-300">
+    <div className="h-15 flex justify-between bg-slate-300 sticky top-0">
       <img className="h-full" src={workNestLogo} alt="WorkNest" />
       {user && <div className="text-3xl flex justify-center items-center mr-30">
         Welcome Back, {user.name}

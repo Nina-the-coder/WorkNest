@@ -12,6 +12,7 @@ import QuotationManagement from "./pages/QuotationManagement";
 import OrderManagement from "./pages/OrderManagement";
 import ConversationManagement from "./pages/ConversationManagement";
 import Profile from "./pages/Profile";
+import AddQuotation from "./pages/AddQuotation";
 
 function App() {
   return (
@@ -101,6 +102,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["employee"]}>
                 <EmployeeDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employee/quotation"
+            element={
+              <ProtectedRoute allowedRoles={["employee"]}>
+                <AddQuotation />
               </ProtectedRoute>
             }
           />
