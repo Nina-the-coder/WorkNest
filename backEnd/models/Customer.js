@@ -28,9 +28,12 @@ const customerSchema = new mongoose.Schema({
     type: String,
   },
   addedBy: {
-    type: String,
-    default: "admin"
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
+}, {
+  timestamps: true
 });
 
 module.exports = mongoose.model("Customer", customerSchema);

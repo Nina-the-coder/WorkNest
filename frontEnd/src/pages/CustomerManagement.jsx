@@ -1,4 +1,4 @@
- import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
 import EmployeeComboBox from "../components/EmployeeComboBox";
@@ -59,6 +59,8 @@ const CustomerkManagement = () => {
       alert("Please fill at least the name of the cutomer");
       return;
     }
+    console.log("Form Data before saving:", formData);
+
     try {
       const token = localStorage.getItem("token");
       if (isEdit) {
@@ -161,7 +163,7 @@ const CustomerkManagement = () => {
       customer.gst.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.customerId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.addedBy.toLowerCase().includes(searchQuery.toLowerCase());
+      customer.addedBy?.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesFilter =
       statusFilter === "" ||
@@ -256,12 +258,13 @@ const CustomerkManagement = () => {
               />
 
               <EmployeeComboBox
-                onSelect={(emp) =>
+                onSelect={(emp) => {
+                  console.log("Selected employee:", emp);
                   setFormData((prev) => ({
                     ...prev,
-                    addedBy: emp.empId,
-                  }))
-                }
+                    addedBy: emp._id,
+                  }));
+                }}
               />
 
               <label htmlFor="status" className="text-lg text-slate-200">
@@ -385,7 +388,7 @@ const CustomerkManagement = () => {
                       <td className="px-4 py-2 border">
                         {customer.companyType}
                       </td>
-                      <td className="px-4 py-2 border">{customer.addedBy}</td>
+                      <td className="px-4 py-2 border">{customer.addedBy?.name}</td>
                       <td className="px-4 py-2 border">
                         <button
                           onClick={() => handleEditCustomer(customer)}

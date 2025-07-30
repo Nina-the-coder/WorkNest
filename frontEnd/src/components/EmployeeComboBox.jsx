@@ -23,6 +23,10 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
     fetchEmployees();
   }, []);
 
+  useEffect(() => {
+    if (!selected) setInputValue("");
+  }, [selected]);
+
   const handleChange = (e) => {
     const value = e.target.value;
     setInputValue(value);
@@ -63,7 +67,7 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
           {filteredEmployees.map((emp, index) => (
             <li
               key={emp.empId || index}
-              onClick={() => handleSelect({ name: emp.name, empId: emp.empId })}
+              onClick={() => handleSelect(emp)}
               className="p-2 hover:bg-gray-100 cursor-pointer"
             >
               {emp.name} ({emp.empId})

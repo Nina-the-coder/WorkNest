@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+import EmployeeTaskManagement from "./employee/EmployeeTaskManagement";
+import EmployeeQuotationManagement from "./employee/employeeQuotationManagement";
+import EmployeeOrderManagement from "./employee/EmployeeOrderManagement";
 
 const EmployeeDashboard = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
+
   const [error, setError] = useState("");
 
-  const [tasks, setTasks] = useState([]);
   const [customers, setCustomers] = useState([]);
 
   const [customerModal, setCustomerModal] = useState(false);
@@ -21,13 +26,14 @@ const EmployeeDashboard = () => {
     email: "",
     status: "active",
     companyType: "dealer",
-    addedBy: user.empId,
+    addedBy: user._id,
   });
 
   useEffect(() => {
-    if (user && user.role == "employee") {
-      fetchEmployeeTasks(user.empId);
-      fetchCustomers(user.empId);
+    if (!user || user.role !== "employee") {
+      navigate("/login");
+    } else {
+      fetchCustomers(user._id);
     }
   }, []);
 
@@ -38,66 +44,11 @@ const EmployeeDashboard = () => {
     }));
   };
 
-  const fetchEmployeeTasks = async (empId) => {
-    try {
-      const res = await axios.get(`${BASE_URL}/api/employee/tasks/${empId}`);
-      setTasks(res.data);
-    } catch (err) {
-      console.error("Error fetching employee tasks:", err);
-    }
-  };
-
-  const handleUpdateTaskStatus = async (task) => {
-    try {
-      let newStatus = "";
-      if (task.status === "done") {
-        newStatus = "pending";
-      } else if (task.status === "in-progress") {
-        newStatus = "done";
-      } else {
-        newStatus = "in-progress";
-      }
-
-      const res = await axios.put(
-        `${BASE_URL}/api/employee/tasks/${task.taskId}`,
-        { status: newStatus }
-      );
-
-      const updated = res.data.task;
-
-      setTasks((prevTasks) =>
-        prevTasks.map((t) => (t.taskId === task.taskId ? updated : t))
-      );
-
-      console.log(
-        "status updated for the task",
-        updated.taskId,
-        " to ",
-        updated.status
-      );
-    } catch (err) {
-      console.error("error updating the status of the task", task);
-    }
-  };
-
-  const handleDeleteTask = async (taskId) => {
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete Task ${taskId}?`
-    );
-    if (!confirmDelete) return;
-    try {
-      await axios.delete(`${BASE_URL}/api/employee/tasks/${taskId}`);
-      console.log("Task deleted", taskId);
-      setTasks((prevTasks) => prevTasks.filter((t) => t.taskId !== taskId));
-    } catch (err) {
-      console.error("Error in deleting the task....", err);
-    }
-  };
-
-  const fetchCustomers = async (empId) => {
+// customers
+  const fetchCustomers = async (emp) => {
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/employee/customers/${empId}`
+        `${BASE_URL}/api/employee/customers/${emp}`
       );
       setCustomers(res.data);
     } catch (err) {
@@ -122,6 +73,8 @@ const EmployeeDashboard = () => {
 
   const handleSaveCustomer = async (e) => {
     e.preventDefault();
+    console.log("FormData being submitted:", customerFormData);
+
     try {
       const res = await axios.post(
         `${BASE_URL}/api/admin/customers`,
@@ -142,7 +95,7 @@ const EmployeeDashboard = () => {
         status: "active",
         companyType: "dealer",
       });
-      fetchCustomers();
+      fetchCustomers(user._id);
       setCustomerModal(false);
     } catch (err) {
       const message =
@@ -156,8 +109,6 @@ const EmployeeDashboard = () => {
     setCustomerModal(true);
   };
 
-  const handleAddNewQuotation = () => {};
-
   return (
     <div>
       <Navbar />
@@ -167,62 +118,7 @@ const EmployeeDashboard = () => {
         {!customerModal && (
           <div className="w-200 h-120 mt-12 p-4 bg-slate-800 text-white">
             <div className="h-10 text-2xl">My Tasks</div>
-            <div className="h-100 w-full overflow-auto text-black">
-              {/* card */}
-              {tasks.map((task) => {
-                return (
-                  <div
-                    key={task.taskId}
-                    onClick={() => handleUpdateTaskStatus(task)}
-                    className={`w-full ${
-                      task.status === "done"
-                        ? "bg-emerald-500 hover:bg-emerald-400 cursor-pointer"
-                        : task.status === "in-progress"
-                        ? "bg-amber-500 hover:bg-amber-400 cursor-pointer"
-                        : "bg-rose-500 hover:bg-rose-400 cursor-pointer"
-                    } min-h-40 border mb-4`}
-                  >
-                    {/* upper */}
-                    <div className="flex justify-between min-h-8">
-                      <div className="flex items-center">
-                        <div className="text-xl ml-2">{task.title}</div>
-                        <div className="text-lg ml-8">-- {task.priority}</div>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteTask(task.taskId);
-                        }}
-                        className="border-b border-l border-black p-0.5 px-4 ml-4 max-h-8 bg-indigo-800 hover:bg-indigo-900 text-white"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                    {/* lower */}
-                    <div className="flex w-full pt-2">
-                      <div className="w-150 text-justify pl-4">
-                        {task.description}
-                      </div>
-                      <div className="flex h-28 flex-col w-40 pl-8 justify-between">
-                        <div>
-                          <div className="w-full">-- due date --</div>
-                          <div className="w-full text-lg">
-                            {new Date(task.dueDate)
-                              .toLocaleDateString("en-GB", {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              })
-                              .toUpperCase()}
-                          </div>
-                        </div>
-                        <div className="w-full text-lg">{task.status}</div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <EmployeeTaskManagement />
           </div>
         )}
 
@@ -235,24 +131,12 @@ const EmployeeDashboard = () => {
 
         {/* quotations */}
         {!customerModal && (
-          <div className="w-120 h-100 mt-12 p-4 bg-slate-800 text-white">
-            <div>My Quotations</div>
-            <div className="">
-              <Link
-                className="text-white bg-indigo-800 hover:bg-indigo-900 hover:cursor-pointer py-0.5 px-4"
-                to={"/employee/quotation"}
-              >
-                Add New Quotation
-              </Link>
-            </div>
-          </div>
+          <EmployeeQuotationManagement />
         )}
 
         {/* orders */}
         {!customerModal && (
-          <div className="w-120 h-100 my-12 p-4 bg-slate-800 text-white">
-            <div>Confirmed Orders</div>
-          </div>
+          <EmployeeOrderManagement />
         )}
 
         {/* customers model */}
@@ -378,11 +262,12 @@ const EmployeeDashboard = () => {
             </form>
           </div>
         )}
+
         {/* customers */}
         {!customerModal && (
           <div className="w-120 h-100 my-12 p-4 bg-slate-800 text-white flex flex-col justify-between">
             <div>
-              <div className="my-2">Customers</div>
+              <div className="text-xl font-semibold mb-4">Customers</div>
               {/* cards */}
               <div className="h-70 overflow-y-auto">
                 {customers.map((customer) => (

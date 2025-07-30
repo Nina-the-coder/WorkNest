@@ -15,18 +15,20 @@ const QuotationModal = mongoose.Schema(
       unique: true,
     },
     addedBy: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", 
       required: true,
     },
     customerId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer", 
       required: true,
     },
     total: {
       type: Number,
       required: true,
     },
-    product: { 
+    products: {
       type: [productSchema],
       required: true,
     },

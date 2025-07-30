@@ -33,7 +33,7 @@ exports.addCustomer = async (req, res) => {
 
 exports.getAllCustomers = async (req, res) => {
   try {
-    const customer = await Customer.find().select();
+    const customer = await Customer.find().populate("addedBy");
     res.status(200).json(customer);
   } catch (err) {
     res

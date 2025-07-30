@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import axios from "axios";
 import CustomerComboBox from "../components/CustomerComboBox";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const AddQuotation = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState("");
 
   const [selectedCustomerObj, setSelectedCustomerObj] = useState(null);
@@ -16,13 +17,15 @@ const AddQuotation = () => {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const isEditMode = location.state?.mode === "edit";
+  const existingQuotation = location.state?.quotation;
   const [quotationModal, setQuotationModal] = useState(true);
   const [productModal, setProductModal] = useState(false);
   const [quotationFormData, setQuotationFormData] = useState({
-    addedBy: "", // employeeId
+    addedBy: "", // employee objectId
     customerId: "",
     total: 0,
-    product: [], // [{productId, productName, quotedPrice, total}]
+    products: [], // [{productId, productName, quotedPrice, total}]
     isApprovedByDoctor: "pending",
     status: "pending",
   });
@@ -31,7 +34,7 @@ const AddQuotation = () => {
     if (user?.role === "employee") {
       setQuotationFormData((prev) => ({
         ...prev,
-        addedBy: user.empId,
+        addedBy: user._id,
       }));
     }
   }, []);
@@ -39,6 +42,29 @@ const AddQuotation = () => {
   useEffect(() => {
     updateTotalPrice();
   }, [selectedProducts]);
+
+  useEffect(() => {
+    if (isEditMode && existingQuotation) {
+      console.log("yes it is the edit mode");
+      // Pre-fill the form
+      setQuotationFormData(existingQuotation);
+      setSelectedProducts(existingQuotation.products);
+
+      const fetchCustomerById = async () => {
+        try {
+          const res = await axios.get(
+            `${BASE_URL}/api/employee/customers/${existingQuotation.customerId}`
+          );
+          setSelectedCustomerObj(res.data); // ✅ pass the whole object
+        } catch (err) {
+          console.error("Error fetching customer:", err);
+        }
+      };
+
+      fetchCustomerById();
+      console.log("Pre-filled form data:", existingQuotation);
+    }
+  }, [isEditMode, existingQuotation]);
 
   const handleChange = (e) => {
     setQuotationFormData((prev) => ({
@@ -60,42 +86,65 @@ const AddQuotation = () => {
     setSelectedCustomerObj(customer); // whole object
     setQuotationFormData((prev) => ({
       ...prev,
-      customerId: customer.customerId, // only ID goes into the form
+      customerId: customer._id, // only ID goes into the form
     }));
   };
 
   const handleSaveQuotationModal = async (e) => {
     e.preventDefault();
-    if(!quotationFormData.product || !quotationFormData.customerId){
-      setError("please Fill all the required fields");
+    if (selectedProducts.length === 0) {
+      setError("Please add at least one product.");
       return;
     }
+
     setQuotationFormData((prev) => ({
       ...prev,
-      product: selectedProducts,
-      addedBy: user.empId,
+      products: selectedProducts,
+      addedBy: user._id,
     }));
 
     const finalQuotation = {
       ...quotationFormData,
-      product: selectedProducts,
-      addedBy: user.empId,
+      products: selectedProducts,
+      addedBy: user._id,
     };
 
-    console.log("Final quotation being saved:", finalQuotation);
-    try {
-      const res = await axios.post(
-        `${BASE_URL}/api/employee/quotation`,
-        finalQuotation,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      console.log("Qutotation added to the db", res.data);
-    } catch (err) {
-      const message =
-        err.response?.data?.message ||
-        "An error occured while saving the quotation";
-      setError(message);
+    if (isEditMode) {
+      try {
+        await axios.put(
+          `${BASE_URL}/api/employee/quotation/${existingQuotation._id}`,
+          finalQuotation,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("quotation edited successfully");
+        // setQuotationFormData({});
+        navigate("/employee/dashboard");
+      } catch (err) {
+        setError(
+          err?.response?.data?.message || "Error updating the quotation"
+        );
+      }
+    } else {
+      console.log("Final quotation being saved:", finalQuotation);
+      try {
+        const res = await axios.post(
+          `${BASE_URL}/api/employee/quotation`,
+          finalQuotation,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log("Qutotation added to the db", res.data);
+      } catch (err) {
+        const message =
+          err.response?.data?.message ||
+          "An error occured while saving the quotation";
+        setError(message);
+      }
     }
+
     setError("");
     navigate("/employee/dashboard");
   };
@@ -149,7 +198,7 @@ const AddQuotation = () => {
     setSelectedProducts((prev) =>
       prev.map((p) =>
         p.productId === productId
-          ? { ...p, quantity: (p.quantity > 1)? p.quantity-1 : p.quantity }
+          ? { ...p, quantity: p.quantity > 1 ? p.quantity - 1 : p.quantity }
           : p
       )
     );
@@ -183,11 +232,13 @@ const AddQuotation = () => {
             <div className="text-4xl text-white ml-28 my-4">Make Quotation</div>
             <div>
               <form className="mx-4 pt-8">
-                <CustomerComboBox
-                  userId={user.empId}
-                  onSelect={handleCustomerSelect}
-                  selectedCustomer={selectedCustomerObj}
-                />
+                {!isEditMode && (
+                  <CustomerComboBox
+                    userId={user._id}
+                    onSelect={handleCustomerSelect}
+                    selectedCustomer={selectedCustomerObj}
+                  />
+                )}
 
                 {/* products */}
                 <div className="text-slate-300 mt-8">
@@ -244,8 +295,6 @@ const AddQuotation = () => {
                                 >
                                   +{" "}
                                 </button>
-
-                                
                               </td>
                             </tr>
                           </tbody>

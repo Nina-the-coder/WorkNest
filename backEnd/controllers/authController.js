@@ -3,27 +3,27 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 // function for register user (only for admin)
-// exports.registerUser = async (req, res) => {
-//   try {
-//     const { name, email, password, role, phone, designation } = req.body;
+exports.registerUser = async (req, res) => {
+  try {
+    const { name, email, password, role, phone, designation } = req.body;
 
-//     // checking if the user exists or not
-//     const existingUser = await User.findOne({ email });
-//     if (existingUser) {
-//       return res.status(400).json({ message: "User already exists..." });
-//     }
+    // checking if the user exists or not
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists..." });
+    }
 
-//     //create a new user and save
-//     const user = new User({ name, email, password, role, phone, designation });
-//     await user.save();
+    //create a new user and save
+    const user = new User({ name, email, password, role, phone, designation });
+    await user.save();
 
-//     res.status(201).json({ message: "User got registered successfully..." });
-//   } catch (err) {
-//     res
-//       .status(500)
-//       .json({ message: "Registration failed.", error: err.message });
-//   }
-// };
+    res.status(201).json({ message: "User got registered successfully..." });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Registration failed.", error: err.message });
+  }
+};
 
 // function to login
 exports.loginUser = async (req, res) => {

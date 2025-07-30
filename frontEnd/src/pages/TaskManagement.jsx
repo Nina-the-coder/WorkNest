@@ -32,7 +32,7 @@ const TaskManagement = () => {
 
       const employeeMap = {};
       empRes.data.forEach((emp) => {
-        employeeMap[emp.empId] = emp.name;
+        employeeMap[emp._id] = emp.name;
       });
 
       const updatedTasks = taskRes.data.map((task) => ({
@@ -74,8 +74,15 @@ const TaskManagement = () => {
     }
     try {
       const token = localStorage.getItem("token");
+      const currentUser = JSON.parse(localStorage.getItem("user"));
+
+      const payload = {
+        ...formData,
+        assignedBy: currentUser._id,
+      };
+
       if (isEdit) {
-        await axios.put(`${BASE_URL}/api/admin/tasks/${editTaskId}`, formData, {
+        await axios.put(`${BASE_URL}/api/admin/tasks/${editTaskId}`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -84,7 +91,7 @@ const TaskManagement = () => {
         setIsEdit(false);
         setEditTaskId(null);
       } else {
-        const res = await axios.post(`${BASE_URL}/api/admin/tasks`, formData, {
+        const res = await axios.post(`${BASE_URL}/api/admin/tasks`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -155,8 +162,8 @@ const TaskManagement = () => {
     const matchesTask =
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.assignedTo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.assignedToName.toLowerCase().includes(searchQuery.toLowerCase());
+      task.assignedTo?.empId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.assignedTo?.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesFilter =
       statusFilter === "" ||
@@ -192,7 +199,7 @@ const TaskManagement = () => {
                 onSelect={(emp) =>
                   setFormData((prev) => ({
                     ...prev,
-                    assignedTo: emp.empId,
+                    assignedTo: emp._id,
                   }))
                 }
               />
@@ -355,7 +362,7 @@ const TaskManagement = () => {
                         {task.title}
                       </div>
                       <div className="text-lg ml-8 w-[35%] font-sans text-slate-300">
-                        {`${task.assignedToName} (${task.assignedTo})`}
+                        {`${task.assignedTo?.name} (${task.assignedTo?.empId})`}
                       </div>
                     </div>
                     <div className="flex justify-evenly">

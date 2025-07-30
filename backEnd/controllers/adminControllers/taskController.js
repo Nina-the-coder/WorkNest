@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 
 exports.addTask = async (req, res) => {
   try {
-    const { assignedTo, title, description, dueDate, status, priority } =
+    const { assignedTo, assignedBy, title, description, dueDate, status, priority } =
       req.body;
 
     const nextTaskNumber = await getNextSequence("taskId");
@@ -16,6 +16,7 @@ exports.addTask = async (req, res) => {
       title,
       description,
       assignedTo,
+      assignedBy,
       dueDate,
       status,
       priority,
@@ -25,14 +26,18 @@ exports.addTask = async (req, res) => {
     res.status(201).json({ message: "Task added successfully", task: title });
   } catch (err) {
     console.error("Error in adding the task: ...", err);
-    res.status(500).json({ message: "SErver ERrrornfn>>>>?...." });
+    res
+      .status(500)
+      .json({ message: "SErver ERrrornfn>>>>?....", error: err.message });
   }
 };
 
 exports.getAllTasks = async (req, res) => {
   try {
-    const task = await Task.find().select("-assignedBy");
-    res.status(200).json(task);
+    const tasks = await Task.find()
+      .populate("assignedTo")
+      .populate("assignedBy");
+    res.status(200).json(tasks);
   } catch (err) {
     res
       .status(500)

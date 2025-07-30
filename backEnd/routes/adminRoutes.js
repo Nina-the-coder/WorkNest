@@ -27,6 +27,9 @@ const {
   deleteCustomer,
   updateCustomer,
 } = require("../controllers/adminControllers/customerController");
+const {
+  getAllQuotations,
+} = require("../controllers/adminControllers/quotationController");
 
 // employee routes
 router.post("/employees", verifyToken, addEmployee);
@@ -51,5 +54,7 @@ router.post("/customers", addCustomer);
 router.get("/customers", getAllCustomers);
 router.delete("/customers/:customerId", deleteCustomer);
 router.put("/customers/:customerId", updateCustomer);
+
+router.get("/quotation", getAllQuotations);
 
 module.exports = router;
