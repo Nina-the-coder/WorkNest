@@ -16,12 +16,12 @@ const QuotationModal = mongoose.Schema(
     },
     addedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", 
+      ref: "User",
       required: true,
     },
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer", 
+      ref: "Customer",
       required: true,
     },
     total: {

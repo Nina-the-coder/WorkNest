@@ -13,7 +13,7 @@ const EmployeeQuotationManagement = () => {
 
   useEffect(() => {
     if (!user || user.role !== "employee") {
-      navigate("/login");
+      navigate("/");
     } else {
       fetchQuotation(user._id);
     }
@@ -25,6 +25,7 @@ const EmployeeQuotationManagement = () => {
         `${BASE_URL}/api/employee/quotation/${empId}`
       );
       setQuotations(res.data);
+      console.log("Quotations fetched", res.data);
     } catch (err) {
       console.error("Error in fetching the quotations");
     }
@@ -69,7 +70,7 @@ const EmployeeQuotationManagement = () => {
   const handleMakeOrder = async (quotation) => {
     if (quotation.status !== "approved") {
       alert("only Approved quotation can be converted to an order");
-      return;
+      // return;
     }
     try {
       const res = await axios.post(
@@ -132,7 +133,7 @@ const EmployeeQuotationManagement = () => {
                     <div>
                       <div>
                         <span className="font-bold">CustomerId:</span>{" "}
-                        {quotation.customerId.name}
+                        {quotation.customerId.customerId}
                       </div>
                       <div>
                         <span className="font-bold">Doctor's Status:</span>{" "}

@@ -24,7 +24,7 @@ const EmployeeOrderManagement = () => {
     try {
       const res = await axios.get(`${BASE_URL}/api/employee/order/${empId}`);
       setOrders(res.data);
-      console.log(res.data);
+      console.log("ORders beign fetched ", res.data);
     } catch (err) {
       console.error("Error in fetching the orders");
     }

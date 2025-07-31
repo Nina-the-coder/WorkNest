@@ -3,7 +3,9 @@ import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-const CustomerComboBox = ({ userId, onSelect, selectedCustomer }) => {
+const CustomerComboBox = ({ user, onSelect, selectedCustomer }) => {
+  const token = localStorage.getItem("token");
+
   const [customers, setCustomers] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [filteredCustomers, setFilteredCustomers] = useState([]);
@@ -23,22 +25,29 @@ const CustomerComboBox = ({ userId, onSelect, selectedCustomer }) => {
   }, [selectedCustomer]);
 
   useEffect(() => {
+    if (!user) return; // Don't fetch if user is not available
+
     const fetchCustomers = async () => {
       try {
-        const res = await axios.get(
-          `${BASE_URL}/api/employee/customers/${userId}`
-        );
+        const url =
+          user.role === "admin"
+            ? `${BASE_URL}/api/admin/customers`
+            : `${BASE_URL}/api/employee/customers/${user.empId}`;
+        const res = await axios.get(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setCustomers(res.data);
-        setFilteredCustomers(res.data);
+        console.log(
+          "Customers being fetched to choose from for quotation",
+          res.data
+        );
       } catch (err) {
-        console.error("Error fetching customers from the DB:", err);
+        console.error("Error fetching customers:", err);
       }
     };
 
-    if (userId) {
-      fetchCustomers();
-    }
-  }, [userId]);
+    fetchCustomers();
+  }, [user]);
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -76,7 +85,12 @@ const CustomerComboBox = ({ userId, onSelect, selectedCustomer }) => {
         name="customer"
         value={inputValue}
         onChange={handleChange}
-        onFocus={() => setShowDropdown(true)}
+        onFocus={() => {
+          if (!inputValue) {
+            setFilteredCustomers(customers); // Show all customers if nothing typed
+          }
+          setShowDropdown(true);
+        }}
         className="border w-full p-0.5 rounded bg-slate-200 pl-2"
         placeholder="Type name or customerId"
       />

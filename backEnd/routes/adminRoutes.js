@@ -30,6 +30,8 @@ const {
 const {
   getAllQuotations,
 } = require("../controllers/adminControllers/quotationController");
+const { fetchOrders } = require("../controllers/adminControllers/orderController");
+const { submitQuotation } = require("../controllers/employeeController");
 
 // employee routes
 router.post("/employees", verifyToken, addEmployee);
@@ -55,6 +57,11 @@ router.get("/customers", getAllCustomers);
 router.delete("/customers/:customerId", deleteCustomer);
 router.put("/customers/:customerId", updateCustomer);
 
-router.get("/quotation", getAllQuotations);
+// quotation routes
+router.get("/quotations", getAllQuotations);
+router.post("/quotations", submitQuotation)
+
+// order routes
+router.get("/orders", fetchOrders);
 
 module.exports = router;

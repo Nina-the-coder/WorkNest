@@ -76,7 +76,7 @@ exports.getCustomerByEmployee = async (req, res) => {
 
 exports.submitQuotation = async (req, res) => {
   try {
-    const { addedBy, customerId, total, product, isApprovedByDoctor, status } =
+    const { addedBy, customerId, total, products, isApprovedByDoctor, status } =
       req.body;
 
     const nextQuotationNumber = await getNextSequence("quotation");
@@ -90,7 +90,7 @@ exports.submitQuotation = async (req, res) => {
       addedBy,
       customerId,
       total,
-      product,
+      products,
       isApprovedByDoctor,
       status,
     });
@@ -110,8 +110,8 @@ exports.getQuotations = async (req, res) => {
   try {
     const { empId } = req.params;
     const quotations = await Quotation.find({ addedBy: empId })
-      .populate("addedBy")
-      .populate("customerId");
+      .populate({ path: "addedBy", select: "" })
+      .populate({ path: "customerId", select: "customerId" });
     res.status(200).json(quotations);
   } catch (err) {
     console.error("Erorr in fetching the quotations, ", err);
@@ -183,9 +183,11 @@ exports.getOrders = async (req, res) => {
     // Inside getOrdersByEmployee controller
     const orders = await Order.find({ addedBy: empId }).populate({
       path: "quotationId",
+      select: "CustomerId",
       populate: {
         path: "customerId", // 👈 this populates the nested customer
         model: "Customer",
+        select: "customerId",
       },
     });
     console.log(JSON.stringify(orders, null, 2));

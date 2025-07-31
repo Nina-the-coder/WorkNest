@@ -2,27 +2,36 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import axios from "axios";
 import CustomerComboBox from "../components/CustomerComboBox";
+import EmployeeComboBox from "../components/EmployeeComboBox";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-const AddQuotation = () => {
+const AddQuotation = (props) => {
   const user = JSON.parse(localStorage.getItem("user"));
+  const role = props.role || user?.role;
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const location = useLocation();
-  const [error, setError] = useState("");
 
+  const [error, setError] = useState("");
+  const [employeeList, setEmployeeList] = useState([]);
+  const [customerList, setCustomerList] = useState([]);
+
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const [selectedCustomerObj, setSelectedCustomerObj] = useState(null);
+
   const [products, setProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const isEditMode = location.state?.mode === "edit";
   const existingQuotation = location.state?.quotation;
+
   const [quotationModal, setQuotationModal] = useState(true);
   const [productModal, setProductModal] = useState(false);
+
   const [quotationFormData, setQuotationFormData] = useState({
-    addedBy: "", // employee objectId
+    addedBy: role === "admin" ? "" : user?.empId,
     customerId: "",
     total: 0,
     products: [], // [{productId, productName, quotedPrice, total}]
@@ -31,11 +40,24 @@ const AddQuotation = () => {
   });
 
   useEffect(() => {
-    if (user?.role === "employee") {
+    if (role === "employee") {
       setQuotationFormData((prev) => ({
         ...prev,
-        addedBy: user._id,
+        addedBy: user.empId,
       }));
+    }
+    if (role === "admin") {
+      const fetchEmployees = async () => {
+        try {
+          const res = await axios.get(`${BASE_URL}/api/admin/employees`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setEmployeeList(res.data);
+        } catch (err) {
+          console.error("Error fetching employees:", err);
+        }
+      };
+      fetchEmployees();
     }
   }, []);
 
@@ -60,8 +82,9 @@ const AddQuotation = () => {
           console.error("Error fetching customer:", err);
         }
       };
-
+      
       fetchCustomerById();
+
       console.log("Pre-filled form data:", existingQuotation);
     }
   }, [isEditMode, existingQuotation]);
@@ -96,23 +119,27 @@ const AddQuotation = () => {
       setError("Please add at least one product.");
       return;
     }
+    if (user?.role === "admin" && !selectedEmployeeId) {
+      setError("Please select an employee");
+      return;
+    }
 
     setQuotationFormData((prev) => ({
       ...prev,
       products: selectedProducts,
-      addedBy: user._id,
+      addedBy: user.role === "admin" ? selectedEmployeeId : user.empId,
     }));
 
     const finalQuotation = {
       ...quotationFormData,
       products: selectedProducts,
-      addedBy: user._id,
+      addedBy: role === "admin" ? selectedEmployeeId : user.empId,
     };
 
     if (isEditMode) {
       try {
         await axios.put(
-          `${BASE_URL}/api/employee/quotation/${existingQuotation._id}`,
+          `${BASE_URL}/api/employee/quotation/${existingQuotation.quotationId}`,
           finalQuotation,
           {
             headers: {
@@ -122,7 +149,7 @@ const AddQuotation = () => {
         );
         console.log("quotation edited successfully");
         // setQuotationFormData({});
-        navigate("/employee/dashboard");
+        navigate(role === "admin" ? "/admin/dashboard" : "/employee/dashboard");
       } catch (err) {
         setError(
           err?.response?.data?.message || "Error updating the quotation"
@@ -146,7 +173,7 @@ const AddQuotation = () => {
     }
 
     setError("");
-    navigate("/employee/dashboard");
+    navigate(role === "admin" ? "/admin/dashboard" : "/employee/dashboard");
   };
 
   const handleAddProductToQuotation = () => {
@@ -169,7 +196,7 @@ const AddQuotation = () => {
 
   const handleProductClick = (product) => {
     const alreadySelected = selectedProducts.find(
-      (p) => p.productId === product.productId
+      (p) => p.productId === product.productId || p.productId === product._id
     );
     if (alreadySelected) {
       setSelectedProducts((prev) =>
@@ -178,7 +205,15 @@ const AddQuotation = () => {
       );
     } else {
       // add
-      setSelectedProducts((prev) => [...prev, { ...product, quantity: 1 }]);
+      setSelectedProducts((prev) => [
+        ...prev,
+        {
+          productId: product.productId || product._id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+        },
+      ]);
     }
   };
 
@@ -232,9 +267,17 @@ const AddQuotation = () => {
             <div className="text-4xl text-white ml-28 my-4">Make Quotation</div>
             <div>
               <form className="mx-4 pt-8">
+                {role === "admin" && (
+                  <div className="mb-4">
+                    <EmployeeComboBox
+                      onSelect={(emp) => setSelectedEmployeeId(emp._id)}
+                    />
+                  </div>
+                )}
+
                 {!isEditMode && (
                   <CustomerComboBox
-                    userId={user._id}
+                    user={user}
                     onSelect={handleCustomerSelect}
                     selectedCustomer={selectedCustomerObj}
                   />

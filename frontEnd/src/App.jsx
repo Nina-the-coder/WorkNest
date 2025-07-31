@@ -72,6 +72,14 @@ function App() {
             }
           />
           <Route
+            path="/admin/add-quotation"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AddQuotation role="admin" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/orders"
             element={
               <ProtectedRoute allowedRoles={["admin"]}>

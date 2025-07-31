@@ -31,7 +31,7 @@ const EmployeeDashboard = () => {
 
   useEffect(() => {
     if (!user || user.role !== "employee") {
-      navigate("/login");
+      navigate("/");
     } else {
       fetchCustomers(user._id);
     }
