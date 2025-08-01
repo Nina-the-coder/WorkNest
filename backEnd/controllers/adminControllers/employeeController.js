@@ -32,6 +32,18 @@ exports.addEmployee = async (req, res) => {
   }
 };
 
+exports.getEmployeeById = async (req, res) => {
+  try {
+    const { empId } = req.params;
+    const employee = await User.findOne({ empId: empId });
+    res.status(200).json(employee);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Failed to fetch the employee", error: err.message });
+  }
+};
+
 exports.getAllEmployees = async (req, res) => {
   try {
     const employees = await User.find({}).select("-password");

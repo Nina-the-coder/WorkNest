@@ -133,7 +133,7 @@ const EmployeeQuotationManagement = () => {
                     <div>
                       <div>
                         <span className="font-bold">CustomerId:</span>{" "}
-                        {quotation.customerId.customerId}
+                        {quotation?.customerId?.customerId || "N/A"}
                       </div>
                       <div>
                         <span className="font-bold">Doctor's Status:</span>{" "}

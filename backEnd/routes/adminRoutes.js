@@ -8,6 +8,7 @@ const {
   getAllEmployees,
   deleteEmployee,
   updateEmployee,
+  getEmployeeById,
 } = require("../controllers/adminControllers/employeeController");
 const {
   addTask,
@@ -36,6 +37,7 @@ const { submitQuotation } = require("../controllers/employeeController");
 // employee routes
 router.post("/employees", verifyToken, addEmployee);
 router.get("/employees", getAllEmployees);
+router.get("/employees/:empId", getEmployeeById);
 router.delete("/employees/:empId", deleteEmployee);
 router.put("/employees/:empId", updateEmployee);
 

@@ -14,10 +14,10 @@ const AddQuotation = (props) => {
   const location = useLocation();
 
   const [error, setError] = useState("");
-  const [employeeList, setEmployeeList] = useState([]);
-  const [customerList, setCustomerList] = useState([]);
+  // const [employeeList, setEmployeeList] = useState([]);
 
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [selectedEmployeeObj, setSelectedEmployeeObj] = useState(null);
   const [selectedCustomerObj, setSelectedCustomerObj] = useState(null);
 
   const [products, setProducts] = useState([]);
@@ -46,19 +46,19 @@ const AddQuotation = (props) => {
         addedBy: user.empId,
       }));
     }
-    if (role === "admin") {
-      const fetchEmployees = async () => {
-        try {
-          const res = await axios.get(`${BASE_URL}/api/admin/employees`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setEmployeeList(res.data);
-        } catch (err) {
-          console.error("Error fetching employees:", err);
-        }
-      };
-      fetchEmployees();
-    }
+    // if (role === "admin") {
+    //   const fetchEmployees = async () => {
+    //     try {
+    //       const res = await axios.get(`${BASE_URL}/api/admin/employees`, {
+    //         headers: { Authorization: `Bearer ${token}` },
+    //       });
+    //       setEmployeeList(res.data);
+    //     } catch (err) {
+    //       console.error("Error fetching employees:", err);
+    //     }
+    //   };
+    //   fetchEmployees();
+    // }
   }, []);
 
   useEffect(() => {
@@ -75,15 +75,34 @@ const AddQuotation = (props) => {
       const fetchCustomerById = async () => {
         try {
           const res = await axios.get(
-            `${BASE_URL}/api/employee/customers/${existingQuotation.customerId}`
+            `${BASE_URL}/api/employee/customers/${existingQuotation.addedBy._id}`
           );
           setSelectedCustomerObj(res.data); // ✅ pass the whole object
+          // console.log("fetched customer from db", res.data);
         } catch (err) {
           console.error("Error fetching customer:", err);
         }
       };
-      
+
       fetchCustomerById();
+
+      const fetchEmployeeById = async () => {
+        try {
+          // console.log("existing quotation :", existingQuotation);
+          const res = await axios.get(
+            `${BASE_URL}/api/admin/employees/${existingQuotation.addedBy.empId}`
+          );
+          setSelectedEmployeeObj(res.data); // ✅ set full employee object
+          setSelectedEmployeeId(res.data._id); // ✅ set ID for form
+          // console.log("fetched employee from db", res.data);
+        } catch (err) {
+          console.error("Error fetching employee:", err);
+        }
+      };
+
+      if (role === "admin") {
+        fetchEmployeeById();
+      }
 
       console.log("Pre-filled form data:", existingQuotation);
     }
@@ -149,7 +168,7 @@ const AddQuotation = (props) => {
         );
         console.log("quotation edited successfully");
         // setQuotationFormData({});
-        navigate(role === "admin" ? "/admin/dashboard" : "/employee/dashboard");
+        navigate(role === "admin" ? "/admin/quotations" : "/employee/dashboard");
       } catch (err) {
         setError(
           err?.response?.data?.message || "Error updating the quotation"
@@ -173,7 +192,7 @@ const AddQuotation = (props) => {
     }
 
     setError("");
-    navigate(role === "admin" ? "/admin/dashboard" : "/employee/dashboard");
+    navigate(role === "admin" ? "/admin/quotations" : "/employee/dashboard");
   };
 
   const handleAddProductToQuotation = () => {
@@ -271,11 +290,12 @@ const AddQuotation = (props) => {
                   <div className="mb-4">
                     <EmployeeComboBox
                       onSelect={(emp) => setSelectedEmployeeId(emp._id)}
+                      selected={selectedEmployeeObj}
                     />
                   </div>
                 )}
 
-                {!isEditMode && (
+                {(!isEditMode || role === "admin") && (
                   <CustomerComboBox
                     user={user}
                     onSelect={handleCustomerSelect}
@@ -386,7 +406,7 @@ const AddQuotation = (props) => {
                 <div className="flex justify-around items-center mt-4">
                   <Link
                     className="mt-8 p-2 px-10 hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
-                    to={"/employee/dashboard"}
+                    to={`${role === "employee" ? "/employee/dashboard": "/admin/quotations"}`}
                   >
                     Cancel
                   </Link>

@@ -7,7 +7,7 @@ const productSchema = new mongoose.Schema({
   quantity: Number,
 });
 
-const QuotationModal = mongoose.Schema(
+const QuotationSchema = mongoose.Schema(
   {
     quotationId: {
       type: String,
@@ -44,4 +44,4 @@ const QuotationModal = mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Quotation", QuotationModal);
+module.exports = mongoose.model("Quotation", QuotationSchema);

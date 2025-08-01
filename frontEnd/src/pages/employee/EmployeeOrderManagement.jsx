@@ -49,11 +49,11 @@ const EmployeeOrderManagement = () => {
               {/* quotation card content */}
               <div className="flex flex-col bg-slate-300 text-black p-3 rounded-md shadow">
                 <div>
-                  <span className="font-bold">OrderId :</span> {order.orderId}
+                  <span className="font-bold">OrderId :</span> {order?.orderId}
                 </div>
                 <div>
                   <span className="font-bold">CustomerId :</span>{" "}
-                  {order.quotationId.customerId.customerId || "N/A"}
+                  {order?.quotationId?.customerId?.customerId || "N/A"}
                 </div>
 
                 <div>

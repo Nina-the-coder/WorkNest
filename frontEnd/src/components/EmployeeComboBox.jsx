@@ -24,8 +24,14 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
   }, []);
 
   useEffect(() => {
-    if (!selected) setInputValue("");
-  }, [selected]);
+  if (selected) {
+    console.log(selected);
+    setInputValue(`${selected.name} (${selected.empId})`);
+  } else {
+    setInputValue("");
+  }
+}, [selected]);
+
 
   const handleChange = (e) => {
     const value = e.target.value;
