@@ -46,7 +46,7 @@ exports.getEmployeeById = async (req, res) => {
 
 exports.getAllEmployees = async (req, res) => {
   try {
-    const employees = await User.find({}).select("-password");
+    const employees = await User.find({ deleted: false }).select("-password");
     res.status(200).json(employees);
   } catch (err) {
     res
@@ -58,7 +58,17 @@ exports.getAllEmployees = async (req, res) => {
 exports.deleteEmployee = async (req, res) => {
   try {
     const { empId } = req.params;
-    await User.deleteOne({ empId });
+    // await User.deleteOne({ empId });
+    const emp = await User.findOne({ empId });
+
+    if (!emp) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    emp.deleted = true;
+    emp.deletedAt = new Date();
+
+    await emp.save();
     res.status(200).json({ message: "Employee deleted successfully" });
   } catch (err) {
     res

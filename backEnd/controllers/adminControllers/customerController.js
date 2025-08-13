@@ -33,7 +33,7 @@ exports.addCustomer = async (req, res) => {
 
 exports.getAllCustomers = async (req, res) => {
   try {
-    const customer = await Customer.find().populate("addedBy");
+    const customer = await Customer.find({deleted: false}).populate("addedBy");
     res.status(200).json(customer);
   } catch (err) {
     res
@@ -45,11 +45,23 @@ exports.getAllCustomers = async (req, res) => {
 exports.deleteCustomer = async (req, res) => {
   try {
     const { customerId } = req.params;
-    const deleted = await Customer.deleteOne({ customerId });
+    // const deleted = await Customer.deleteOne({ customerId });
 
-    if (deleted.deletedCount === 0) {
-      return res.status(404).json({ message: "Customer not found" });
+    // if (deleted.deletedCount === 0) {
+    //   return res.status(404).json({ message: "Customer not found" });
+    // }
+
+    const customer = await Customer.findOne({customerId});
+
+    if(!customer){
+      return res.status(404).json({message: "No customer found"});
     }
+
+    customer.deleted = true;
+    customer.deletedAt = new Date();
+
+    await customer.save();
+
     res.status(200).json({ message: "Customer deleted successfully" });
   } catch (err) {
     res

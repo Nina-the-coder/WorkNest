@@ -103,8 +103,6 @@ const AddQuotation = (props) => {
       if (role === "admin") {
         fetchEmployeeById();
       }
-
-      console.log("Pre-filled form data:", existingQuotation);
     }
   }, [isEditMode, existingQuotation]);
 
@@ -166,7 +164,6 @@ const AddQuotation = (props) => {
             },
           }
         );
-        console.log("quotation edited successfully");
         // setQuotationFormData({});
         navigate(role === "admin" ? "/admin/quotations" : "/employee/dashboard");
       } catch (err) {

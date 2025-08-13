@@ -51,6 +51,12 @@ const TaskManagement = () => {
     fetchData();
   }, []);
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSave(e);
+    }
+  };
+
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -162,7 +168,9 @@ const TaskManagement = () => {
     const matchesTask =
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.assignedTo?.empId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.assignedTo?.empId
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
       task.assignedTo?.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesFilter =
@@ -194,7 +202,7 @@ const TaskManagement = () => {
             <div className="text-3xl mb-8 ml-4 text-white">
               {isEdit ? "Edit Task" : "Add New Task"}
             </div>
-            <form>
+            <form onKeyDown={(e) => handleKeyDown(e)}>
               <EmployeeComboBox
                 onSelect={(emp) =>
                   setFormData((prev) => ({

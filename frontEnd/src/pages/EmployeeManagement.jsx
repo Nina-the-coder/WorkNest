@@ -34,6 +34,12 @@ const EmployeeManagement = () => {
     fetchEmployees();
   }, []);
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSave(e);
+    }
+  };
+
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -89,7 +95,6 @@ const EmployeeManagement = () => {
           {
             headers: {
               Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
             },
           }
         );
@@ -191,7 +196,7 @@ const EmployeeManagement = () => {
             <div className="text-3xl mb-8 ml-4 text-white">
               {isEdit ? "Edit Employee" : "Add New Employee"}
             </div>
-            <form>
+            <form onKeyDown={(e) => handleKeyDown(e)}>
               <label htmlFor="name" className="w-full text-lg text-slate-200">
                 Name
               </label>
@@ -315,7 +320,7 @@ const EmployeeManagement = () => {
               >
                 <option value="">All Roles</option>
                 <option value="admin">Admin</option>
-                <option value="Employee">Employee</option>
+                <option value="employee">Employee</option>
               </select>
               <select
                 name=""

@@ -24,6 +24,12 @@ const ProductManagement = () => {
     }));
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSave(e);
+    }
+  };
+
   const handleAddNewProduct = () => {
     console.log("adding the new product");
     setModal(true);
@@ -90,7 +96,7 @@ const ProductManagement = () => {
         setIsEdit(false);
         setEditProductId(null);
       } else {
-        if(!formData.image){
+        if (!formData.image) {
           setError("Please upload an image");
           return;
         }
@@ -131,20 +137,20 @@ const ProductManagement = () => {
       name: product.name,
       description: product.description,
       // image: product.image,
-      price: product.price
+      price: product.price,
     });
     setModal(true);
   };
 
   const handleDeleteProduct = async (productId) => {
-    try{
+    try {
       await axios.delete(`${BASE_URL}/api/admin/products/${productId}`);
       await fetchProducts();
       console.log("Product deleted successfully");
-    }catch(err){
+    } catch (err) {
       console.error("Error in deleting the product", err);
     }
-  }
+  };
 
   const filteredProducts = products.filter((product) => {
     const matchesProduct =
@@ -173,7 +179,7 @@ const ProductManagement = () => {
             <div className="text-3xl mb-8 ml-4 text-white">
               {isEdit ? "Edit Product" : "Add New Product"}
             </div>
-            <form>
+            <form onKeyDown={(e) => handleKeyDown(e)}>
               <label htmlFor="name" className="w-full text-lg text-slate-200">
                 Name
               </label>

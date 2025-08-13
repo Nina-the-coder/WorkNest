@@ -40,6 +40,12 @@ const CustomerkManagement = () => {
     fetchCustomers();
   }, []);
 
+  const handleKeyDown = (e) => {
+    if(e.key === "Enter"){
+      handleSave(e);
+    }
+  }
+
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -78,6 +84,10 @@ const CustomerkManagement = () => {
         setIsEdit(false);
         setEditCustomerId(null);
       } else {
+        if(!formData.addedBy){
+          alert("Please select the employee name");
+          return;
+        }
         const res = await axios.post(
           `${BASE_URL}/api/admin/customers`,
           formData,
@@ -190,7 +200,7 @@ const CustomerkManagement = () => {
             <div className="text-3xl mb-8 ml-4 text-white">
               {isEdit ? "Edit Customer" : "Add New Customer"}
             </div>
-            <form>
+            <form onKeyDown={(e) => handleKeyDown(e)}>
               <label htmlFor="name" className="w-full text-lg text-slate-200">
                 Customer Name
               </label>

@@ -32,28 +32,104 @@ const QuotationManagement = () => {
       );
     }
   };
-  
+
   const handleApproveQuotation = async (e, quotation) => {
-    console.log("approve quotation");
-  };
-  
-  const handleRejectQuotation = async (e, quotation) => {
-    console.log("reject quotation");
+    e.preventDefault();
+    if (quotation.status === "approved") {
+      alert("You have already approved the quotation");
+    }
+    try {
+      console.log("approve quotation");
+      await axios.put(
+        `${BASE_URL}/api/admin/quotations/${quotation.quotationId}`,
+        {
+          status: "approved",
+        }
+      );
+
+      setQuotations((prev) =>
+        prev.map((q) =>
+          q.quotationId === quotation.quotationId
+            ? { ...q, status: "approved" }
+            : q
+        )
+      );
+    } catch (err) {
+      setError("Failed to approve the quotation");
+      console.error("error in approving the quotation", err);
+    }
   };
 
-  const handleEditQuotation = async (quotation) => {
+  const handleRejectQuotation = async (e, quotation) => {
+    e.preventDefault();
+    if (quotation.status === "rejected") {
+      alert("You have already rejected the quotation");
+    }
+    try {
+      console.log("reject quotation");
+      await axios.put(
+        `${BASE_URL}/api/admin/quotations/${quotation.quotationId}`,
+        {
+          status: "rejected",
+        }
+      );
+
+      setQuotations((prev) =>
+        prev.map((q) =>
+          q.quotationId === quotation.quotationId
+            ? { ...q, status: "rejected" }
+            : q
+        )
+      );
+    } catch (err) {
+      setError("Failed to reject the quotation");
+      console.error("error in rejecting the quotation", err);
+    }
+  };
+
+  const handleEditQuotation = async (e, quotation) => {
     navigate("/admin/add-quotation", {
       state: { mode: "edit", quotation },
     });
   };
 
-  const handleDeleteQuotation = async(quotationId) => {
+  const handleDeleteQuotation = async (e, quotationId) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete quotation ${quotationId}?`
+      )
+    ) {
+      return;
+    }
     console.log("deleting the quotation", quotationId);
-  }
+    try {
+      const res = await axios.delete(
+        `${BASE_URL}/api/admin/quotations/${quotationId}`
+      );
+      setQuotations((prev) =>
+        prev.filter((q) => q.quotationId !== quotationId)
+      );
+    } catch (err) {
+      console.error("Error in deleting the quotation", err);
+      setError("Error in deleting the quotation");
+    }
+  };
 
   const handleMakeOrder = async (e, quotation) => {
     console.log("making order", quotation);
   };
+
+  const filteredQuotations = quotations.filter((quotation) => {
+    const matchesQuotation = quotation.quotationId
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    const matchesFilter =
+      statusFilter === "" ||
+      quotation.status.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesQuotation && matchesFilter;
+  });
 
   return (
     <div className="flex min-h-screen">
@@ -85,8 +161,9 @@ const QuotationManagement = () => {
               className="h-10 border-l bg-white hover:cursor-pointer px-2"
             >
               <option value="">All Status</option>
-              <option value="active">active</option>
-              <option value="inactive">Inactive</option>
+              <option value="approved">approved</option>
+              <option value="rejected">rejected</option>
+              <option value="pending">pending</option>
             </select>
           </div>
           <div className="h-full w-1/4 items-center flex ml-20">
@@ -102,16 +179,17 @@ const QuotationManagement = () => {
         {/* container */}
         <div className="h-120 w-fit flex flex-col overflow-auto px-4 pb-4 ml-4">
           {/* card */}
-          {quotations.map((quotation) => (
+          {filteredQuotations.map((quotation) => (
             <div
-              className="min-h-30 w-250 bg-slate-800 mt-4 flex justify-between text-slate-300 p-4 text-lg hover:cursor-pointer"
+              className="min-h-30 w-250 bg-slate-800 mt-4 flex justify-between text-slate-300 p-4 text-lg"
               key={quotation.quotationId}
             >
               {/* 1st */}
               <div className="flex flex-col justify-between w-1/2">
                 <div className="text-white flex justify-between">
                   <div>
-                    {quotation.quotationId} - {quotation.customerId?.customerId}
+                    {quotation.quotationId} - {quotation.customerId?.customerId}{" "}
+                    {`(${quotation.customerId?.name})`}
                   </div>
                   <div
                     className={`ml-30 text-black py-0.5 px-4 rounded-xl ${
@@ -160,7 +238,9 @@ const QuotationManagement = () => {
                 </button>
                 <button
                   className="p-1 w-20 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
-                  onClick={(e) => handleDeleteQuotation(e, quotation)}
+                  onClick={(e) =>
+                    handleDeleteQuotation(e, quotation.quotationId)
+                  }
                 >
                   Delete
                 </button>
