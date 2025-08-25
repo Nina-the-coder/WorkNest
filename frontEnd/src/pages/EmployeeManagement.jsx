@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
+import Header from "../components/Header";
+import CTAButton from "../components/CTAButton";
+import SearchBar from "../components/SearchBar";
+import FilterDropdown from "../components/FilterDropdown";
+import EmployeeCard from "../components/EmployeeCard";
+import Icon from "../components/Icons";
+import VariantButton from "../components/VariantButton";
+import NoItemFoundModal from "../components/NoItemFoundModal";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const EmployeeManagement = () => {
@@ -183,21 +191,24 @@ const EmployeeManagement = () => {
       <Sidebar />
 
       {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col items-center bg-slate-900">
+      <div className="ml-64 w-full p-4 flex flex-col items-center bg-bg">
         {/* header */}
-        <div className="w-full flex justify-between text-white">
-          <div className="text-3xl">Employee Management</div>
-          <div className="text-3xl pr-4">Admin</div>
-        </div>
+        <Header title="Employee Management" />
 
         {/* modal */}
         {modal && (
-          <div className="w-100 h-fit mt-16 p-8 border bg-slate-800">
-            <div className="text-3xl mb-8 ml-4 text-white">
+          <div className="w-[460px] h-[560px] rounded-2xl mt-16 p-8 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
+            <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
               {isEdit ? "Edit Employee" : "Add New Employee"}
             </div>
-            <form onKeyDown={(e) => handleKeyDown(e)}>
-              <label htmlFor="name" className="w-full text-lg text-slate-200">
+            <form
+              className="flex flex-col items-center gap-1"
+              onKeyDown={(e) => handleKeyDown(e)}
+            >
+              <label
+                htmlFor="name"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 Name
               </label>
               <input
@@ -206,10 +217,13 @@ const EmployeeManagement = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
 
-              <label htmlFor="email" className="w-full text-lg text-slate-200">
+              <label
+                htmlFor="email"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 Email
               </label>
               <input
@@ -218,10 +232,13 @@ const EmployeeManagement = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
 
-              <label htmlFor="phone" className="w-full text-lg text-slate-200">
+              <label
+                htmlFor="phone"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 Phone
               </label>
               <input
@@ -230,12 +247,12 @@ const EmployeeManagement = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
 
               <label
                 htmlFor="password"
-                className="w-full text-lg text-slate-200"
+                className="w-full text-[16px] ml-4 text-text/90"
               >
                 Password
               </label>
@@ -245,56 +262,65 @@ const EmployeeManagement = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-8 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
+              <div className="flex">
+                <div className="flex flex-col mr-[60px]">
+                  <label
+                    htmlFor="role"
+                    className="w-full text-[16px] ml-4 text-text/90"
+                  >
+                    Role
+                  </label>
+                  <select
+                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="employee">Employee</option>
+                  </select>
+                </div>
 
-              <label htmlFor="role" className="text-lg mr-1.5 text-slate-200">
-                Role
-              </label>
-              <select
-                className="border w-1/3 bg-slate-200 p-0.5"
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value="admin">Admin</option>
-                <option value="employee">Employee</option>
-              </select>
-
-              <label
-                htmlFor="status"
-                className="text-lg ml-4 mr-1.5 text-slate-200"
-              >
-                Status
-              </label>
-              <select
-                className="border w-1/3 bg-slate-200 p-0.5"
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
+                <div className="flex flex-col">
+                  <label
+                    htmlFor="status"
+                    className="w-full text-[16px] ml-4 text-text/90"
+                  >
+                    Status
+                  </label>
+                  <select
+                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                    id="status"
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
               {error && (
                 <div className="text-rose-500 mb-2 text-sm mt-4">{error}</div>
               )}
-              <div className="flex justify-around items-center">
-                <button
+              <div className="flex justify-around items-center gap-[50px] mt-4">
+                <VariantButton
                   onClick={handleCancel}
-                  className="mt-8 p-2 px-10 w-30 text-white text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
+                  variant="ghostRed"
+                  size="medium"
+                  text="Cancel"
+                  icon="x"
+                />
+                <VariantButton
                   onClick={handleSave}
-                  className="mt-8 p-2 px-10 w-30 text-white text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900"
-                >
-                  Save
-                </button>
+                  variant="cta"
+                  size="medium"
+                  text="Save"
+                  icon="check"
+                />
               </div>
             </form>
           </div>
@@ -304,16 +330,13 @@ const EmployeeManagement = () => {
         {!modal && (
           <div className="flex my-16 px-10 h-20 w-full">
             <div className="h-full w-1/2 items-center flex">
-              <input
-                type="text"
-                className="h-10 w-3/4 bg-white px-2"
+              <SearchBar
                 placeholder="Search employee by name, email, empId"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <select
-                name=""
-                id=""
+
+              <FilterDropdown
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
                 className="h-10 border-l bg-white hover:cursor-pointer px-2"
@@ -321,10 +344,9 @@ const EmployeeManagement = () => {
                 <option value="">All Roles</option>
                 <option value="admin">Admin</option>
                 <option value="employee">Employee</option>
-              </select>
-              <select
-                name=""
-                id=""
+              </FilterDropdown>
+
+              <FilterDropdown
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="h-10 border-l bg-white hover:cursor-pointer px-2"
@@ -332,73 +354,31 @@ const EmployeeManagement = () => {
                 <option value="">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
-              </select>
+              </FilterDropdown>
             </div>
-            <div className="h-full w-1/4 items-center flex ml-20">
-              <button
-                className="border border-slate-800 p-8 w-full text-2xl rounded-xl text-white bg-indigo-800 hover:cursor-pointer hover:bg-indigo-900"
-                onClick={handleAddNewEmployee}
-              >
-                Add new Employee
-              </button>
+
+            <div className="items-center flex ml-20">
+              <CTAButton onClick={handleAddNewEmployee} icon="plus">
+                <div className="text-left mb-1">Add new</div>
+                <div className="text-left">Employee</div>
+              </CTAButton>
             </div>
           </div>
         )}
 
         {/* container */}
         {!modal && (
-          <div className="w-200 mr-100 max-h-120 overflow-auto flex flex-col gap-4 justify-evenly items-center p-6 text-white">
+          <div className="w-full flex flex-wrap gap-4 h-[480px] overflow-auto">
             {/* cards */}
             {filteredEmployees.length === 0
-              ? "No Employee found"
+              ? <NoItemFoundModal message="No employees found" />
               : filteredEmployees.map((emp) => (
-                  <div
+                  <EmployeeCard
                     key={emp.empId}
-                    className="w-[100%] h-fit bg-slate-800 flex"
-                  >
-                    {/* left */}
-                    <div className="flex flex-col w-[75%] p-2">
-                      <div className="flex gap-12 items-center mb-2">
-                        <div className="text-2xl text-white">{emp.empId}</div>
-                        <div
-                          className={`text-xl ${
-                            emp.status === "active"
-                              ? "bg-amber-500"
-                              : "bg-rose-500 "
-                          } p-0.5 px-4 rounded-xl text-black`}
-                        >
-                          {emp.status}
-                        </div>
-                        <div className="text-xl bg-emerald-500 p-0.5 px-4 rounded-xl text-black">
-                          {emp.role}
-                        </div>
-                      </div>
-                      <div className="text-lg text-slate-300">
-                        Name: {emp.name}
-                      </div>
-                      <div className="text-lg text-slate-300">
-                        Email: {emp.email}
-                      </div>
-                      <div className="text-lg text-slate-300">
-                        Phone: {emp.phone}
-                      </div>
-                    </div>
-                    {/* right */}
-                    <div className="flex items-center">
-                      <button
-                        onClick={() => handleEditEmployee(emp)}
-                        className="p-2 w-25 text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteEmployee(emp.empId)}
-                        className="p-2 w-25 mx-4 text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
+                    emp={emp}
+                    handleEdit={() => handleEditEmployee(emp)}
+                    handleDelete={() => handleDeleteEmployee(emp)}
+                  />
                 ))}
           </div>
         )}

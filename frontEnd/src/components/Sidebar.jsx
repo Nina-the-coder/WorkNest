@@ -1,44 +1,49 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import WorkNestLogo from "../assets/WorkNestLogo.jpg";
+import Icon from "./Icons";
 
 const Sidebar = () => {
   const location = useLocation();
   const items = [
-    { name: "Dashboard", path: "/admin/dashboard" },
-    { name: "Employees", path: "/admin/employees" },
-    { name: "Tasks", path: "/admin/tasks" },
-    { name: "Products", path: "/admin/Products" },
-    { name: "Customers", path: "/admin/customers" },
-    { name: "Quotations", path: "/admin/quotations" },
-    { name: "Orders", path: "/admin/orders" },
-    { name: "Conversations", path: "/admin/conversations" },
-    { name: "Profile", path: "/admin/profile" },
+    { name: "Dashboard", path: "/admin/dashboard", icon: "layout-dashboard" },
+    { name: "Employees", path: "/admin/employees", icon: "circle-user-round" },
+    { name: "Tasks", path: "/admin/tasks", icon: "list-checks" },
+    { name: "Products", path: "/admin/Products", icon: "shopping-cart" },
+    { name: "Customers", path: "/admin/customers", icon: "notepad-text" },
+    { name: "Quotations", path: "/admin/quotations", icon: "users" },
+    { name: "Orders", path: "/admin/orders", icon: "scroll" },
+    {
+      name: "Conversations",
+      path: "/admin/conversations",
+      icon: "message-circle-more",
+    },
+    { name: "Profile", path: "/admin/profile", icon: "user" },
   ];
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="w-64 border-r min-h-screen fixed bg-slate-300">
+    <div className="w-64 min-h-screen fixed bg-card-bg text-text">
       {/* logo */}
       <div className="p-2 pr-10 flex">
-        <button className="px-2 hover:bg-slate-400 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
-          ☰
-        </button>
         <img src={WorkNestLogo} />
       </div>
-
       {/* elements */}
-      <nav className="flex flex-col gap-3 mt-6">
+      <nav className="flex flex-col gap-4 mt-6 p-4">
         {items.map((item, index) => (
-          <Link
+          <div
             key={index}
-            to={item.path}
-            className={`text-xl pl-5 mx-2 py-1 rounded-2xl ${
-              item.path === location.pathname && "bg-emerald-500"
+            className={`flex items-center mx-2 rounded-2xl border border-card-bg hover:border-text text ${
+            item.path === location.pathname && "bg-green text-black"
             }`}
           >
-            {item.name}
-          </Link>
+            <Link
+              to={item.path}
+              className={`text-xl  flex pl-5 py-1 pr-4 rounded-2xl w-full h-full`}
+            >
+              <Icon name={item.icon} className="text-secondary mr-4" />
+              <span className="text-[16px]">{item.name}</span>
+            </Link>
+          </div>
         ))}
       </nav>
     </div>

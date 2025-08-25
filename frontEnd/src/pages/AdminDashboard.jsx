@@ -1,5 +1,6 @@
 import React from "react";
 import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
 
 const AdminDashboard = () => {
   const items = [
@@ -13,22 +14,19 @@ const AdminDashboard = () => {
       <Sidebar />
 
       {/* main */}
-      <div className="ml-64 w-full p-4 bg-slate-900">
+      <div className="ml-64 w-full p-4 bg-bg">
         {/* header */}
-        <div className="flex justify-between text-white">
-          <div className="text-3xl">Dashboard</div>
-          <div className="text-3xl pr-4">Admin</div>
-        </div>
+      <Header title="Dashboard" />
 
         {/* cards */}
         <div className="flex flex-wrap justify-around mt-14">
           {items.map((item, index) => (
             <div
               key={index}
-              className="flex flex-col justify-between items-center border p-1 mb-4 mr-4 h-40 w-60 bg-slate-800"
+              className="flex flex-col justify-between items-center p-1 mb-4 mr-4 h-40 w-60 bg-card-bg/"
             >
-              <div className="text-2xl text-center text-slate-300">{item.name}</div>
-              <div className="text-5xl mb-8 text-white">{item.count}</div>
+              <div className="text-2xl text-center text-text">{item.name}</div>
+              <div className="text-5xl mb-8 text-secondary-text">{item.count}</div>
             </div>
           ))}
         </div>
@@ -36,10 +34,10 @@ const AdminDashboard = () => {
         {/* Tables */}
         <div className="flex justify-around mt-16 h-40 w-full">
           {/* left */}
-          <div className="md:w-[48%] border bg-slate-800 text-white border-slate-800">Confirmed Orders lol!</div>
+          <div className="md:w-[48%] bg-card-bg/80 text-text">Confirmed Orders lol!</div>
 
           {/* right */}
-          <div className="md:w-[48%] border bg-slate-800 text-white border-slate-800">Current Conversations</div>
+          <div className="md:w-[48%] bg-card-bg/80 text-text">Current Conversations</div>
         </div>
       </div>
     </div>

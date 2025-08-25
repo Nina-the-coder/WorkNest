@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const QuotationManagement = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [error, setError] = useState("");
@@ -116,6 +118,21 @@ const QuotationManagement = () => {
   };
 
   const handleMakeOrder = async (e, quotation) => {
+    if (quotation.status !== "approved") {
+      alert("Only approved quotations can be converted to the order");
+      return;
+    }
+    try {
+      const res = await axios.post(
+        `${BASE_URL}/api/employee/order`,
+        { quotationId: quotation._id, addedBy: user._id },
+        { headers: { Authorization: `bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error("error in making the order", err);
+      setError("Error in making the Order");
+    }
+
     console.log("making order", quotation);
   };
 
