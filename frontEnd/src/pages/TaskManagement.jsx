@@ -2,6 +2,12 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import EmployeeComboBox from "../components/EmployeeComboBox";
 import axios from "axios";
+import Header from "../components/Header";
+import SearchBar from "../components/SearchBar";
+import FilterDropdown from "../components/FilterDropdown";
+import CTAButton from "../components/CTAButton";
+import TaskCard from "../components/TaskCard";
+import VariantButton from "../components/VariantButton";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const TaskManagement = () => {
@@ -189,20 +195,21 @@ const TaskManagement = () => {
       <Sidebar />
 
       {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col items-center bg-slate-900">
+      <div className="ml-64 w-full p-4 flex flex-col items-center bg-bg">
         {/* header */}
-        <div className="w-full flex justify-between text-white">
-          <div className="text-3xl">Task Management</div>
-          <div className="text-3xl pr-4">Admin</div>
-        </div>
+        <Header title="Task Management" />
 
         {/* modal */}
         {modal && (
-          <div className="w-100 h-fit mt-16 p-8 bg-slate-800">
-            <div className="text-3xl mb-8 ml-4 text-white">
+          <div className="w-[460px] h-[600px] rounded-2xl mt-16 p-8 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
+            {" "}
+            <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
               {isEdit ? "Edit Task" : "Add New Task"}
             </div>
-            <form onKeyDown={(e) => handleKeyDown(e)}>
+            <form
+              className="flex flex-col items-center gap-1"
+              onKeyDown={(e) => handleKeyDown(e)}
+            >
               <EmployeeComboBox
                 onSelect={(emp) =>
                   setFormData((prev) => ({
@@ -212,7 +219,10 @@ const TaskManagement = () => {
                 }
               />
 
-              <label htmlFor="title" className="w-full text-lg text-slate-200">
+              <label
+                htmlFor="title"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 Task Title
               </label>
               <input
@@ -221,12 +231,12 @@ const TaskManagement = () => {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
 
               <label
                 htmlFor="description"
-                className="w-full text-lg text-slate-200"
+                className="w-full text-[16px] ml-4 text-text/90"
               >
                 Description
               </label>
@@ -236,12 +246,13 @@ const TaskManagement = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                className="border w-full h-20 p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[84px] p-0.5 rounded-xl mb-4 bg-white"
+                placeholder="write description here..."
               />
 
               <label
                 htmlFor="dueDate"
-                className="w-full text-lg text-slate-200"
+                className="w-full text-[16px] ml-4 text-text/90"
               >
                 Due Date
               </label>
@@ -251,55 +262,70 @@ const TaskManagement = () => {
                 name="dueDate"
                 value={formData.dueDate}
                 onChange={handleChange}
-                className="border w-full mb-10 bg-slate-200 p-0.5"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
 
-              <label htmlFor="status" className="text-lg text-slate-200">
-                Status
-              </label>
-              <select
-                name="status"
-                id="status"
-                onChange={handleChange}
-                value={formData.status}
-                className="w-1/4 ml-2 mr-8 p-0.5 bg-slate-200 border"
-              >
-                <option value="pending">Pending</option>
-                <option value="in-progress">In progress</option>
-                <option value="done">Done</option>
-              </select>
+              <div className="flex">
+                <div className="flex flex-col mr-[60px]">
+                  <label
+                    htmlFor="status"
+                    className="w-full text-[16px] ml-4 text-text/90"
+                  >
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    id="status"
+                    onChange={handleChange}
+                    value={formData.status}
+                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in-progress">In progress</option>
+                    <option value="done">Done</option>
+                  </select>
+                </div>
 
-              <label htmlFor="priority" className="text-lg text-slate-200">
-                Priority
-              </label>
-              <select
-                name="priority"
-                id="priority"
-                onChange={handleChange}
-                value={formData.priority}
-                className="w-1/4 ml-2 p-0.5 bg-slate-200 border"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
+                <div className="flex flex-col">
+                  <label
+                    htmlFor="priority"
+                    className="w-full text-[16px] ml-4 text-text/90"
+                  >
+                    Priority
+                  </label>
+                  <select
+                    name="priority"
+                    id="priority"
+                    onChange={handleChange}
+                    value={formData.priority}
+                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+
               {error && (
                 <div className="text-rose-500 mb-2 text-sm mt-4">{error}</div>
               )}
-              <div className="flex justify-around items-center mt-4">
-                <button
+              <div className="flex justify-around items-center gap-[50px] mt-4">
+                {" "}
+                <VariantButton
                   onClick={handleCancel}
-                  className="mt-8 p-2 px-10 hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
+                  variant="ghostRed"
+                  size="medium"
+                  text="Cancel"
+                  icon="x"
+                />
+                <VariantButton
                   onClick={handleSave}
-                  className="mt-8 p-2 px-10 hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
-                >
-                  Save
-                </button>
+                  variant="cta"
+                  size="medium"
+                  text="Save"
+                  icon="check"
+                />
               </div>
             </form>
           </div>
@@ -307,126 +333,54 @@ const TaskManagement = () => {
 
         {/* Search Bar and CTA button */}
         {!modal && (
-          <div className="flex my-16 px-10 h-20 w-full">
-            <div className="h-full w-1/2 items-center flex">
-              <input
-                type="text"
-                className="h-10 w-3/4 bg-white px-2"
+          <div className=" w-full my-16 px-10 flex">
+            <div className="">
+              <SearchBar
                 placeholder="Search tasks by title, description, employee"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <select
-                name=""
-                id=""
+              <FilterDropdown
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-10 border-l bg-white hover:cursor-pointer px-2"
               >
                 <option value="">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="in-progress">In-Progress</option>
                 <option value="done">Done</option>
-              </select>
-              <select
-                name=""
-                id=""
+              </FilterDropdown>
+              <FilterDropdown
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="h-10 border-l bg-white hover:cursor-pointer px-2"
               >
                 <option value="">All Priority</option>
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
-              </select>
+              </FilterDropdown>
             </div>
-            <div className="h-full w-1/4 items-center flex ml-20">
-              <button
-                className="w-full p-8 text-2xl rounded-xl text-white bg-indigo-800 hover:cursor-pointer hover:bg-indigo-900"
-                onClick={handleAddNewTask}
-              >
-                Add new Task
-              </button>
+            <div className="ml-20">
+              <CTAButton onClick={handleAddNewTask} icon="plus">
+                <div className="text-left mb-1">Add new</div>
+                <div className="text-left">Employee</div>
+              </CTAButton>
             </div>
           </div>
         )}
 
         {/* container */}
         {!modal && (
-          <div className="w-300 max-h-120 overflow-auto h-fit flex flex-wrap pt-8 text-white">
+          <div className="w-300 max-h-120 overflow-auto h-fit flex flex-wrap gap-4 pt-8 text-white">
             {filteredTasks.length === 0 ? (
               <div className="ml-40">No Task found</div>
             ) : (
               filteredTasks.map((task, index) => (
-                <div
-                  key={index}
-                  className="w-[45%] h-80 bg-slate-800 mb-8 ml-8 p-2 flex justify-between flex-col"
-                >
-                  {/* top */}
-                  <div className="overflow-auto">
-                    <div className="flex mb-2">
-                      <div className="text-xl font-bold text-white">
-                        {task.title}
-                      </div>
-                      <div className="text-lg ml-8 w-[35%] font-sans text-slate-300">
-                        {`${task.assignedTo?.name} (${task.assignedTo?.empId})`}
-                      </div>
-                    </div>
-                    <div className="flex justify-evenly">
-                      <div
-                        className={`text-xl p-0.5 px-4 ${
-                          task.status === "pending"
-                            ? "bg-rose-500"
-                            : task.status === "in-progress"
-                            ? "bg-amber-500"
-                            : "bg-emerald-500"
-                        } rounded-xl`}
-                      >
-                        {task.status}
-                      </div>
-                      <div
-                        className={`text-xl p-0.5 px-4 ${
-                          task.priority === "high"
-                            ? "bg-rose-500"
-                            : task.priority === "medium"
-                            ? "bg-amber-500"
-                            : "bg-yellow-300"
-                        } rounded-xl`}
-                      >
-                        {task.priority}
-                      </div>
-                      <div className="text-xl p-0.5 px-4 text-white">
-                        due:
-                        {new Date(task.dueDate)
-                          .toLocaleDateString("en-GB", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })
-                          .toUpperCase()}
-                      </div>
-                    </div>
-                    <div className="text-justify p-2 mt-2 text-lg text-slate-300">
-                      {task.description}
-                    </div>
-                  </div>
-                  {/* bottom */}
-                  <div className="align-baseline flex justify-evenly my-2">
-                    <button
-                      onClick={() => handleEditTask(task)}
-                      className="p-2 w-30 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTask(task.taskId)}
-                      className="p-2 w-30 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
+                <TaskCard
+                  key={task.taskId}
+                  task={task}
+                  handleEdit={() => handleEditTask(task)}
+                  handleDelete={() => handleDeleteTask(task.taskId)}
+                />
               ))
             )}
           </div>

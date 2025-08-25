@@ -24,14 +24,13 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
   }, []);
 
   useEffect(() => {
-  if (selected) {
-    console.log(selected);
-    setInputValue(`${selected.name} (${selected.empId})`);
-  } else {
-    setInputValue("");
-  }
-}, [selected]);
-
+    if (selected) {
+      console.log(selected);
+      setInputValue(`${selected.name} (${selected.empId})`);
+    } else {
+      setInputValue("");
+    }
+  }, [selected]);
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -54,8 +53,11 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
   };
 
   return (
-    <div className="relative w-full mb-4">
-      <label htmlFor="assignedTo" className="w-full text-lg text-slate-200">
+    <div className="relative w-full">
+      <label
+        htmlFor="assignedTo"
+        className="w-full text-[16px] ml-4 text-text/90"
+      >
         Employee
       </label>
       <input
@@ -65,7 +67,8 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
         value={inputValue}
         onChange={handleChange}
         onFocus={() => setShowDropdown(true)}
-        className="border w-full p-0.5 rounded bg-slate-200"
+        className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+        autoComplete="off"
         placeholder="Type name or empId"
       />
       {showDropdown && filteredEmployees.length > 0 && (

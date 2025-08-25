@@ -328,8 +328,8 @@ const EmployeeManagement = () => {
 
         {/* Search Bar and CTA button */}
         {!modal && (
-          <div className="flex my-16 px-10 h-20 w-full">
-            <div className="h-full w-1/2 items-center flex">
+          <div className="flex my-16 px-10 w-full">
+            <div className="">
               <SearchBar
                 placeholder="Search employee by name, email, empId"
                 value={searchQuery}
@@ -339,7 +339,6 @@ const EmployeeManagement = () => {
               <FilterDropdown
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="h-10 border-l bg-white hover:cursor-pointer px-2"
               >
                 <option value="">All Roles</option>
                 <option value="admin">Admin</option>
@@ -349,7 +348,6 @@ const EmployeeManagement = () => {
               <FilterDropdown
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-10 border-l bg-white hover:cursor-pointer px-2"
               >
                 <option value="">All Status</option>
                 <option value="active">Active</option>
@@ -357,7 +355,7 @@ const EmployeeManagement = () => {
               </FilterDropdown>
             </div>
 
-            <div className="items-center flex ml-20">
+            <div className="ml-20">
               <CTAButton onClick={handleAddNewEmployee} icon="plus">
                 <div className="text-left mb-1">Add new</div>
                 <div className="text-left">Employee</div>
