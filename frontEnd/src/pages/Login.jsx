@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Worknestlogo from "../assets/WorkNestLogo.jpg";
+import ThemeToggle from "../components/ThemeToggle";
+import Icon from "../components/Icons";
+import { SpaceIcon } from "lucide-react";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const Login = () => {
@@ -47,35 +50,44 @@ const Login = () => {
 
   return (
     <>
-      <div className="bg-slate-900 h-screen">
-        <div className="navbar h-15 p-1.5 w-full bg-slate-300">
+<div className="h-screen bg-gradient-to-r from-bg to-text">
+        <div className="navbar h-[60px] p-1.5 w-full flex justify-between ">
           <img className="h-full" src={Worknestlogo} />
+          <ThemeToggle />
         </div>
         <div className="main flex flex-col justify-center items-center mt-8">
-          <div className="login h-fit w-100 p-8 mt-8 rounded-lg bg-slate-800">
-            <div className="text-3xl mt-4 mb-8 text-center text-white">
-              Login
+          <div className="login h-[432px] w-[440px] p-8 my-8 bg-card-bg rounded-2xl">
+            <div className="text-[32px] font-extrabold mt-4 mb-8 text-center text-text">
+              Welcome Back
             </div>
+
             <form onSubmit={handleLogin}>
-              <label htmlFor="email" className="w-full text-slate-300">
+              <label
+                htmlFor="email"
+                type="email"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 Email
               </label>
               <input
                 id="email"
                 name="email"
-                className="w-full border mb-4 p-0.5 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl bg-white mb-8"
                 type="text"
                 value={formData.email}
                 onChange={handleChange}
               ></input>
-              <label htmlFor="password" className="w-full text-slate-300">
+              <label
+                htmlFor="password"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 Password
               </label>
-              <div className="relative">
+              <div className="flex">
                 <input
                   id="password"
                   name="password"
-                  className="w-full border mb-4 p-0.5 bg-slate-200 pr-16"
+                  className="w-[350px] h-[28px] p-0.5 rounded-l-xl mb-4 bg-white"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
@@ -83,22 +95,38 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-0 top-4 -translate-y-1/2 px-2 py-1 text-sm bg-slate-300 hover:cursor-pointer hover:bg-slate-400"
+                  className="h-[28px] w-[30px] flex items-center rounded-r-xl bg-white justify-center hover:cursor-pointer "
                 >
-                  {showPassword ? "Hide" : "Show"}
+                  {showPassword ? (
+                    <Icon name="eye" />
+                  ) : (
+                    <Icon name="eye-closed" className="h-[20px] w-[20px] " />
+                  )}
                 </button>
               </div>
 
               {error && (
                 <div className="text-rose-500 mb-2 text-sm">{error}</div>
               )}
-              <button
-                disabled={loading}
-                className="w-full h-10 text-white text-lg bg-indigo-800 mt-4 hover:bg-indigo-900 cursor-pointer "
-                type="submit"
-              >
-                {loading ? "Logging in..." : "Login"}
-              </button>
+              <div className="flex justify-center items-center mt-8">
+                <button
+                  disabled={loading}
+                  className="w-[168px] h-[50px] text-white text-lg bg-cta hover:bg-cta/80 rounded-2xl cursor-pointer "
+                  type="submit"
+                >
+                  {loading ? (
+                    "Logging in..."
+                  ) : (
+                    <div>
+                      <span className="text-[20px] font-semibold">Login</span>{" "}
+                      <Icon
+                        name="arrow-big-right"
+                        className="inline h-[20px] w-[20px] ml-2 "
+                      />{" "}
+                    </div>
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         </div>
