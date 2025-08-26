@@ -8,6 +8,7 @@ import FilterDropdown from "../components/FilterDropdown";
 import CTAButton from "../components/CTAButton";
 import TaskCard from "../components/TaskCard";
 import VariantButton from "../components/VariantButton";
+import NoItemFoundModal from "../components/NoItemFoundModal";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const TaskManagement = () => {
@@ -334,7 +335,7 @@ const TaskManagement = () => {
         {/* Search Bar and CTA button */}
         {!modal && (
           <div className=" w-full my-16 px-10 flex">
-            <div className="">
+            <div className="flex gap-4">
               <SearchBar
                 placeholder="Search tasks by title, description, employee"
                 value={searchQuery}
@@ -362,7 +363,7 @@ const TaskManagement = () => {
             <div className="ml-20">
               <CTAButton onClick={handleAddNewTask} icon="plus">
                 <div className="text-left mb-1">Add new</div>
-                <div className="text-left">Employee</div>
+                <div className="text-left">Task</div>
               </CTAButton>
             </div>
           </div>
@@ -372,7 +373,7 @@ const TaskManagement = () => {
         {!modal && (
           <div className="w-300 max-h-120 overflow-auto h-fit flex flex-wrap gap-4 pt-8 text-white">
             {filteredTasks.length === 0 ? (
-              <div className="ml-40">No Task found</div>
+              <NoItemFoundModal message="No tasks found" />
             ) : (
               filteredTasks.map((task, index) => (
                 <TaskCard

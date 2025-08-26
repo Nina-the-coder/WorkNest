@@ -5,7 +5,7 @@ const FilterDropdown = ({ value, onChange, children }) => {
     <select
       value={value}
       onChange={onChange}
-      className="h-[40px] w-[120px] border bg-white hover:cursor-pointer px-2"
+      className="h-[40px] w-[120px] border rounded-xl bg-white hover:cursor-pointer px-2"
     >
       {children}
     </select>

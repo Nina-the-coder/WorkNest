@@ -50,14 +50,14 @@ const Login = () => {
 
   return (
     <>
-<div className="h-screen bg-gradient-to-r from-bg to-text">
+<div className="h-screen bg-gradient-to-r from-[#304352] to-[#d7d2cc]">
         <div className="navbar h-[60px] p-1.5 w-full flex justify-between ">
           <img className="h-full" src={Worknestlogo} />
           <ThemeToggle />
         </div>
         <div className="main flex flex-col justify-center items-center mt-8">
-          <div className="login h-[432px] w-[440px] p-8 my-8 bg-card-bg rounded-2xl">
-            <div className="text-[32px] font-extrabold mt-4 mb-8 text-center text-text">
+          <div className="login h-[410px] w-[440px] p-8 my-8 bg-card-bg rounded-2xl">
+            <div className="text-[30px] font-extrabold mt-4 mb-8 text-center text-text">
               Welcome Back
             </div>
 

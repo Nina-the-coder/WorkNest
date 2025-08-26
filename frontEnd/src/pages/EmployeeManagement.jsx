@@ -328,8 +328,8 @@ const EmployeeManagement = () => {
 
         {/* Search Bar and CTA button */}
         {!modal && (
-          <div className="flex my-16 px-10 w-full">
-            <div className="">
+          <div className="flex mt-16 mb-20 px-10 w-full">
+            <div className="flex gap-4">
               <SearchBar
                 placeholder="Search employee by name, email, empId"
                 value={searchQuery}
