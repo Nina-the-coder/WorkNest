@@ -14,8 +14,8 @@ const TaskCard = ({ task, handleEdit, handleDelete }) => {
       <div className="flex justify-between mb-4">
         {/* top left */}
         <div className="flex flex-col mb-2">
-          <div className="text-[18px] text-text font-semibold">{task.title}</div>
-          <div className="font-bold underline">{`${task.assignedTo?.name} (${task.assignedTo?.empId})`}</div>
+          <div className="text-[20px] mb-1 text-text font-semibold">{task.title}</div>
+          <div className="underline">{`${task.assignedTo?.name} (${task.assignedTo?.empId})`}</div>
         </div>
 
         {/* top right */}
