@@ -1,4 +1,6 @@
 const multer = require("multer");
+const sharp = require("sharp");
+const fs = require("fs");
 const path = require("path");
 
 const storage = multer.diskStorage({
@@ -31,4 +33,29 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-module.exports = upload;
+//middleware to convert upload file to webp
+const convertToWebP = async (req, res, next) => {
+  if (!req.file) return next();
+
+  const inputPath = req.file.path;
+  const outputPath = `${req.file.destination}/${Date.now()}-${
+    path.parse(req.file.originalname).name
+  }.webp`;
+
+  try {
+    await sharp(inputPath).webp({ quality: 80 }).toFile(outputPath);
+
+    fs.unlinkSync(inputPath);
+
+    req.file.filename = path.basename(outputPath);
+    req.file.path = outputPath;
+    req.file.mimetype = "image/webp";
+
+    next();
+  } catch (err) {
+    console.error("Error converting image to WebP: ", err);
+    next(err);
+  }
+};
+
+module.exports = {upload, convertToWebP};

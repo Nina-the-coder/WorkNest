@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../middleware/multerConfig");
+const {upload, convertToWebP} = require("../middleware/multerConfig");
 
 const { verifyToken } = require("../middleware/verifyToken");
 const {
@@ -52,9 +52,9 @@ router.delete("/tasks/:taskId", deleteTask);
 router.put("/tasks/:taskId", updateTasks);
 
 // product routes
-router.post("/products", upload.single("image"), addProduct);
+router.post("/products", upload.single("image"), convertToWebP, addProduct);
 router.get("/products", getProducts);
-router.put("/products/:productId", upload.single("image"), updateProduct);
+router.put("/products/:productId", upload.single("image"), convertToWebP, updateProduct);
 router.delete("/products/:productId", deleteProduct);
 
 // customer routes
