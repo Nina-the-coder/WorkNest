@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import WorkNestLogo from "../assets/WorkNestLogo.jpg";
+import  WorkNestDark  from "../assets/WorkNest-dark.svg";
+import  WorkNestLight  from "../assets/WorkNest-light.svg";
 import Icon from "./Icons";
 
 const Sidebar = () => {
@@ -24,16 +25,27 @@ const Sidebar = () => {
   return (
     <div className="w-64 min-h-screen fixed bg-card-bg text-text">
       {/* logo */}
-      <div className="p-2 pr-10 flex">
-        <img src={WorkNestLogo} />
+      <div className="w-64 my-4 ml-4">
+        <img
+          src={WorkNestLight}
+          alt="WorkNest"
+          className="block dark:hidden"
+        />
+
+        {/* Dark mode logo */}
+        <img
+          src={WorkNestDark}
+          alt="WorkNest"
+          className="hidden dark:block"
+        />
       </div>
       {/* elements */}
-      <nav className="flex flex-col gap-4 mt-6 p-4">
+      <nav className="flex flex-col gap-4 p-4">
         {items.map((item, index) => (
           <div
             key={index}
             className={`flex items-center mx-2 rounded-2xl border border-card-bg hover:border-text text ${
-            item.path === location.pathname && "bg-green text-black"
+              item.path === location.pathname && "bg-green text-black"
             }`}
           >
             <Link

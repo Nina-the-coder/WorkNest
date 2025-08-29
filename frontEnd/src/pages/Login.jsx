@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Worknestlogo from "../assets/WorkNestLogo.jpg";
 import ThemeToggle from "../components/ThemeToggle";
 import Icon from "../components/Icons";
-import { SpaceIcon } from "lucide-react";
+import WorkNestDark from "../assets/WorkNest-dark.svg";
+import WorkNestLight from "../assets/WorkNest-light.svg";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const Login = () => {
@@ -50,9 +50,22 @@ const Login = () => {
 
   return (
     <>
-<div className="h-screen bg-gradient-to-r from-[#304352] to-[#d7d2cc]">
+      <div className="h-screen bg-gradient-to-r from-[#304352] to-[#d7d2cc]">
         <div className="navbar h-[60px] p-1.5 w-full flex justify-between ">
-          <img className="h-full" src={Worknestlogo} />
+          {/* Light mode logo */}
+          <img
+            src={WorkNestLight}
+            alt="WorkNest"
+            className="block dark:hidden h-10"
+          />
+
+          {/* Dark mode logo */}
+          <img
+            src={WorkNestDark}
+            alt="WorkNest"
+            className="hidden dark:block h-10"
+          />
+
           <ThemeToggle />
         </div>
         <div className="main flex flex-col justify-center items-center mt-8">
