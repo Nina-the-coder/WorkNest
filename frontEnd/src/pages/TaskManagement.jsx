@@ -371,7 +371,7 @@ const TaskManagement = () => {
 
         {/* container */}
         {!modal && (
-          <div className="w-300 max-h-120 overflow-auto h-fit flex flex-wrap gap-4 pt-8 text-white">
+          <div className="w-300 max-h-120 p-2 overflow-auto h-fit flex flex-wrap gap-4 pt-8 text-white">
             {filteredTasks.length === 0 ? (
               <NoItemFoundModal message="No tasks found" />
             ) : (

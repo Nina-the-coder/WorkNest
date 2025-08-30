@@ -366,7 +366,7 @@ const EmployeeManagement = () => {
 
         {/* container */}
         {!modal && (
-          <div className="w-full flex flex-wrap gap-4 h-[480px] overflow-auto">
+          <div className="w-full flex p-2 flex-wrap gap-4 h-[480px] overflow-auto">
             {/* cards */}
             {filteredEmployees.length === 0
               ? <NoItemFoundModal message="No employees found" />
