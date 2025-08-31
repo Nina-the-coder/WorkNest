@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
+import Header from "../components/Header";
+import SearchBar from "../components/SearchBar";
+import CTAButton from "../components/CTAButton";
+import ProductCard from "../components/ProductCard";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ProductManagement = () => {
@@ -166,12 +170,9 @@ const ProductManagement = () => {
       <Sidebar />
 
       {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col items-center bg-slate-900">
+      <div className="ml-64 w-full p-4 flex flex-col items-center bg-bg">
         {/* header */}
-        <div className="w-full flex justify-between text-white">
-          <div className="text-3xl">Product Management</div>
-          <div className="text-3xl pr-4">Admin</div>
-        </div>
+        <Header title="Product Management" />
 
         {/* modal */}
         {modal && (
@@ -266,23 +267,19 @@ const ProductManagement = () => {
 
         {/* Search Bar and CTA button */}
         {!modal && (
-          <div className="flex my-16 px-10 h-20 w-full">
-            <div className="h-full w-1/2 items-center flex">
-              <input
-                type="text"
-                className="h-10 w-3/4 bg-white px-2"
-                placeholder="Search Product by name, description"
+          <div className="flex mt-16 mb-20 px-10 w-full">
+            <div className="flex gap-4">
+              <SearchBar
+                placeholder="Searh for the product by name or description"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="h-full w-1/4 items-center flex ml-20">
-              <button
-                className="border border-slate-800 p-8 w-full text-2xl rounded-xl text-white bg-indigo-800 hover:cursor-pointer hover:bg-indigo-900"
-                onClick={handleAddNewProduct}
-              >
-                Add New Product
-              </button>
+            <div className="ml-20">
+              <CTAButton onClick={handleAddNewProduct} icon="plus">
+                <div className="text-left mb-1">Add new</div>
+                <div className="text-left">Product</div>
+              </CTAButton>
             </div>
           </div>
         )}
@@ -291,47 +288,11 @@ const ProductManagement = () => {
         {!modal && (
           <div className="overflow-auto max-h-[500px] w-full pb-4 px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
-              <div
-                key={product._id}
-                className="bg-slate-800 p-2 rounded-lg shadow-md flex flex-col h-[400px]"
-              >
-                {/* Image */}
-                <div className="w-full h-[180px] bg-gray-700 rounded-md overflow-hidden mb-3 flex items-center justify-center">
-                  <img
-                    src={`${BASE_URL}/uploads/${product.image}`}
-                    alt={product.name}
-                    className="w-full h-full object-fill"
-                  />
-                </div>
-                {/* Title */}
-                <div className="text-white text-xl font-semibold truncate">
-                  {product.name}
-                </div>
-                {/* ID & Price */}
-                <div className="flex justify-between text-slate-300 text-sm mb-2">
-                  <div>{product.productId}</div>
-                  <div className="text-white">₹ {product.price}</div>
-                </div>
-                {/* Description */}
-                <div className="text-slate-300 h-[80px] text-sm line-clamp-4 text-justify">
-                  {product.description}
-                </div>
-                {/* buttons */}
-                <div className="align-baseline flex justify-evenly mt-4">
-                  <button
-                    onClick={() => handleEditProduct(product)}
-                    className="p-1 w-20 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProduct(product.productId)}
-                    className="p-1 w-20 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
-                  >
-                    Delete
-                  </button>
-                </div>{" "}
-              </div>
+              <ProductCard
+                product={product}
+                handleDeleteProduct={() => handleDeleteProduct(product.productId)}
+                handleEditProduct={() => handleEditProduct(product)}
+              />
             ))}
           </div>
         )}
