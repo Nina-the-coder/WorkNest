@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import SearchBar from "../components/SearchBar";
 import CTAButton from "../components/CTAButton";
 import ProductCard from "../components/ProductCard";
+import VariantButton from "../components/VariantButton";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ProductManagement = () => {
@@ -176,12 +177,18 @@ const ProductManagement = () => {
 
         {/* modal */}
         {modal && (
-          <div className="w-100 h-fit mt-16 p-8 border bg-slate-800">
-            <div className="text-3xl mb-8 ml-4 text-white">
+          <div className="w-[460px] h-fit rounded-2xl mt-16 p-8 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
+            <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
               {isEdit ? "Edit Product" : "Add New Product"}
             </div>
-            <form onKeyDown={(e) => handleKeyDown(e)}>
-              <label htmlFor="name" className="w-full text-lg text-slate-200">
+            <form
+              className="flex flex-col items-center gap-1"
+              onKeyDown={(e) => handleKeyDown(e)}
+            >
+              <label
+                htmlFor="name"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 Name
               </label>
               <input
@@ -190,12 +197,12 @@ const ProductManagement = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
 
               <label
                 htmlFor="description"
-                className="w-full text-lg text-slate-200"
+                className="w-full text-[16px] ml-4 text-text/90"
               >
                 Description
               </label>
@@ -205,14 +212,17 @@ const ProductManagement = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                className="border w-full p-0.5 h-20 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[56px] p-0.5 rounded-xl mb-4 bg-white"
               />
 
-              <label htmlFor="image" className="text-lg mr-1.5 text-slate-200">
+              <label
+                htmlFor="image"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 Upload Image
               </label>
               <input
-                className="border bg-slate-300 p-0.5 rounded-xs w-full mb-4 hover:cursor-pointer"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
                 id="image"
                 name="image"
                 type="file"
@@ -232,11 +242,14 @@ const ProductManagement = () => {
                 />
               )}
 
-              <label htmlFor="price" className="w-full text-lg text-slate-200">
+              <label
+                htmlFor="price"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 Price
               </label>
               <input
-                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
                 id="price"
                 name="price"
                 value={formData.price}
@@ -246,20 +259,21 @@ const ProductManagement = () => {
               {error && (
                 <div className="text-rose-500 mb-2 text-sm mt-4">{error}</div>
               )}
-              <div className="flex justify-around items-center">
-                <button
+              <div className="flex justify-around items-center gap-[50px] mt-4">
+                <VariantButton
                   onClick={handleCancel}
-                  className="mt-8 p-2 px-10 w-30 text-white text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
+                  variant="ghostRed"
+                  size="medium"
+                  text="Cancel"
+                  icon="x"
+                />
+                <VariantButton
                   onClick={handleSave}
-                  className="mt-8 p-2 px-10 w-30 text-white text-lg hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900"
-                >
-                  Save
-                </button>
+                  variant="cta"
+                  size="medium"
+                  text="Save"
+                  icon="check"
+                />
               </div>
             </form>
           </div>
@@ -290,8 +304,8 @@ const ProductManagement = () => {
             {filteredProducts.map((product) => (
               <ProductCard
                 product={product}
-                handleDeleteProduct={() => handleDeleteProduct(product.productId)}
-                handleEditProduct={() => handleEditProduct(product)}
+                handleDelete={() => handleDeleteProduct(product.productId)}
+                handleEdit={() => handleEditProduct(product)}
               />
             ))}
           </div>
