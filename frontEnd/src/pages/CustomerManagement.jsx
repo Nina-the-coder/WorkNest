@@ -2,6 +2,12 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
 import EmployeeComboBox from "../components/EmployeeComboBox";
+import Header from "../components/Header";
+import SearchBar from "../components/SearchBar";
+import FilterDropdown from "../components/FilterDropdown";
+import CTAButton from "../components/CTAButton";
+import CustomerTable from "../components/CustomerTable";
+import VariantButton from "../components/VariantButton";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const CustomerkManagement = () => {
@@ -41,10 +47,10 @@ const CustomerkManagement = () => {
   }, []);
 
   const handleKeyDown = (e) => {
-    if(e.key === "Enter"){
+    if (e.key === "Enter") {
       handleSave(e);
     }
-  }
+  };
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -84,7 +90,7 @@ const CustomerkManagement = () => {
         setIsEdit(false);
         setEditCustomerId(null);
       } else {
-        if(!formData.addedBy){
+        if (!formData.addedBy) {
           alert("Please select the employee name");
           return;
         }
@@ -138,6 +144,10 @@ const CustomerkManagement = () => {
   };
 
   const handleDeleteCustomer = async (customerId) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete customer ${customerId}?`
+    );
+    if (!confirmDelete) return;
     try {
       await axios.delete(`${BASE_URL}/api/admin/customers/${customerId}`);
       await fetchCustomers();
@@ -187,21 +197,25 @@ const CustomerkManagement = () => {
       <Sidebar />
 
       {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col items-center bg-slate-900">
+      <div className="ml-64 w-full p-4 flex flex-col items-center bg-bg">
         {/* header */}
-        <div className="w-full flex justify-between text-white">
-          <div className="text-3xl">Customer Management</div>
-          <div className="text-3xl pr-4">Admin</div>
-        </div>
+        <Header title="Customer Management" />
 
         {/* modal */}
         {modal && (
-          <div className="w-100 h-fit mt-16 p-8 bg-slate-800">
-            <div className="text-3xl mb-8 ml-4 text-white">
+          <div className="max-w-[460px] h-fit rounded-2xl mt-16 p-10 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
+            <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
               {isEdit ? "Edit Customer" : "Add New Customer"}
             </div>
-            <form onKeyDown={(e) => handleKeyDown(e)}>
-              <label htmlFor="name" className="w-full text-lg text-slate-200">
+            <form
+              className="flex flex-col items-center gap-1"
+              onKeyDown={(e) => handleKeyDown(e)}
+            >
+              {" "}
+              <label
+                htmlFor="name"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 Customer Name
               </label>
               <input
@@ -210,12 +224,11 @@ const CustomerkManagement = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
-
               <label
                 htmlFor="address"
-                className="w-full text-lg text-slate-200"
+                className="w-full text-[16px] ml-4 text-text/90"
               >
                 Address
               </label>
@@ -225,12 +238,11 @@ const CustomerkManagement = () => {
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
-
               <label
                 htmlFor="contact"
-                className="w-full text-lg text-slate-200"
+                className="w-full text-[16px] ml-4 text-text/90"
               >
                 Contact
               </label>
@@ -240,10 +252,12 @@ const CustomerkManagement = () => {
                 name="contact"
                 value={formData.contact}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
-
-              <label htmlFor="gst" className="w-full text-lg text-slate-200">
+              <label
+                htmlFor="gst"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 GST
               </label>
               <input
@@ -252,10 +266,12 @@ const CustomerkManagement = () => {
                 name="gst"
                 value={formData.gst}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
-
-              <label htmlFor="email" className="w-full text-lg text-slate-200">
+              <label
+                htmlFor="email"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
                 Email
               </label>
               <input
@@ -264,9 +280,8 @@ const CustomerkManagement = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="border w-full p-0.5 rounded-xs mb-4 bg-slate-200"
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
               />
-
               <EmployeeComboBox
                 onSelect={(emp) => {
                   console.log("Selected employee:", emp);
@@ -276,53 +291,63 @@ const CustomerkManagement = () => {
                   }));
                 }}
               />
-
-              <label htmlFor="status" className="text-lg text-slate-200">
-                Status
-              </label>
-              <select
-                name="status"
-                id="status"
-                onChange={handleChange}
-                value={formData.status}
-                className="w-1/4 ml-2 mr-2 mt-4 p-0.5 bg-slate-200 border"
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-
-              <label htmlFor="companyType" className="text-lg text-slate-200">
-                Company
-              </label>
-              <select
-                name="companyType"
-                id="companyType"
-                onChange={handleChange}
-                value={formData.companyType}
-                className="w-1/4 ml-2 mr-2 p-0.5 bg-slate-200 border"
-              >
-                <option value="dealer">dealer</option>
-                <option value="doctor">doctor</option>
-              </select>
-
+              <div className="flex w-full justify-between">
+                <div className="flex flex-col">
+                  <label
+                    htmlFor="status"
+                    className="w-full text-[16px] ml-4 text-text/90"
+                  >
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    id="status"
+                    onChange={handleChange}
+                    value={formData.status}
+                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <div className="flex flex-col">
+                  <label
+                    htmlFor="companyType"
+                    className="w-full text-[16px] ml-4 text-text/90"
+                  >
+                    Company
+                  </label>
+                  <select
+                    name="companyType"
+                    id="companyType"
+                    onChange={handleChange}
+                    value={formData.companyType}
+                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                  >
+                    <option value="dealer">dealer</option>
+                    <option value="doctor">doctor</option>
+                  </select>
+                </div>
+              </div>
               {error && (
                 <div className="text-rose-500 mb-2 text-sm mt-4">{error}</div>
               )}
-
-              <div className="flex justify-around items-center mt-4">
-                <button
+              <div className="flex justify-around items-center gap-[50px] mt-4">
+                {" "}
+                <VariantButton
                   onClick={handleCancel}
-                  className="mt-8 p-2 px-10 hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
+                  variant="ghostRed"
+                  size="medium"
+                  text="Cancel"
+                  icon="x"
+                />
+                <VariantButton
                   onClick={handleSave}
-                  className="mt-8 p-2 px-10 hover:cursor-pointer bg-indigo-800 hover:bg-indigo-900 text-white"
-                >
-                  Save
-                </button>
+                  variant="cta"
+                  size="medium"
+                  text="Save"
+                  icon="check"
+                />
               </div>
             </form>
           </div>
@@ -330,34 +355,29 @@ const CustomerkManagement = () => {
 
         {/* Search Bar and CTA button */}
         {!modal && (
-          <div className="flex my-16 px-10 h-20 w-full">
-            <div className="h-full w-1/2 items-center flex">
-              <input
-                type="text"
-                className="h-10 w-3/4 bg-white px-2"
+          <div className="flex mt-16 mb-20 px-10 w-full">
+            <div className="flex gap-4">
+              <SearchBar
                 placeholder="Search for a customer"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <select
-                name=""
-                id=""
+
+              <FilterDropdown
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-10 border-l bg-white hover:cursor-pointer px-2"
               >
                 <option value="">All Status</option>
                 <option value="active">active</option>
                 <option value="inactive">Inactive</option>
-              </select>
+              </FilterDropdown>
             </div>
-            <div className="h-full w-1/4 items-center flex ml-20">
-              <button
-                className="w-full p-8 text-2xl rounded-xl text-white bg-indigo-800 hover:cursor-pointer hover:bg-indigo-900"
-                onClick={handleAddNewCustomer}
-              >
-                Add new Customer
-              </button>
+
+            <div className="ml-20">
+              <CTAButton onClick={handleAddNewCustomer} icon="plus">
+                <div className="text-left mb-1">Add new</div>
+                <div className="text-left">Customer</div>
+              </CTAButton>
             </div>
           </div>
         )}
@@ -368,57 +388,11 @@ const CustomerkManagement = () => {
             {filteredCustomers.length === 0 ? (
               <div className="ml-40">No Customer found</div>
             ) : (
-              <table className="table-auto w-full text-sm text-left text-white border border-gray-600">
-                <thead className="bg-gray-800 text-white sticky top-0">
-                  <tr>
-                    <th className="px-4 py-2 border">Customer ID</th>
-                    <th className="px-4 py-2 border">Name</th>
-                    <th className="px-4 py-2 border">Address</th>
-                    <th className="px-4 py-2 border">Contact</th>
-                    <th className="px-4 py-2 border">GST</th>
-                    <th className="px-4 py-2 border">Email</th>
-                    <th className="px-4 py-2 border">Status</th>
-                    <th className="px-4 py-2 border">Company Type</th>
-                    <th className="px-4 py-2 border">Added By</th>
-                    <th className="px-4 py-2 border">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="text-white">
-                  {filteredCustomers.map((customer, index) => (
-                    <tr key={index} className="hover:bg-gray-700">
-                      <td className="px-4 py-2 border">
-                        {customer.customerId}
-                      </td>
-                      <td className="px-4 py-2 border">{customer.name}</td>
-                      <td className="px-4 py-2 border">{customer.address}</td>
-                      <td className="px-4 py-2 border">{customer.contact}</td>
-                      <td className="px-4 py-2 border">{customer.gst}</td>
-                      <td className="px-4 py-2 border">{customer.email}</td>
-                      <td className="px-4 py-2 border">{customer.status}</td>
-                      <td className="px-4 py-2 border">
-                        {customer.companyType}
-                      </td>
-                      <td className="px-4 py-2 border">{customer.addedBy?.name}</td>
-                      <td className="px-4 py-2 border">
-                        <button
-                          onClick={() => handleEditCustomer(customer)}
-                          className="text-blue-400 mr-2 hover:cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleDeleteCustomer(customer.customerId)
-                          }
-                          className="text-red-400 hover:cursor-pointer"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <CustomerTable
+                filteredCustomers={filteredCustomers}
+                handleEdit={handleEditCustomer}
+                handleDelete={handleDeleteCustomer}
+              />
             )}
           </div>
         )}

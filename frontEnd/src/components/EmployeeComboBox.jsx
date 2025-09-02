@@ -67,12 +67,12 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
         value={inputValue}
         onChange={handleChange}
         onFocus={() => setShowDropdown(true)}
-        className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+        className="w-full h-[28px] p-0.5 rounded-xl mb-4 bg-white"
         autoComplete="off"
         placeholder="Type name or empId"
       />
       {showDropdown && filteredEmployees.length > 0 && (
-        <ul className="absolute z-10 bg-white border w-full max-h-40 overflow-y-auto shadow">
+        <ul className="absolute z-10 bg-white top-[52px] border w-[380px] max-h-40 overflow-y-auto shadow">
           {filteredEmployees.map((emp, index) => (
             <li
               key={emp.empId || index}

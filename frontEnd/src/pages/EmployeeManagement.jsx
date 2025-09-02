@@ -368,16 +368,18 @@ const EmployeeManagement = () => {
         {!modal && (
           <div className="w-full flex p-2 flex-wrap gap-4 h-[480px] overflow-auto">
             {/* cards */}
-            {filteredEmployees.length === 0
-              ? <NoItemFoundModal message="No employees found" />
-              : filteredEmployees.map((emp) => (
-                  <EmployeeCard
-                    key={emp.empId}
-                    emp={emp}
-                    handleEdit={() => handleEditEmployee(emp)}
-                    handleDelete={() => handleDeleteEmployee(emp)}
-                  />
-                ))}
+            {filteredEmployees.length === 0 ? (
+              <NoItemFoundModal message="No employees found" />
+            ) : (
+              filteredEmployees.map((emp) => (
+                <EmployeeCard
+                  key={emp.empId}
+                  emp={emp}
+                  handleEdit={() => handleEditEmployee(emp)}
+                  handleDelete={() => handleDeleteEmployee(emp)}
+                />
+              ))
+            )}
           </div>
         )}
       </div>
