@@ -42,6 +42,7 @@ const QuotationManagement = () => {
 
   const handleApproveQuotation = async (e, quotation) => {
     e.preventDefault();
+    e.stopPropagation();
     if (quotation.status === "approved") {
       alert("You have already approved the quotation");
     }
@@ -69,6 +70,8 @@ const QuotationManagement = () => {
 
   const handleRejectQuotation = async (e, quotation) => {
     e.preventDefault();
+    e.stopPropagation();
+
     if (quotation.status === "rejected") {
       alert("You have already rejected the quotation");
     }
@@ -98,6 +101,7 @@ const QuotationManagement = () => {
     navigate("/admin/add-quotation", {
       state: { mode: "edit", quotation },
     });
+    e.stopPropagation();
   };
 
   const handleDeleteQuotation = async (e, quotationId) => {
@@ -108,6 +112,8 @@ const QuotationManagement = () => {
     ) {
       return;
     }
+    e.stopPropagation();
+
     console.log("deleting the quotation", quotationId);
     try {
       const res = await axios.delete(
@@ -123,6 +129,8 @@ const QuotationManagement = () => {
   };
 
   const handleMakeOrder = async (e, quotation) => {
+    e.stopPropagation();
+
     if (quotation.status !== "approved") {
       alert("Only approved quotations can be converted to the order");
       return;
@@ -192,7 +200,16 @@ const QuotationManagement = () => {
         <div className="h-120 w-fit flex flex-col overflow-auto px-4 pb-4 ml-4">
           {/* card */}
           {filteredQuotations.map((quotation) => (
-            <QuotationCard />
+            <QuotationCard
+              key={quotation.quotationId}
+              quotation={quotation}
+              editQuotation={(e) => handleEditQuotation(e, quotation)}
+              deleteQuotation={(e) =>
+                handleDeleteQuotation(e, quotation.quotationId)
+              }
+              approveQuotation={(e) => handleApproveQuotation(e, quotation)}
+              rejectQuotation={(e) => handleRejectQuotation(e, quotation)}
+            />
           ))}
         </div>
       </div>
