@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import VariantButton from "./VariantButton";
-import Icon from "./Icons";
+import VariantButton from "../buttons/VariantButton";
+import Icon from "../Icons";
 
 const TaskCard = ({ task, handleEdit, handleDelete }) => {
   const [expanded, setExpanded] = useState(false);

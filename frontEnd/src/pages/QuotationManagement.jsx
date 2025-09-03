@@ -3,6 +3,10 @@ import Sidebar from "../components/Sidebar";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import SearchBar from "../components/SearchBar";
+import FilterDropdown from "../components/FilterDropdown";
+import CTAButton from "../components/buttons/CTAButton";
+import QuotationCard from "../components/cards/QuotationCard";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const QuotationManagement = () => {
@@ -159,35 +163,28 @@ const QuotationManagement = () => {
         <Header title="Quotation Management" />
 
         {/* Search Bar and CTA button */}
-        <div className="flex my-16 px-10 h-20 w-full">
-          <div className="h-full w-1/2 items-center flex">
-            <input
-              type="text"
-              className="h-10 w-3/4 bg-white px-2"
+        <div className=" w-full my-16 px-10 flex">
+          <div className="flex gap-4">
+            <SearchBar
               placeholder="Search for a Quotation"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <select
-              name=""
-              id=""
+            <FilterDropdown
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-10 border-l bg-white hover:cursor-pointer px-2"
             >
               <option value="">All Status</option>
               <option value="approved">approved</option>
               <option value="rejected">rejected</option>
               <option value="pending">pending</option>
-            </select>
+            </FilterDropdown>
           </div>
-          <div className="h-full w-1/4 items-center flex ml-20">
-            <button
-              className="w-full p-8 text-2xl rounded-xl text-white bg-indigo-800 hover:cursor-pointer hover:bg-indigo-900"
-              onClick={handleAddNewQuotation}
-            >
-              Add new Quotation
-            </button>
+          <div className="ml-20">
+            <CTAButton onClick={handleAddNewQuotation} icon="plus">
+              <div className="text-left mb-1">Add new</div>
+              <div className="text-left">Task</div>
+            </CTAButton>
           </div>
         </div>
 
@@ -195,82 +192,7 @@ const QuotationManagement = () => {
         <div className="h-120 w-fit flex flex-col overflow-auto px-4 pb-4 ml-4">
           {/* card */}
           {filteredQuotations.map((quotation) => (
-            <div
-              className="min-h-30 w-250 bg-slate-800 mt-4 flex justify-between text-slate-300 p-4 text-lg"
-              key={quotation.quotationId}
-            >
-              {/* 1st */}
-              <div className="flex flex-col justify-between w-1/2">
-                <div className="text-white flex justify-between">
-                  <div>
-                    {quotation.quotationId} - {quotation.customerId?.customerId}{" "}
-                    {`(${quotation.customerId?.name})`}
-                  </div>
-                  <div
-                    className={`ml-30 text-black py-0.5 px-4 rounded-xl ${
-                      quotation.status === "pending"
-                        ? "bg-amber-500"
-                        : quotation.status === "approved"
-                        ? "bg-emerald-500"
-                        : "bg-rose-500"
-                    }`}
-                  >
-                    {quotation.status}
-                  </div>
-                </div>
-                <div>Added By: {quotation.addedBy?.name}</div>
-                <div>Doctor's status: {quotation.isApprovedByDoctor}</div>
-              </div>
-
-              {/* 2nd */}
-              <div className="flex flex-col-reverse">
-                <div className="text-white">Total - {quotation.total}</div>
-              </div>
-
-              {/* 3rd */}
-              <div className="flex flex-col justify-between">
-                <button
-                  className="p-1 w-20 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
-                  onClick={(e) => handleApproveQuotation(e, quotation)}
-                >
-                  Approve
-                </button>
-                <button
-                  className="p-1 w-20 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
-                  onClick={(e) => handleRejectQuotation(e, quotation)}
-                >
-                  Reject
-                </button>
-              </div>
-
-              {/* 4th */}
-              <div className="flex flex-col justify-between">
-                <button
-                  className="p-1 w-20 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
-                  onClick={(e) => handleEditQuotation(e, quotation)}
-                >
-                  Edit
-                </button>
-                <button
-                  className="p-1 w-20 bg-indigo-800 hover:bg-indigo-900 text-white hover:cursor-pointer"
-                  onClick={(e) =>
-                    handleDeleteQuotation(e, quotation.quotationId)
-                  }
-                >
-                  Delete
-                </button>
-              </div>
-
-              {/* 5th */}
-              <div className="flex justify-center">
-                <button
-                  className="h-full w-20 bg-slate-700 cursor-pointer hover:bg-slate-600"
-                  onClick={(e) => handleMakeOrder(e, quotation)}
-                >
-                  Make Order
-                </button>
-              </div>
-            </div>
+            <QuotationCard />
           ))}
         </div>
       </div>

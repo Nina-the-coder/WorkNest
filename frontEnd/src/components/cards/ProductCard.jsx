@@ -1,5 +1,5 @@
 import React from "react";
-import VariantButton from "./VariantButton";
+import VariantButton from "../buttons/VariantButton";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ProductCard = ({ product, handleEdit, handleDelete }) => {

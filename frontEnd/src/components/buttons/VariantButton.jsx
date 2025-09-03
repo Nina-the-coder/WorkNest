@@ -1,5 +1,5 @@
 import React from "react";
-import Icon from "./Icons";
+import Icon from "../Icons";
 
 const VariantButton = ({ onClick, variant, size, text, icon, className }) => {
   const baseClasses =
@@ -13,8 +13,8 @@ const VariantButton = ({ onClick, variant, size, text, icon, className }) => {
 
   const variantClasses = {
     ghostCta: "border-2 border-cta text-text/90 hover:bg-cta hover:text-white",
-    ghostRed:
-      "border-2 border-red/60 text-text/90 hover:bg-red hover:text-white",
+    ghostRed: "border-2 border-red/60 text-text/90 hover:bg-red hover:text-white",
+    ghostGreen: "border-2 border-green/60 text-text/90 hover:bg-green hover:text-white",
     cta: "border-2 border-cta bg-cta text-white hover:bg-cta/90 hover:text-white",
   };
 

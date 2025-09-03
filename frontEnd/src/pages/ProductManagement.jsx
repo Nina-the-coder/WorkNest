@@ -3,9 +3,9 @@ import Sidebar from "../components/Sidebar";
 import axios from "axios";
 import Header from "../components/Header";
 import SearchBar from "../components/SearchBar";
-import CTAButton from "../components/CTAButton";
-import ProductCard from "../components/ProductCard";
-import VariantButton from "../components/VariantButton";
+import CTAButton from "../components/buttons/CTAButton";
+import ProductCard from "../components/cards/ProductCard";
+import VariantButton from "../components/buttons/VariantButton";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ProductManagement = () => {

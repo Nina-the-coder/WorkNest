@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import ThemeToggle from "../components/ThemeToggle";
+import ThemeToggle from "../components/buttons/ThemeToggle";
 import Icon from "../components/Icons";
 import WorkNestDark from "../assets/WorkNest-dark.svg";
 import WorkNestLight from "../assets/WorkNest-light.svg";

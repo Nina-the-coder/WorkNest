@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import axios from "axios";
-import CustomerComboBox from "../components/CustomerComboBox";
-import EmployeeComboBox from "../components/EmployeeComboBox";
+import CustomerComboBox from "../components/combobox/CustomerComboBox";
+import EmployeeComboBox from "../components/combobox/EmployeeComboBox";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 

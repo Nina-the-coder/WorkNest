@@ -2,12 +2,11 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
 import Header from "../components/Header";
-import CTAButton from "../components/CTAButton";
+import CTAButton from "../components/buttons/CTAButton";
 import SearchBar from "../components/SearchBar";
 import FilterDropdown from "../components/FilterDropdown";
-import EmployeeCard from "../components/EmployeeCard";
-import Icon from "../components/Icons";
-import VariantButton from "../components/VariantButton";
+import EmployeeCard from "../components/cards/EmployeeCard";
+import VariantButton from "../components/buttons/VariantButton";
 import NoItemFoundModal from "../components/NoItemFoundModal";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 

@@ -1,5 +1,5 @@
 import React from "react";
-import ThemeToggle from "./ThemeToggle";
+import ThemeToggle from "./buttons/ThemeToggle";
 
 const Header = ({ title }) => {
   return (

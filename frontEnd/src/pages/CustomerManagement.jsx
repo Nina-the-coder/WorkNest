@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
-import EmployeeComboBox from "../components/EmployeeComboBox";
 import Header from "../components/Header";
 import SearchBar from "../components/SearchBar";
 import FilterDropdown from "../components/FilterDropdown";
-import CTAButton from "../components/CTAButton";
 import CustomerTable from "../components/CustomerTable";
-import VariantButton from "../components/VariantButton";
+import EmployeeComboBox from "../components/combobox/EmployeeComboBox";
+import VariantButton from "../components/buttons/VariantButton";
+import CTAButton from "../components/buttons/CTAButton";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const CustomerkManagement = () => {

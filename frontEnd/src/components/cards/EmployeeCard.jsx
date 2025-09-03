@@ -1,6 +1,6 @@
 import React from "react";
-import Icon from "./Icons";
-import VariantButton from "./VariantButton";
+import Icon from "../Icons";
+import VariantButton from "../buttons/VariantButton";
 
 const EmployeeCard = ({ emp, handleEdit, handleDelete }) => {
   const colors = [
