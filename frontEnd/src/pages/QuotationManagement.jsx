@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const QuotationManagement = () => {
@@ -153,12 +154,9 @@ const QuotationManagement = () => {
       <Sidebar />
 
       {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col bg-slate-900">
+      <div className="ml-64 w-full p-4 flex flex-col items-center bg-bg">
         {/* header */}
-        <div className="w-full flex justify-between text-white">
-          <div className="text-3xl">Qutotation Management</div>
-          <div className="text-3xl pr-4">Admin</div>
-        </div>
+        <Header title="Quotation Management" />
 
         {/* Search Bar and CTA button */}
         <div className="flex my-16 px-10 h-20 w-full">

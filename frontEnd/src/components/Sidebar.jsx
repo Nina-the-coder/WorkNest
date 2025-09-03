@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import  WorkNestDark  from "../assets/WorkNest-dark.svg";
-import  WorkNestLight  from "../assets/WorkNest-light.svg";
+import WorkNestDark from "../assets/WorkNest-dark.svg";
+import WorkNestLight from "../assets/WorkNest-light.svg";
 import Icon from "./Icons";
 
 const Sidebar = () => {
   const location = useLocation();
+
   const items = [
     { name: "Dashboard", path: "/admin/dashboard", icon: "layout-dashboard" },
     { name: "Employees", path: "/admin/employees", icon: "circle-user-round" },
@@ -26,37 +27,32 @@ const Sidebar = () => {
     <div className="w-64 min-h-screen fixed bg-card-bg text-text">
       {/* logo */}
       <div className="w-64 my-4 ml-4">
-        <img
-          src={WorkNestLight}
-          alt="WorkNest"
-          className="block dark:hidden"
-        />
-
-        {/* Dark mode logo */}
-        <img
-          src={WorkNestDark}
-          alt="WorkNest"
-          className="hidden dark:block"
-        />
+        <img src={WorkNestLight} alt="WorkNest" className="block dark:hidden" />
+        <img src={WorkNestDark} alt="WorkNest" className="hidden dark:block" />
       </div>
-      {/* elements */}
-      <nav className="flex flex-col gap-4 p-4">
-        {items.map((item, index) => (
-          <div
-            key={index}
-            className={`flex items-center mx-2 rounded-2xl border border-card-bg hover:border-text text ${
-              item.path === location.pathname && "bg-green text-black"
-            }`}
-          >
+
+      {/* navigation */}
+      <nav className="flex flex-col">
+        {items.map((item, index) => {
+          const isActive = item.path === location.pathname;
+          return (
             <Link
+              key={index}
               to={item.path}
-              className={`text-xl  flex pl-5 py-1 pr-4 rounded-2xl w-full h-full`}
+              className={`flex items-center pl-5 py-3 pr-4 rounded-l-xl border border-transparent mb-2 transition-all duration-300 
+                ${isActive 
+                  ? "bg-bg ml-4" 
+                  : "hover:border-text text-text"
+                }`}
             >
-              <Icon name={item.icon} className="text-secondary mr-4" />
-              <span className="text-[16px]">{item.name}</span>
+              <Icon
+                name={item.icon}
+                className={`mr-4 text-lg ${isActive ? "text-purple-400" : "text-text"}`}
+              />
+              <span className="text-[15px] font-medium">{item.name}</span>
             </Link>
-          </div>
-        ))}
+          );
+        })}
       </nav>
     </div>
   );
