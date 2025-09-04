@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
+import "react-toastify/dist/ReactToastify.css";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import EmployeeManagement from "./pages/EmployeeManagement";
@@ -13,6 +14,7 @@ import OrderManagement from "./pages/OrderManagement";
 import ConversationManagement from "./pages/ConversationManagement";
 import Profile from "./pages/Profile";
 import AddQuotation from "./pages/AddQuotation";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   return (
@@ -123,6 +125,7 @@ function App() {
           />
         </Routes>
       </Router>
+      <ToastContainer position="top-right" autoClose={3000} />
     </>
   );
 }

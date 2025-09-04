@@ -25,7 +25,7 @@ const QuotationCard = ({
             {quotation.quotationId} - {quotation.customerId?.customerId}{" "}
             {`(${quotation.customerId?.name})`}
           </div>
-          <div>Added By : {quotation.addedBy?.name}</div>
+          <div>Added By : {quotation?.addedBy?.empId} ({quotation.addedBy?.name})</div>
           <div className="flex items-center gap-4">
             <div>Doctor status : </div>
             <div
@@ -38,6 +38,18 @@ const QuotationCard = ({
               } rounded-2xl text-[14px] flex justify-center items-center text-black`}
             >
               {quotation.isApprovedByDoctor}
+            </div>
+            <div className="ml-[100px]">Admin status : </div>
+            <div
+              className={`h-[16px] w-[80px] ${
+                quotation.status === "approved"
+                  ? "bg-green"
+                  : quotation.status === "pending"
+                  ? "bg-orange"
+                  : "bg-red"
+              } rounded-2xl text-[14px] flex justify-center items-center text-black`}
+            >
+              {quotation.status}
             </div>
           </div>
         </div>

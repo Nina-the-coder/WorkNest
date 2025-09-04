@@ -16,7 +16,13 @@ const OrderCard = ({ order, deleteOrder, onOrderClick }) => {
         <div className="text-text text-[18px] font-bold">
           {order.orderId} - {order.quotationId?.quotationId}
         </div>
-        <div className="h-[16px] w-[80px] bg-green rounded-2xl text-[14px] flex justify-center items-center text-black">
+        <div className={`h-[16px] w-[80px] ${
+          order.status === "confirm"
+            ? "bg-green"
+            : order.status === "dispatched" ? "bg-orange/50"
+            : order.status === "delivered" ? "bg-cta/50"
+            : "bg-gray-400"
+        } rounded-2xl text-[14px] flex justify-center items-center text-black`}>
           {order.status}
         </div>
       </div>

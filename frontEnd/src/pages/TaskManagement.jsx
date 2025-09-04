@@ -202,7 +202,7 @@ const TaskManagement = () => {
 
         {/* modal */}
         {modal && (
-          <div className="max-w-[460px] h-fit rounded-2xl mt-16 p-8 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
+          <div className="rounded-2xl mt-16 p-8 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
             {" "}
             <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
               {isEdit ? "Edit Task" : "Add New Task"}

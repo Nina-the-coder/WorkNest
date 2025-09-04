@@ -21,3 +21,23 @@ exports.fetchOrders = async (req, res) => {
     });
   }
 };
+
+exports.updateOrderStatus = async (req, res) => {
+  const { orderId } = req.params;
+  const { status } = req.body;
+  try {
+    const order = await Orders.findOne({ orderId });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    order.status = status;
+    await order.save();
+    res.status(200).json({ message: "Order status updated successfully" });
+  } catch (err) {
+    console.error("Server error", err);
+    res.status(500).json({
+      message: "Server error failed to update the order status",
+      error: err.message,
+    });
+  }
+};

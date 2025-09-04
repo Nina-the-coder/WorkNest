@@ -45,13 +45,20 @@ const OrderPreviewCard = ({
           </div>
           <select
             onChange={updateStatus}
-            className="h-[24px] w-[120px] bg-green rounded-2xl text-[14px] flex justify-center items-center text-black py-0.5 px-2 hover:cursor-pointer"
+            className={`h-[24px] w-[120px]
+              ${order.status === "confirm"
+                ? "bg-green"
+                : order.status === "dispatched" ? "bg-orange/50"
+                : order.status === "delivered" ? "bg-cta/50"
+                : "bg-gray-400"
+              }
+              rounded-2xl text-[14px] flex justify-center items-center text-black py-0.5 px-2 hover:cursor-pointer`}
             value={order.status}
           >
             <option value="confirm">Confirm</option>
-            <option value="confirm">Dispatched</option>
-            <option value="confirm">Delivered</option>
-            <option value="confirm">Closed</option>
+            <option value="dispatched">Dispatched</option>
+            <option value="delivered">Delivered</option>
+            <option value="closed">Closed</option>
           </select>
         </div>
         <div className="mt-1">

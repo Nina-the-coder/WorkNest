@@ -76,7 +76,7 @@ const CustomerComboBox = ({ user, onSelect, selectedCustomer }) => {
 
   return (
     <div className="relative w-full mb-4">
-      <label htmlFor="customer" className="w-full text-lg text-slate-200">
+      <label htmlFor="customer" className="w-full text-[16px] ml-4 text-text/90">
         Customer
       </label>
       <input
@@ -91,11 +91,11 @@ const CustomerComboBox = ({ user, onSelect, selectedCustomer }) => {
           }
           setShowDropdown(true);
         }}
-        className="border w-full p-0.5 rounded bg-slate-200 pl-2"
+        className="w-full h-[28px] p-0.5 rounded-xl mb-4 px-2 bg-white"
         placeholder="Type name or customerId"
       />
       {showDropdown && filteredCustomers.length > 0 && (
-        <ul className="absolute z-10 bg-white border w-full max-h-40 overflow-y-auto shadow">
+        <ul className="absolute z-10 bg-white top-[52px] border w-full max-h-40 overflow-y-auto shadow">
           {filteredCustomers.map((customer, index) => (
             <li
               key={customer.customerId || index}

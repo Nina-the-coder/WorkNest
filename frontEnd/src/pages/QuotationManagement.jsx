@@ -7,6 +7,7 @@ import SearchBar from "../components/SearchBar";
 import FilterDropdown from "../components/FilterDropdown";
 import CTAButton from "../components/buttons/CTAButton";
 import QuotationCard from "../components/cards/QuotationCard";
+import { toast } from "react-toastify";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const QuotationManagement = () => {
@@ -44,7 +45,7 @@ const QuotationManagement = () => {
     e.preventDefault();
     e.stopPropagation();
     if (quotation.status === "approved") {
-      alert("You have already approved the quotation");
+      toast.warn("You have already approved the quotation");
     }
     try {
       console.log("approve quotation");
@@ -73,7 +74,7 @@ const QuotationManagement = () => {
     e.stopPropagation();
 
     if (quotation.status === "rejected") {
-      alert("You have already rejected the quotation");
+      toast.warn("You have already rejected the quotation");
     }
     try {
       console.log("reject quotation");
@@ -114,7 +115,6 @@ const QuotationManagement = () => {
     }
     e.stopPropagation();
 
-    console.log("deleting the quotation", quotationId);
     try {
       const res = await axios.delete(
         `${BASE_URL}/api/admin/quotations/${quotationId}`
@@ -122,9 +122,10 @@ const QuotationManagement = () => {
       setQuotations((prev) =>
         prev.filter((q) => q.quotationId !== quotationId)
       );
+      toast.success("Quotation deleted successfully");
     } catch (err) {
       console.error("Error in deleting the quotation", err);
-      setError("Error in deleting the quotation");
+      toast.error("Error in deleting the quotation");
     }
   };
 
@@ -132,7 +133,7 @@ const QuotationManagement = () => {
     e.stopPropagation();
 
     if (quotation.status !== "approved") {
-      alert("Only approved quotations can be converted to the order");
+      toast.warn("Only approved quotations can be converted to the order");
       return;
     }
     try {
@@ -141,18 +142,35 @@ const QuotationManagement = () => {
         { quotationId: quotation._id, addedBy: user._id },
         { headers: { Authorization: `bearer ${token}` } }
       );
+      toast.success("Order created successfully");
+      console.log("order created", res.data);
     } catch (err) {
       console.error("error in making the order", err);
-      setError("Error in making the Order");
+      toast.error("Error in making the Order");
     }
 
     console.log("making order", quotation);
   };
 
   const filteredQuotations = quotations.filter((quotation) => {
-    const matchesQuotation = quotation.quotationId
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
+    const matchesQuotation =
+      quotation.quotationId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (quotation.customerId?.customerId &&
+        quotation.customerId?.customerId
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())) ||
+      (quotation.customerId?.name &&
+        quotation.customerId?.name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())) ||
+      (quotation.addedBy?.name &&
+        quotation.addedBy?.name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())) ||
+      (quotation.addedBy?.empId &&
+        quotation.addedBy?.empId
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()));
 
     const matchesFilter =
       statusFilter === "" ||
@@ -173,7 +191,7 @@ const QuotationManagement = () => {
         {/* Search Bar and CTA button */}
         <div className=" w-full my-16 px-10 flex">
           <div className="flex gap-4">
-            <SearchBar
+            <SearchBar 
               placeholder="Search for a Quotation"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -191,7 +209,7 @@ const QuotationManagement = () => {
           <div className="ml-20">
             <CTAButton onClick={handleAddNewQuotation} icon="plus">
               <div className="text-left mb-1">Add new</div>
-              <div className="text-left">Task</div>
+              <div className="text-left">Quotation</div>
             </CTAButton>
           </div>
         </div>
@@ -209,6 +227,7 @@ const QuotationManagement = () => {
               }
               approveQuotation={(e) => handleApproveQuotation(e, quotation)}
               rejectQuotation={(e) => handleRejectQuotation(e, quotation)}
+              makeOrder={(e) => handleMakeOrder(e, quotation)}
             />
           ))}
         </div>

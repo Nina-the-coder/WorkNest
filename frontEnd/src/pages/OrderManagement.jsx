@@ -7,12 +7,12 @@ import FilterDropdown from "../components/FilterDropdown";
 import CTAButton from "../components/buttons/CTAButton";
 import OrderCard from "../components/cards/OrderCard";
 import OrderPreviewCard from "../components/cards/OrderPreviewCard";
+import { toast } from "react-toastify";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const OrderManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [error, setError] = useState("");
   const [orders, setOrders] = useState([]);
   const [ActiveOrder, setActiveOrder] = useState(null);
 
@@ -36,10 +36,46 @@ const OrderManagement = () => {
     console.log("deleting order", order);
   };
 
+  const updateOrderStatus = async (e, order) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const newStatus = e.target.value;
+    console.log("updating order status", order, newStatus);
+    try {
+      await axios.put(`${BASE_URL}/api/admin/orders/${order.orderId}`, {
+        status: newStatus,
+      });
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.orderId === order.orderId ? { ...o, status: newStatus } : o
+        )
+      );
+      if (ActiveOrder && ActiveOrder.orderId === order.orderId) {
+        setActiveOrder({ ...ActiveOrder, status: newStatus });
+      }
+      toast.success("Order status updated successfully");
+    } catch (err) {
+      toast.error("Error in updating the order status");
+      console.error("Error in updating the order status", err);
+    }
+  };
+
   const handleActiveOrderChange = (order) => {
     setActiveOrder(order);
     console.log("Active order changed to:", order);
   };
+
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch =
+      order.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.addedBy?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.addedBy?.empId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.quotationId?.quotationId
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter ? order.status === statusFilter : true;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="flex min-h-screen">
@@ -63,9 +99,10 @@ const OrderManagement = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="">All Status</option>
-              <option value="approved">approved</option>
-              <option value="rejected">rejected</option>
-              <option value="pending">pending</option>
+              <option value="confirm">confirm</option>
+              <option value="dispatched">dispatched</option>
+              <option value="delivered">delivered</option>
+              <option value="closed">closed</option>
             </FilterDropdown>
           </div>
         </div>
@@ -74,7 +111,7 @@ const OrderManagement = () => {
         <div className="flex justify-between">
           <div className="h-120 mt-16 flex flex-col overflow-auto px-4 pb-4 ml-8">
             {/* cards */}
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <OrderCard
                 onOrderClick={() => handleActiveOrderChange(order)}
                 key={order._id}
@@ -88,7 +125,13 @@ const OrderManagement = () => {
               Select an order to preview
             </div>
           ) : (
-            <OrderPreviewCard order={ActiveOrder} />
+            <OrderPreviewCard
+              order={ActiveOrder}
+              downloadOrder={null}
+              editOrder={null}
+              delteOrder={null}
+              updateStatus={(e)=>updateOrderStatus(e, ActiveOrder)}
+            />
           )}
         </div>
       </div>
