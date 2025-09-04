@@ -1,5 +1,23 @@
 const mongoose = require("mongoose");
 
+const productSnapshotSchema = new mongoose.Schema({
+  productId: String,
+  name: String,
+  price: Number,
+  quantity: Number,
+});
+
+const customerSnapshotSchema = new mongoose.Schema({
+  customerId: String,
+  name: String,
+  address: String,
+  contact: String,
+  gst: String,
+  email: String,
+  status: String,
+  companyType: String,
+});
+
 const OrderSchema = new mongoose.Schema(
   {
     orderId: {
@@ -13,19 +31,37 @@ const OrderSchema = new mongoose.Schema(
     },
     quotationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Quotation", // this must match the name you used in mongoose.model() for quotation
+      ref: "Quotation", // still keep the link for traceability
       required: true,
     },
+
+    // 🔥 snapshot of customer & quotation details
+    customerSnapshot: {
+      type: customerSnapshotSchema,
+      required: true,
+    },
+    productsSnapshot: {
+      type: [productSnapshotSchema],
+      required: true,
+    },
+    totalSnapshot: {
+      type: Number,
+      required: true,
+    },
+
     status: {
       type: String,
       required: true,
     },
-    dispatchDate: {
+    dispatchDate: Date,
+    dispatchedDate: Date,
+    deleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
       type: Date,
     },
-    dispatchedDate: {
-      type: Date,
-    }
   },
   { timestamps: true }
 );

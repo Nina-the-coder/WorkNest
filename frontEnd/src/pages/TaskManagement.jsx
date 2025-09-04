@@ -9,6 +9,7 @@ import CTAButton from "../components/buttons/CTAButton";
 import TaskCard from "../components/cards/TaskCard";
 import VariantButton from "../components/buttons/VariantButton";
 import NoItemFoundModal from "../components/NoItemFoundModal";
+import { toast } from "react-toastify";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const TaskManagement = () => {
@@ -28,7 +29,6 @@ const TaskManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
-  const [error, setError] = useState("");
 
   const fetchData = async () => {
     try {
@@ -80,7 +80,7 @@ const TaskManagement = () => {
     e.preventDefault();
 
     if (!formData.assignedTo || !formData.title || !formData.dueDate) {
-      alert(
+      toast.warn(
         "Please fill in all required fields, including selecting an employee."
       );
       return;
@@ -101,6 +101,7 @@ const TaskManagement = () => {
           },
         });
         console.log("task updated successfullly");
+        toast.success("Task updated successfully");
         setIsEdit(false);
         setEditTaskId(null);
       } else {
@@ -110,6 +111,7 @@ const TaskManagement = () => {
             "Content-Type": "application/json",
           },
         });
+        toast.success("Task created successfully");
         console.log("Sending Task: ", res.data);
       }
 
@@ -126,7 +128,7 @@ const TaskManagement = () => {
     } catch (err) {
       const message =
         err.response?.data?.message || "An error occurred while saving task.";
-      setError(message);
+      toast.error(message);
     }
   };
 
@@ -307,10 +309,6 @@ const TaskManagement = () => {
                   </select>
                 </div>
               </div>
-
-              {error && (
-                <div className="text-rose-500 mb-2 text-sm mt-4">{error}</div>
-              )}
               <div className="flex justify-around items-center gap-[50px] mt-4">
                 {" "}
                 <VariantButton

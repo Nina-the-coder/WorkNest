@@ -6,6 +6,7 @@ import SearchBar from "../components/SearchBar";
 import CTAButton from "../components/buttons/CTAButton";
 import ProductCard from "../components/cards/ProductCard";
 import VariantButton from "../components/buttons/VariantButton";
+import { toast } from "react-toastify";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ProductManagement = () => {
@@ -17,7 +18,6 @@ const ProductManagement = () => {
   });
   const [products, setProducts] = useState([]);
   const [modal, setModal] = useState(false);
-  const [error, setError] = useState("");
   const [isEdit, setIsEdit] = useState(false);
   const [editProductId, setEditProductId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,14 +69,15 @@ const ProductManagement = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!formData.name || !formData.description || !formData.price) {
-      setError("Please fill all the requied fields");
+      toast.warn("Please fill all the requied fields");
       return;
     }
     if (formData.image) {
       const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
       if (!allowedTypes.includes(formData.image.type)) {
-        setError("Only JPG, JPEG, and PNG image types are allowed.");
+        toast.warn("Only JPG, JPEG, and PNG image types are allowed.");
         return;
       }
     }
@@ -98,11 +99,12 @@ const ProductManagement = () => {
           }
         );
         console.log("product updated successfullly");
+          toast.success("Product updated successfully");
         setIsEdit(false);
         setEditProductId(null);
       } else {
         if (!formData.image) {
-          setError("Please upload an image");
+          toast.warn("Please upload an image");
           return;
         }
         const res = await axios.post(
@@ -115,6 +117,7 @@ const ProductManagement = () => {
           }
         );
         console.log("Sending Product: ", res.data);
+        toast.success("Product added successfully");
       }
 
       await fetchProducts();
@@ -125,16 +128,17 @@ const ProductManagement = () => {
         price: "",
       });
       setModal(false);
-      setError("");
     } catch (err) {
       const message =
         err.response?.data?.message ||
         "An error occurred while saving Product.";
-      setError(message);
+      toast.error(message);
     }
   };
 
-  const handleEditProduct = async (product) => {
+  const handleEditProduct = async (e, product) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log("Editing the product", product);
     setIsEdit(true);
     setEditProductId(product.productId);
@@ -147,7 +151,14 @@ const ProductManagement = () => {
     setModal(true);
   };
 
-  const handleDeleteProduct = async (productId) => {
+  const handleDeleteProduct = async (e, productId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete product ${productId}?`
+    );
+    if (!confirmDelete) return;
+    console.log("deleting the product", productId);
     try {
       await axios.delete(`${BASE_URL}/api/admin/products/${productId}`);
       await fetchProducts();
@@ -256,9 +267,6 @@ const ProductManagement = () => {
                 onChange={handleChange}
               />
 
-              {error && (
-                <div className="text-rose-500 mb-2 text-sm mt-4">{error}</div>
-              )}
               <div className="flex justify-around items-center gap-[50px] mt-4">
                 <VariantButton
                   onClick={handleCancel}
@@ -303,9 +311,10 @@ const ProductManagement = () => {
           <div className="overflow-auto max-h-[500px] w-full pb-4 px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <ProductCard
+                key={product.productId}
                 product={product}
-                handleDelete={() => handleDeleteProduct(product.productId)}
-                handleEdit={() => handleEditProduct(product)}
+                handleDelete={(e) => handleDeleteProduct(e, product.productId)}
+                handleEdit={(e) => handleEditProduct(e, product)}
               />
             ))}
           </div>

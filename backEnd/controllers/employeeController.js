@@ -147,17 +147,52 @@ exports.editQuotation = async (req, res) => {
 };
 
 // orders
+
 exports.addOrder = async (req, res) => {
   try {
     const { quotationId, addedBy } = req.body;
 
+    // fetch quotation with customer populated
+    const quotation = await Quotation.findById(quotationId).populate(
+      "customerId"
+    );
+    if (!quotation) {
+      return res.status(404).json({ message: "Quotation not found" });
+    }
+
+    // generate new order number
     const nextOrderNumber = await getNextSequence("order");
     const orderId = `ORD${String(nextOrderNumber).padStart(3, "0")}`;
 
+    // prepare snapshots
+    const customerSnapshot = {
+      customerId: quotation.customerId.customerId,
+      name: quotation.customerId.name,
+      address: quotation.customerId.address,
+      contact: quotation.customerId.contact,
+      gst: quotation.customerId.gst,
+      email: quotation.customerId.email,
+      status: quotation.customerId.status,
+      companyType: quotation.customerId.companyType,
+    };
+
+    const productsSnapshot = quotation.products.map((p) => ({
+      productId: p.productId,
+      name: p.name,
+      price: p.price,
+      quantity: p.quantity,
+    }));
+
+    const totalSnapshot = quotation.total;
+
+    // create order with snapshots
     const newOrder = new Order({
-      orderId: orderId,
-      quotationId, // Must be ObjectId
+      orderId,
+      quotationId,
       addedBy,
+      customerSnapshot,
+      productsSnapshot,
+      totalSnapshot,
       status: "confirm",
     });
 
@@ -175,7 +210,6 @@ exports.addOrder = async (req, res) => {
     });
   }
 };
-
 exports.getOrders = async (req, res) => {
   try {
     const { empId } = req.params;

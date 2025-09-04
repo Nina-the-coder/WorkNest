@@ -133,23 +133,28 @@ const QuotationManagement = () => {
     e.stopPropagation();
 
     if (quotation.status !== "approved") {
-      toast.warn("Only approved quotations can be converted to the order");
+      toast.warn("Only approved quotations can be converted to an order");
       return;
     }
+
     try {
       const res = await axios.post(
         `${BASE_URL}/api/employee/order`,
-        { quotationId: quotation._id, addedBy: user._id },
-        { headers: { Authorization: `bearer ${token}` } }
+        {
+          quotationId: quotation._id,
+          addedBy: user._id,
+        },
+        {
+          headers: { Authorization: `bearer ${token}` },
+        }
       );
+
       toast.success("Order created successfully");
       console.log("order created", res.data);
     } catch (err) {
       console.error("error in making the order", err);
       toast.error("Error in making the Order");
     }
-
-    console.log("making order", quotation);
   };
 
   const filteredQuotations = quotations.filter((quotation) => {
@@ -191,7 +196,7 @@ const QuotationManagement = () => {
         {/* Search Bar and CTA button */}
         <div className=" w-full my-16 px-10 flex">
           <div className="flex gap-4">
-            <SearchBar 
+            <SearchBar
               placeholder="Search for a Quotation"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

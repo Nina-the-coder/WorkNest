@@ -16,13 +16,13 @@ const OrderCard = ({ order, deleteOrder, onOrderClick }) => {
         <div className="text-text text-[18px] font-bold">
           {order.orderId} - {order.quotationId?.quotationId}
         </div>
-        <div className={`h-[16px] w-[80px] ${
+        <div className={`h-[16px] w-[80px]  text-black ${
           order.status === "confirm"
             ? "bg-green"
-            : order.status === "dispatched" ? "bg-orange/50"
-            : order.status === "delivered" ? "bg-cta/50"
+            : order.status === "dispatched" ? "bg-orange/80"
+            : order.status === "delivered" ? "bg-cta/80"
             : "bg-gray-400"
-        } rounded-2xl text-[14px] flex justify-center items-center text-black`}>
+        } rounded-2xl text-[14px] flex justify-center items-center`}>
           {order.status}
         </div>
       </div>
@@ -48,7 +48,7 @@ const OrderCard = ({ order, deleteOrder, onOrderClick }) => {
 
       {/* total */}
       <div className="flex justify-end mr-8 mt-2 mb-2 font-bold text-text text-[18px]">
-        <div>Total : ₹ {order?.quotationId?.total}</div>
+        <div>Total : ₹ {order?.totalSnapshot}</div>
       </div>
     </div>
   );

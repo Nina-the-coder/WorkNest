@@ -48,8 +48,8 @@ const OrderPreviewCard = ({
             className={`h-[24px] w-[120px]
               ${order.status === "confirm"
                 ? "bg-green"
-                : order.status === "dispatched" ? "bg-orange/50"
-                : order.status === "delivered" ? "bg-cta/50"
+                : order.status === "dispatched" ? "bg-orange/80"
+                : order.status === "delivered" ? "bg-cta/80"
                 : "bg-gray-400"
               }
               rounded-2xl text-[14px] flex justify-center items-center text-black py-0.5 px-2 hover:cursor-pointer`}
@@ -86,7 +86,7 @@ const OrderPreviewCard = ({
             Products:
           </div>
           <div className="border-b-2 mb-2"></div>
-          {order?.quotationId?.products?.map((prod, index) => (
+          {order?.productsSnapshot?.map((prod, index) => (
             <div key={index} className="flex justify-between">
               <div>
                 {prod?.name} (x{prod.quantity})
@@ -100,7 +100,7 @@ const OrderPreviewCard = ({
         <div>
           <div className="border-b-2 my-2"></div>
           <div className="flex justify-end mt-2 mb-2 font-bold text-text text-[16px]">
-            <div>Total : ₹ {order?.quotationId?.total}</div>
+            <div>Total : ₹ {order?.totalSnapshot}</div>
           </div>
         </div>
 
@@ -111,18 +111,18 @@ const OrderPreviewCard = ({
             Dispatch Details:
           </div>
           <div className="border-b-2 mb-2"></div>
-          <div>Name: {order?.quotationId?.customerId?.name || "Not Set"}</div>
+          <div>Name: {order?.customerSnapshot?.name || "Not Set"}</div>
           <div>
-            Company: {order?.quotationId?.customerId?.address || "Not Set"}
+            Company: {order?.customerSnapshot?.address || "Not Set"}
           </div>
           <div>
-            Contact: {order?.quotationId?.customerId?.contact || "Not Set"}
+            Contact: {order?.customerSnapshot?.contact || "Not Set"}
           </div>
           <div>
-            Address: {order?.quotationId?.customerId?.address || "Not Set"}
+            Address: {order?.customerSnapshot?.address || "Not Set"}
           </div>
-          <div>GST: {order?.quotationId?.customerId?.gst || "Not Set"}</div>
-          <div>Email: {order?.quotationId?.customerId?.email || "Not Set"}</div>
+          <div>GST: {order?.customerSnapshot?.gst || "Not Set"}</div>
+          <div>Email: {order?.customerSnapshot?.email || "Not Set"}</div>
         </div>
       </div>
     </div>

@@ -33,7 +33,22 @@ const OrderManagement = () => {
   const handleDeleteOrder = async (e, order) => {
     e.preventDefault();
     e.stopPropagation();
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete order ${order.orderId}?`
+    );
+    if (!confirmDelete) return;
     console.log("deleting order", order);
+    try {
+      await axios.delete(`${BASE_URL}/api/admin/orders/${order.orderId}`);
+      setOrders((prev) => prev.filter((o) => o.orderId !== order.orderId)); 
+      if (ActiveOrder && ActiveOrder.orderId === order.orderId) {
+        setActiveOrder(null);
+      }
+      toast.success("Order deleted successfully");
+    } catch (err) {
+      toast.error("Error in deleting the order");
+      console.error("Error in deleting the order", err);
+    }
   };
 
   const updateOrderStatus = async (e, order) => {
@@ -57,6 +72,32 @@ const OrderManagement = () => {
     } catch (err) {
       toast.error("Error in updating the order status");
       console.error("Error in updating the order status", err);
+    }
+  };
+
+
+  const downloadOrder = async (order, type = "pdf") => {
+    try {
+      const endpoint =
+        type === "csv"
+          ? `${BASE_URL}/api/admin/orders/${order.orderId}/download-csv`
+          : `${BASE_URL}/api/admin/orders/${order.orderId}/download`;
+
+      const res = await axios.get(endpoint, { responseType: "blob" });
+
+      // Create blob and trigger download
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `order-${order.orderId}.${type === "csv" ? "csv" : "pdf"}`
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Error downloading order", err);
     }
   };
 
@@ -127,10 +168,10 @@ const OrderManagement = () => {
           ) : (
             <OrderPreviewCard
               order={ActiveOrder}
-              downloadOrder={null}
+              downloadOrder={() => downloadOrder(ActiveOrder, "pdf")}
               editOrder={null}
               delteOrder={null}
-              updateStatus={(e)=>updateOrderStatus(e, ActiveOrder)}
+              updateStatus={(e) => updateOrderStatus(e, ActiveOrder)}
             />
           )}
         </div>

@@ -8,6 +8,7 @@ import FilterDropdown from "../components/FilterDropdown";
 import EmployeeCard from "../components/cards/EmployeeCard";
 import VariantButton from "../components/buttons/VariantButton";
 import NoItemFoundModal from "../components/NoItemFoundModal";
+import { toast } from "react-toastify";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const EmployeeManagement = () => {
@@ -21,7 +22,6 @@ const EmployeeManagement = () => {
   });
   const [employees, setEmployees] = useState([]);
   const [modal, setModal] = useState(false);
-  const [error, setError] = useState("");
   const [isEdit, setIsEdit] = useState(false);
   const [editEmpId, setEditEmpId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,16 +62,16 @@ const EmployeeManagement = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || (!isEdit && !formData.password)) {
-      alert("Please fill all required fields");
+      toast.warn("Please fill all required fields");
       return;
     }
     if (formData.password && formData.password.length < 6) {
-      alert("Password must be at least 6 characters long");
+      toast.warn("Password must be at least 6 characters long");
       return;
     }
 
     if (formData.phone.length !== 10) {
-      alert("Phone number must have 10 digits");
+      toast.warn("Phone number must have 10 digits");
       return;
     }
 
@@ -93,6 +93,7 @@ const EmployeeManagement = () => {
           }
         );
         console.log("Employee updated successfully");
+        toast.success("Employee updated successfully");
         setIsEdit(false);
         setEditEmpId(null);
       } else {
@@ -105,6 +106,7 @@ const EmployeeManagement = () => {
             },
           }
         );
+        toast.success("Employee addedd successfully");
         console.log("Employee added successfully to the DB:", res.data);
       }
 
@@ -123,7 +125,7 @@ const EmployeeManagement = () => {
       const message =
         err.response?.data?.message ||
         "An error occurred while saving employee.";
-      setError(message);
+      toast.error(message);
     }
   };
 
@@ -150,8 +152,10 @@ const EmployeeManagement = () => {
     try {
       await axios.delete(`${BASE_URL}/api/admin/employees/${empId}`);
       await fetchEmployees();
+      toast.success("successfully deleted the employee");
     } catch (err) {
       console.error("Error deleting employee:...", err);
+      toast.error("Error in deleting the employee");
     }
   };
 
@@ -302,9 +306,6 @@ const EmployeeManagement = () => {
                   </select>
                 </div>
               </div>
-              {error && (
-                <div className="text-rose-500 mb-2 text-sm mt-4">{error}</div>
-              )}
               <div className="flex justify-around items-center gap-[50px] mt-4">
                 <VariantButton
                   onClick={handleCancel}
@@ -375,7 +376,7 @@ const EmployeeManagement = () => {
                   key={emp.empId}
                   emp={emp}
                   handleEdit={() => handleEditEmployee(emp)}
-                  handleDelete={() => handleDeleteEmployee(emp)}
+                  handleDelete={() => handleDeleteEmployee(emp.empId)}
                 />
               ))
             )}

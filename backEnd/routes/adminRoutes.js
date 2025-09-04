@@ -36,6 +36,9 @@ const {
 const {
   fetchOrders,
   updateOrderStatus,
+  downloadcsv,
+  downloadPdf,
+  deleteOrder,
 } = require("../controllers/adminControllers/orderController");
 const { submitQuotation } = require("../controllers/employeeController");
 
@@ -73,6 +76,10 @@ router.delete("/quotations/:quotationId", deleteQuotation);
 // order routes
 router.get("/orders", fetchOrders);
 router.put("/orders/:orderId", updateOrderStatus);
+router.get("/orders/:id/download", downloadPdf);
+router.post("/orders/:id/download-csv", downloadcsv);
+router.delete("/orders/:orderId", deleteOrder);
+
 // router.post("/orders", addOrder);
 
 module.exports = router;

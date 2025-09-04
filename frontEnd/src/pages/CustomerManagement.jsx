@@ -8,6 +8,7 @@ import CustomerTable from "../components/CustomerTable";
 import EmployeeComboBox from "../components/combobox/EmployeeComboBox";
 import VariantButton from "../components/buttons/VariantButton";
 import CTAButton from "../components/buttons/CTAButton";
+import { toast } from "react-toastify";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const CustomerkManagement = () => {
@@ -28,7 +29,6 @@ const CustomerkManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [companyTypeFilter, setCompanyTypeFilter] = useState("");
-  const [error, setError] = useState("");
 
   const fetchCustomers = async () => {
     try {
@@ -68,7 +68,7 @@ const CustomerkManagement = () => {
     e.preventDefault();
 
     if (!formData.name) {
-      alert("Please fill at least the name of the cutomer");
+      toast.warn("Please fill at least the name of the cutomer");
       return;
     }
     console.log("Form Data before saving:", formData);
@@ -86,7 +86,7 @@ const CustomerkManagement = () => {
             },
           }
         );
-        console.log("Customer updated successfullly");
+        toast.success("Customer updated successfullly");
         setIsEdit(false);
         setEditCustomerId(null);
       } else {
@@ -105,6 +105,7 @@ const CustomerkManagement = () => {
           }
         );
         console.log("Sending Customers data: ", res.data);
+        toast.success("Customer added successfully");
       }
 
       await fetchCustomers();
@@ -123,8 +124,9 @@ const CustomerkManagement = () => {
       const message =
         err.response?.data?.message ||
         "An error occurred while saving the customer's data.";
-      setError(message);
-    }
+      console.error("Error in saving the customer data>>>", err);
+      toast.error(message);
+      }
   };
 
   const handleEditCustomer = (customer) => {
@@ -152,8 +154,10 @@ const CustomerkManagement = () => {
       await axios.delete(`${BASE_URL}/api/admin/customers/${customerId}`);
       await fetchCustomers();
       console.log("Customer deleted successfully");
+      toast.success("Customer deleted successfully");
     } catch (err) {
       console.error("Error deleting the customer>>>", err);
+      toast.error("Error deleting the customer");
     }
   };
 
@@ -189,7 +193,11 @@ const CustomerkManagement = () => {
       statusFilter === "" ||
       customer.status.toLowerCase() === statusFilter.toLowerCase();
 
-    return matchesCustomer && matchesFilter;
+    const matchesCompany =
+      companyTypeFilter === "" ||
+      customer.companyType.toLowerCase() ===
+        companyTypeFilter.toLowerCase();
+    return matchesCustomer && matchesFilter && matchesCompany;
   });
 
   return (
@@ -329,9 +337,6 @@ const CustomerkManagement = () => {
                   </select>
                 </div>
               </div>
-              {error && (
-                <div className="text-rose-500 mb-2 text-sm mt-4">{error}</div>
-              )}
               <div className="flex justify-around items-center gap-[50px] mt-4">
                 {" "}
                 <VariantButton
@@ -370,6 +375,15 @@ const CustomerkManagement = () => {
                 <option value="">All Status</option>
                 <option value="active">active</option>
                 <option value="inactive">Inactive</option>
+              </FilterDropdown>
+
+              <FilterDropdown
+                value={companyTypeFilter}
+                onChange={(e) => setCompanyTypeFilter(e.target.value)}
+              >
+                <option value="">All Company</option>
+                <option value="dealer">dealer</option>
+                <option value="doctor">doctor</option>
               </FilterDropdown>
             </div>
 

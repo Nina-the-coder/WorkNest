@@ -25,7 +25,9 @@ const QuotationCard = ({
             {quotation.quotationId} - {quotation.customerId?.customerId}{" "}
             {`(${quotation.customerId?.name})`}
           </div>
-          <div>Added By : {quotation?.addedBy?.empId} ({quotation.addedBy?.name})</div>
+          <div>
+            Added By : {quotation?.addedBy?.empId} ({quotation.addedBy?.name})
+          </div>
           <div className="flex items-center gap-4">
             <div>Doctor status : </div>
             <div
@@ -76,7 +78,9 @@ const QuotationCard = ({
       {/* middle with smooth transition */}
       <div
         className={`transition-all duration-500 ease-in-out overflow-hidden ${
-          isExpanded ? "max-h-[400px] overflow-auto opacity-100" : "max-h-0 opacity-0"
+          isExpanded
+            ? "max-h-[400px] overflow-auto opacity-100"
+            : "max-h-0 opacity-0"
         }`}
       >
         <div className="m-8">
@@ -122,6 +126,11 @@ const QuotationCard = ({
               size="large"
               text="Make Order"
               icon="arrow-right"
+              className={`${
+                quotation.status !== "approved"
+                  ? "opacity-50"
+                  : ""
+              }`}
             />
           )}
         </div>
