@@ -170,7 +170,7 @@ const OrderManagement = () => {
               order={ActiveOrder}
               downloadOrder={() => downloadOrder(ActiveOrder, "pdf")}
               editOrder={null}
-              delteOrder={null}
+              delteOrder={(e) => handleDeleteOrder(e, ActiveOrder)}
               updateStatus={(e) => updateOrderStatus(e, ActiveOrder)}
             />
           )}
