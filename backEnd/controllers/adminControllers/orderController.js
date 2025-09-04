@@ -6,7 +6,7 @@ exports.fetchOrders = async (req, res) => {
       .populate({ path: "addedBy", select: "empId name" })
       .populate({
         path: "quotationId",
-        select: "customerId",
+        select: "customerId quotationId total",
         populate: {
           path: "customerId",
         },

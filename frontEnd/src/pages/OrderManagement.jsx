@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
+import Header from "../components/Header";
+import SearchBar from "../components/SearchBar";
+import FilterDropdown from "../components/FilterDropdown";
+import CTAButton from "../components/buttons/CTAButton";
+import OrderCard from "../components/cards/OrderCard";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const OrderManagement = () => {
@@ -23,60 +28,50 @@ const OrderManagement = () => {
     }
   };
 
+  const handleDeleteOrder = async (e, order) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("deleting order", order);
+  };
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
 
       {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col bg-slate-900">
+      <div className="ml-64 w-full p-4 flex flex-col bg-bg">
         {/* header */}
-        <div className="w-full flex justify-between text-white">
-          <div className="text-3xl">Order Management</div>
-          <div className="text-3xl pr-4">Admin</div>
-        </div>
+        <Header title="Order Management" />
 
         {/* Search Bar and CTA button */}
-        <div className="flex my-16 px-10 h-20 w-full">
-          <div className="h-full w-1/2 items-center flex">
-            <input
-              type="text"
-              className="h-10 w-3/4 bg-white px-2"
+        <div className=" w-full my-16 px-10 flex">
+          <div className="flex gap-4">
+            <SearchBar
               placeholder="Search for a Quotation"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <select
-              name=""
-              id=""
+            <FilterDropdown
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-10 border-l bg-white hover:cursor-pointer px-2"
             >
               <option value="">All Status</option>
-              <option value="active">active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+              <option value="approved">approved</option>
+              <option value="rejected">rejected</option>
+              <option value="pending">pending</option>
+            </FilterDropdown>
           </div>
         </div>
 
         {/* container */}
-        <div className="h-120 w-fit flex flex-col overflow-auto px-4 pb-4 ml-4">
+        <div className="h-120 flex flex-col overflow-auto px-4 pb-4 ml-8">
           {/* cards */}
           {orders.map((order) => (
-            <div 
-              className="w-200 min-h-30 bg-slate-800 text-slate-300 p-4 text-lg flex"
-              key={order.orderId}
-            >
-              
-              {/* left */}
-              <div className="flex flex-col mr-40">
-                <div>{order.orderId} - {order.quotationId?.customerId?.customerId}</div>
-                <div>Dispatch Date : {order.dispatchDate}</div>
-              </div>
-
-              {/* right */}
-              <div className="">dispatched</div>
-            </div>
+            <OrderCard
+            key={order._id}
+              order={order}
+              deleteOrder ={(e) => handleDeleteOrder(e, order)}
+            />
           ))}
         </div>
       </div>

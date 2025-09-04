@@ -63,8 +63,8 @@ const QuotationCard = ({
 
       {/* middle with smooth transition */}
       <div
-        className={`transition-all duration-400 ease-in-out overflow-hidden ${
-          isExpanded ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        className={`transition-all duration-500 ease-in-out overflow-hidden ${
+          isExpanded ? "max-h-[400px] overflow-auto opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="m-8">
@@ -119,4 +119,3 @@ const QuotationCard = ({
 };
 
 export default QuotationCard;
- 

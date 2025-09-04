@@ -166,7 +166,7 @@ const QuotationManagement = () => {
       <Sidebar />
 
       {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col items-center bg-bg">
+      <div className="ml-64 w-full p-4 flex flex-col bg-bg">
         {/* header */}
         <Header title="Quotation Management" />
 
@@ -197,7 +197,7 @@ const QuotationManagement = () => {
         </div>
 
         {/* container */}
-        <div className="h-120 w-fit flex flex-col overflow-auto px-4 pb-4 ml-4">
+        <div className="h-120 w-fit flex flex-col overflow-auto px-4 pb-4 ml-8">
           {/* card */}
           {filteredQuotations.map((quotation) => (
             <QuotationCard
