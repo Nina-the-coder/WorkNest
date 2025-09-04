@@ -15,11 +15,11 @@ const Sidebar = () => {
     { name: "Customers", path: "/admin/customers", icon: "notepad-text" },
     { name: "Quotations", path: "/admin/quotations", icon: "users" },
     { name: "Orders", path: "/admin/orders", icon: "scroll" },
-    {
-      name: "Conversations",
-      path: "/admin/conversations",
-      icon: "message-circle-more",
-    },
+    // {
+    //   name: "Conversations",
+    //   path: "/admin/conversations",
+    //   icon: "message-circle-more",
+    // },
     { name: "Profile", path: "/admin/profile", icon: "user" },
   ];
 

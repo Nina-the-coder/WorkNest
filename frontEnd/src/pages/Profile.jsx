@@ -1,5 +1,6 @@
 import React from "react";
 import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
 
 const Profile = () => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -9,12 +10,9 @@ const Profile = () => {
       <Sidebar />
 
       {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col bg-slate-900">
+      <div className="ml-64 w-full p-4 flex flex-col items-center bg-bg">
         {/* header */}
-        <div className="w-full flex justify-between text-white">
-          <div className="text-3xl">Profile</div>
-          <div className="text-3xl pr-4">Admin</div>
-        </div>
+        <Header title="Profile" />
 
         {/* profile */}
         <div className="mt-6 p-4 rounded-md bg-slate-800 shadow-md space-y-2 w-full md:w-1/2">

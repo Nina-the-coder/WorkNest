@@ -69,7 +69,7 @@ const QuotationCard = ({
       >
         <div className="m-8">
           <div className="text-text text-[18px] font-semibold">Products</div>
-          <div className="h-0.25 my-2 w-[400px] bg-text"></div>
+          <div className="border-b-2 mb-2"></div>
           <ul>
             {quotation.products.map((product) => (
               <li key={product.productId}>
@@ -77,7 +77,7 @@ const QuotationCard = ({
               </li>
             ))}
           </ul>
-          <div className="h-0.25 my-2 w-[400px] bg-text"></div>
+          <div className="border-b-2 mb-2"></div>
         </div>
       </div>
 

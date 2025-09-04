@@ -6,9 +6,10 @@ exports.fetchOrders = async (req, res) => {
       .populate({ path: "addedBy", select: "empId name" })
       .populate({
         path: "quotationId",
-        select: "customerId quotationId total",
+        select: "customerId quotationId total products",
         populate: {
           path: "customerId",
+          select: "name address contact email gst company",
         },
       });
     res.status(200).json(orders);

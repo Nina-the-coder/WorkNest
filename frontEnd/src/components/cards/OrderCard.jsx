@@ -1,9 +1,11 @@
 import React from "react";
 import VariantButton from "../buttons/VariantButton";
 
-const OrderCard = ({ order, deleteOrder }) => {
+const OrderCard = ({ order, deleteOrder, onOrderClick }) => {
   return (
-    <div className="w-[500px] h-fit pb-2 bg-card-bg text-secondary-text rounded-2xl bg-gradient-to-r from-bg/80 to-card-bg/10 hover:shadow-xl translate-all duration-300 my-2">
+    <div 
+        onClick={onOrderClick}
+        className="w-[500px] h-fit pb-2 bg-card-bg text-secondary-text rounded-2xl bg-gradient-to-r from-bg/80 to-card-bg/10 hover:shadow-xl translate-all duration-300 my-2">
       {/* top right */}
       <div className="flex justify-end">
         <VariantButton onClick={deleteOrder} variant="red" text="" icon="trash-2" size="tiny" />

@@ -6,6 +6,7 @@ import SearchBar from "../components/SearchBar";
 import FilterDropdown from "../components/FilterDropdown";
 import CTAButton from "../components/buttons/CTAButton";
 import OrderCard from "../components/cards/OrderCard";
+import OrderPreviewCard from "../components/cards/OrderPreviewCard";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const OrderManagement = () => {
@@ -13,6 +14,7 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [error, setError] = useState("");
   const [orders, setOrders] = useState([]);
+  const [ActiveOrder, setActiveOrder] = useState(null);
 
   useEffect(() => {
     fetchOrders();
@@ -34,6 +36,11 @@ const OrderManagement = () => {
     console.log("deleting order", order);
   };
 
+  const handleActiveOrderChange = (order) => {
+    setActiveOrder(order);
+    console.log("Active order changed to:", order);
+  };
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
@@ -44,7 +51,7 @@ const OrderManagement = () => {
         <Header title="Order Management" />
 
         {/* Search Bar and CTA button */}
-        <div className=" w-full my-16 px-10 flex">
+        <div className=" w-full mt-16 px-10 flex">
           <div className="flex gap-4">
             <SearchBar
               placeholder="Search for a Quotation"
@@ -64,15 +71,25 @@ const OrderManagement = () => {
         </div>
 
         {/* container */}
-        <div className="h-120 flex flex-col overflow-auto px-4 pb-4 ml-8">
-          {/* cards */}
-          {orders.map((order) => (
-            <OrderCard
-            key={order._id}
-              order={order}
-              deleteOrder ={(e) => handleDeleteOrder(e, order)}
-            />
-          ))}
+        <div className="flex justify-between">
+          <div className="h-120 mt-16 flex flex-col overflow-auto px-4 pb-4 ml-8">
+            {/* cards */}
+            {orders.map((order) => (
+              <OrderCard
+                onOrderClick={() => handleActiveOrderChange(order)}
+                key={order._id}
+                order={order}
+                deleteOrder={(e) => handleDeleteOrder(e, order)}
+              />
+            ))}
+          </div>
+          {ActiveOrder === null ? (
+            <div className="flex items-center justify-center h-120 mt-16 w-[450px] mr-16 text-text text-[18px] font-bold">
+              Select an order to preview
+            </div>
+          ) : (
+            <OrderPreviewCard order={ActiveOrder} />
+          )}
         </div>
       </div>
     </div>
