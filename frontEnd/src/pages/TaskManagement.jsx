@@ -31,7 +31,7 @@ const TaskManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
-  const [tableView, setTableView] = useState(true); // 🆕 toggle state
+  const [tableView, setTableView] = useState(false); // 🆕 toggle state
 
   const fetchData = async () => {
     try {

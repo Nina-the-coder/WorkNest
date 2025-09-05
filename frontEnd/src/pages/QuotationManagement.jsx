@@ -21,7 +21,7 @@ const QuotationManagement = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [error, setError] = useState("");
   const [quotations, setQuotations] = useState([]);
-  const [tableView, setTableView] = useState(true); // toggle
+  const [tableView, setTableView] = useState(false); // toggle
   const navigate = useNavigate();
 
   useEffect(() => {

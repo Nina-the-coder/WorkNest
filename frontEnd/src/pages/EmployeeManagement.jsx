@@ -28,7 +28,7 @@ const EmployeeManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [tableView, setTableView] = useState(true);
+  const [tableView, setTableView] = useState(false);
 
   const fetchEmployees = async () => {
     try {
