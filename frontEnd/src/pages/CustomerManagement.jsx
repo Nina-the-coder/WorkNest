@@ -4,7 +4,7 @@ import axios from "axios";
 import Header from "../components/Header";
 import SearchBar from "../components/SearchBar";
 import FilterDropdown from "../components/FilterDropdown";
-import CustomerTable from "../components/CustomerTable";
+import CustomerTable from "../components/tables/CustomerTable";
 import EmployeeComboBox from "../components/combobox/EmployeeComboBox";
 import VariantButton from "../components/buttons/VariantButton";
 import CTAButton from "../components/buttons/CTAButton";
@@ -126,7 +126,7 @@ const CustomerkManagement = () => {
         "An error occurred while saving the customer's data.";
       console.error("Error in saving the customer data>>>", err);
       toast.error(message);
-      }
+    }
   };
 
   const handleEditCustomer = (customer) => {
@@ -195,8 +195,7 @@ const CustomerkManagement = () => {
 
     const matchesCompany =
       companyTypeFilter === "" ||
-      customer.companyType.toLowerCase() ===
-        companyTypeFilter.toLowerCase();
+      customer.companyType.toLowerCase() === companyTypeFilter.toLowerCase();
     return matchesCustomer && matchesFilter && matchesCompany;
   });
 
