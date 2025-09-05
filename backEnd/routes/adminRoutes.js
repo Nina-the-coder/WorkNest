@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const {upload, convertToWebP} = require("../middleware/multerConfig");
+const { upload, convertToWebP } = require("../middleware/multerConfig");
 
 const { verifyToken } = require("../middleware/verifyToken");
 const {
@@ -32,6 +32,7 @@ const {
   getAllQuotations,
   updateQuotationStatus,
   deleteQuotation,
+  listQuotation,
 } = require("../controllers/adminControllers/quotationController");
 const {
   fetchOrders,
@@ -58,7 +59,12 @@ router.put("/tasks/:taskId", updateTasks);
 // product routes
 router.post("/products", upload.single("image"), convertToWebP, addProduct);
 router.get("/products", getProducts);
-router.put("/products/:productId", upload.single("image"), convertToWebP, updateProduct);
+router.put(
+  "/products/:productId",
+  upload.single("image"),
+  convertToWebP,
+  updateProduct
+);
 router.delete("/products/:productId", deleteProduct);
 
 // customer routes
@@ -68,7 +74,8 @@ router.delete("/customers/:customerId", deleteCustomer);
 router.put("/customers/:customerId", updateCustomer);
 
 // quotation routes
-router.get("/quotations", getAllQuotations);
+router.get("/quotations", listQuotation);
+// router.get("/quotations", getAllQuotations);
 router.post("/quotations", submitQuotation);
 router.put("/quotations/:quotationId", updateQuotationStatus);
 router.delete("/quotations/:quotationId", deleteQuotation);

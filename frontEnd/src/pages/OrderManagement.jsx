@@ -8,6 +8,8 @@ import CTAButton from "../components/buttons/CTAButton";
 import OrderCard from "../components/cards/OrderCard";
 import OrderPreviewCard from "../components/cards/OrderPreviewCard";
 import { toast } from "react-toastify";
+import SkeletonLoader from "../components/SkeletonLoader";
+import NoItemFoundModal from "../components/NoItemFoundModal";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const OrderManagement = () => {
@@ -15,18 +17,22 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [orders, setOrders] = useState([]);
   const [ActiveOrder, setActiveOrder] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchOrders();
   }, []);
 
   const fetchOrders = async () => {
+    setLoading(true);
     try {
       const res = await axios.get(`${BASE_URL}/api/admin/orders`);
       setOrders(res.data);
       console.log("orders being fetched", res.data);
     } catch (err) {
       console.error("Error in fetching the orders from the server", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -40,7 +46,7 @@ const OrderManagement = () => {
     console.log("deleting order", order);
     try {
       await axios.delete(`${BASE_URL}/api/admin/orders/${order.orderId}`);
-      setOrders((prev) => prev.filter((o) => o.orderId !== order.orderId)); 
+      setOrders((prev) => prev.filter((o) => o.orderId !== order.orderId));
       if (ActiveOrder && ActiveOrder.orderId === order.orderId) {
         setActiveOrder(null);
       }
@@ -74,7 +80,6 @@ const OrderManagement = () => {
       console.error("Error in updating the order status", err);
     }
   };
-
 
   const downloadOrder = async (order, type = "pdf") => {
     try {
@@ -149,32 +154,40 @@ const OrderManagement = () => {
         </div>
 
         {/* container */}
-        <div className="flex justify-between">
-          <div className="h-[500px] mt-14 flex flex-col overflow-auto px-4 pb-4 ml-8">
-            {/* cards */}
-            {filteredOrders.map((order) => (
-              <OrderCard
-                onOrderClick={() => handleActiveOrderChange(order)}
-                key={order._id}
-                order={order}
-                deleteOrder={(e) => handleDeleteOrder(e, order)}
-              />
-            ))}
+        {loading ? (
+          <div className="w-full p-4 gap-4">
+            <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
           </div>
-          {ActiveOrder === null ? (
-            <div className="flex items-center justify-center h-120 mt-16 w-[450px] mr-16 text-text text-[18px] font-bold">
-              Select an order to preview
+        ) : filteredOrders.length === 0 ? (
+          <NoItemFoundModal message="No orders found" />
+        ) : (
+          <div className="flex justify-between">
+            <div className="h-[500px] mt-14 flex flex-col overflow-auto px-4 pb-4 ml-8">
+              {/* cards */}
+              {filteredOrders.map((order) => (
+                <OrderCard
+                  onOrderClick={() => handleActiveOrderChange(order)}
+                  key={order._id}
+                  order={order}
+                  deleteOrder={(e) => handleDeleteOrder(e, order)}
+                />
+              ))}
             </div>
-          ) : (
-            <OrderPreviewCard
-              order={ActiveOrder}
-              downloadOrder={() => downloadOrder(ActiveOrder, "pdf")}
-              editOrder={null}
-              delteOrder={(e) => handleDeleteOrder(e, ActiveOrder)}
-              updateStatus={(e) => updateOrderStatus(e, ActiveOrder)}
-            />
-          )}
-        </div>
+            {ActiveOrder === null ? (
+              <div className="flex items-center justify-center h-120 mt-16 w-[450px] mr-16 text-text text-[18px] font-bold">
+                Select an order to preview
+              </div>
+            ) : (
+              <OrderPreviewCard
+                order={ActiveOrder}
+                downloadOrder={() => downloadOrder(ActiveOrder, "pdf")}
+                editOrder={null}
+                delteOrder={(e) => handleDeleteOrder(e, ActiveOrder)}
+                updateStatus={(e) => updateOrderStatus(e, ActiveOrder)}
+              />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import EmployeeComboBox from "../components/combobox/EmployeeComboBox";
 import VariantButton from "../components/buttons/VariantButton";
 import CTAButton from "../components/buttons/CTAButton";
 import { toast } from "react-toastify";
+import SkeletonLoader from "../components/SkeletonLoader";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const CustomerkManagement = () => {
@@ -24,6 +25,7 @@ const CustomerkManagement = () => {
   });
   const [customers, setCustomers] = useState([]);
   const [modal, setModal] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editCustomerId, setEditCustomerId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,6 +34,7 @@ const CustomerkManagement = () => {
 
   const fetchCustomers = async () => {
     try {
+      setLoading(true);
       const res = await axios.get(`${BASE_URL}/api/admin/customers`);
       setCustomers(res.data);
     } catch (err) {
@@ -39,6 +42,8 @@ const CustomerkManagement = () => {
         "Error in fetching the customers form the database...",
         err
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,6 +70,7 @@ const CustomerkManagement = () => {
   };
 
   const handleSave = async (e) => {
+    setLoading(true);
     e.preventDefault();
 
     if (!formData.name) {
@@ -126,6 +132,8 @@ const CustomerkManagement = () => {
         "An error occurred while saving the customer's data.";
       console.error("Error in saving the customer data>>>", err);
       toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -149,6 +157,7 @@ const CustomerkManagement = () => {
     const confirmDelete = window.confirm(
       `Are you sure you want to delete customer ${customerId}?`
     );
+    setLoading(true);
     if (!confirmDelete) return;
     try {
       await axios.delete(`${BASE_URL}/api/admin/customers/${customerId}`);
@@ -158,6 +167,8 @@ const CustomerkManagement = () => {
     } catch (err) {
       console.error("Error deleting the customer>>>", err);
       toast.error("Error deleting the customer");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -396,19 +407,24 @@ const CustomerkManagement = () => {
         )}
 
         {/* container */}
-        {!modal && (
-          <div className="w-300 max-h-120 overflow-y-auto h-fit flex flex-wrap text-white">
-            {filteredCustomers.length === 0 ? (
-              <div className="ml-40">No Customer found</div>
-            ) : (
-              <CustomerTable
-                filteredCustomers={filteredCustomers}
-                handleEdit={handleEditCustomer}
-                handleDelete={handleDeleteCustomer}
-              />
-            )}
-          </div>
-        )}
+        {!modal &&
+          (loading ? (
+            <div className="w-full p-4 gap-4">
+              <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+            </div>
+          ) : (
+            <div className="w-300 max-h-120 overflow-y-auto h-fit flex flex-wrap text-white">
+              {filteredCustomers.length === 0 ? (
+                <div className="ml-40">No Customer found</div>
+              ) : (
+                <CustomerTable
+                  filteredCustomers={filteredCustomers}
+                  handleEdit={handleEditCustomer}
+                  handleDelete={handleDeleteCustomer}
+                />
+              )}
+            </div>
+          ))}
       </div>
     </div>
   );

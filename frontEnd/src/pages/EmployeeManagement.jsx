@@ -10,6 +10,7 @@ import VariantButton from "../components/buttons/VariantButton";
 import NoItemFoundModal from "../components/NoItemFoundModal";
 import { toast } from "react-toastify";
 import EmployeeTable from "../components/tables/EmployeeTable";
+import SkeletonLoader from "../components/SkeletonLoader";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const EmployeeManagement = () => {
@@ -23,6 +24,7 @@ const EmployeeManagement = () => {
   });
   const [employees, setEmployees] = useState([]);
   const [modal, setModal] = useState(false);
+  const [loading, setLoading] = useState(false); // added loading state
   const [isEdit, setIsEdit] = useState(false);
   const [editEmpId, setEditEmpId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,10 +34,13 @@ const EmployeeManagement = () => {
 
   const fetchEmployees = async () => {
     try {
+      setLoading(true);
       const res = await axios.get(`${BASE_URL}/api/admin/employees`);
       setEmployees(res.data);
     } catch (err) {
       console.error("Error fetching employees from the db : ...", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -357,7 +362,11 @@ const EmployeeManagement = () => {
                 <option value="inactive">Inactive</option>
               </FilterDropdown>
               {/* Add New Employee */}
-              <CTAButton onClick={handleAddNewEmployee} icon="plus" className="ml-8"> 
+              <CTAButton
+                onClick={handleAddNewEmployee}
+                icon="plus"
+                className="ml-8"
+              >
                 <div className="text-left mb-1">Add new</div>
                 <div className="text-left">Employee</div>
               </CTAButton>
@@ -379,7 +388,12 @@ const EmployeeManagement = () => {
 
         {/* Container */}
         {!modal &&
-          (tableView ? (
+          (loading ? (
+            // Skeleton loader while fetching employees
+            <div className="w-full p-4 gap-4">
+              <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+            </div>
+          ) : tableView ? (
             <EmployeeTable
               employees={filteredEmployees}
               handleEdit={handleEditEmployee}

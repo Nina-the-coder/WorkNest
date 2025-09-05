@@ -11,6 +11,8 @@ import QuotationCard from "../components/cards/QuotationCard";
 import QuotationTable from "../components/tables/QuotationTable";
 import NoItemFoundModal from "../components/NoItemFoundModal";
 import { toast } from "react-toastify";
+import useDebounce from "../hooks/useDebounce";
+import SkeletonLoader from "../components/SkeletonLoader";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -19,21 +21,46 @@ const QuotationManagement = () => {
   const token = localStorage.getItem("token");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [error, setError] = useState("");
   const [quotations, setQuotations] = useState([]);
   const [tableView, setTableView] = useState(false); // toggle
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 450);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchQuotations();
-  }, []);
+    setPage(1); // reset to first page on new search or filter
+    fetchQuotations({
+      page: 1,
+      limit,
+      search: debouncedSearch,
+      status: statusFilter,
+    });
+  }, [debouncedSearch, statusFilter, limit]);
 
-  const fetchQuotations = async () => {
+  const fetchQuotations = async ({
+    page = 1,
+    limit = 10,
+    search = "",
+    status = "",
+  } = {}) => {
+    setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/admin/quotations`);
-      setQuotations(res.data);
+      const res = await axios.get(`${BASE_URL}/api/admin/quotations`, {
+        params: { page, limit, search, status },
+        headers: { Authorization: `Bearer ${token}` }, // if protected
+      });
+      setQuotations(res.data.quotations);
+      setTotalPages(res.data.totalPages);
+      setPage(res.data.page);
     } catch (err) {
-      console.error("Error fetching quotations...", err);
+      console.error("Error fetching quotations", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -142,9 +169,7 @@ const QuotationManagement = () => {
 
   const filteredQuotations = quotations.filter((quotation) => {
     const matchesSearch =
-      quotation.quotationId
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
+      quotation.quotationId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (quotation.customerId?.customerId &&
         quotation.customerId?.customerId
           .toLowerCase()
@@ -221,6 +246,10 @@ const QuotationManagement = () => {
             rejectQuotation={handleRejectQuotation}
             makeOrder={handleMakeOrder}
           />
+        ) : loading ? (
+          <div className="w-full p-4 gap-4">
+            <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+          </div>
         ) : (
           <div className="w-full p-2 flex flex-wrap gap-4">
             {filteredQuotations.length === 0 ? (
@@ -234,12 +263,8 @@ const QuotationManagement = () => {
                   deleteQuotation={(e) =>
                     handleDeleteQuotation(e, quotation.quotationId)
                   }
-                  approveQuotation={(e) =>
-                    handleApproveQuotation(e, quotation)
-                  }
-                  rejectQuotation={(e) =>
-                    handleRejectQuotation(e, quotation)
-                  }
+                  approveQuotation={(e) => handleApproveQuotation(e, quotation)}
+                  rejectQuotation={(e) => handleRejectQuotation(e, quotation)}
                   makeOrder={(e) => handleMakeOrder(e, quotation)}
                 />
               ))

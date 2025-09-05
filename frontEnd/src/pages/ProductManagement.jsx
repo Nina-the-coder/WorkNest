@@ -7,6 +7,7 @@ import CTAButton from "../components/buttons/CTAButton";
 import ProductCard from "../components/cards/ProductCard";
 import VariantButton from "../components/buttons/VariantButton";
 import { toast } from "react-toastify";
+import SkeletonLoader from "../components/SkeletonLoader";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ProductManagement = () => {
@@ -17,6 +18,7 @@ const ProductManagement = () => {
     price: "",
   });
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editProductId, setEditProductId] = useState(null);
@@ -56,10 +58,13 @@ const ProductManagement = () => {
 
   const fetchProducts = async () => {
     try {
+      setLoading(true);
       const res = await axios.get(`${BASE_URL}/api/admin/products`);
       setProducts(res.data);
     } catch (err) {
       console.error("Error in fetching the products form the database...", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,6 +73,7 @@ const ProductManagement = () => {
   }, []);
 
   const handleSave = async (e) => {
+    setLoading(true);
     e.preventDefault();
     e.stopPropagation();
     if (!formData.name || !formData.description || !formData.price) {
@@ -99,7 +105,7 @@ const ProductManagement = () => {
           }
         );
         console.log("product updated successfullly");
-          toast.success("Product updated successfully");
+        toast.success("Product updated successfully");
         setIsEdit(false);
         setEditProductId(null);
       } else {
@@ -133,6 +139,8 @@ const ProductManagement = () => {
         err.response?.data?.message ||
         "An error occurred while saving Product.";
       toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -152,6 +160,7 @@ const ProductManagement = () => {
   };
 
   const handleDeleteProduct = async (e, productId) => {
+    setLoading(true);
     e.preventDefault();
     e.stopPropagation();
     const confirmDelete = window.confirm(
@@ -165,6 +174,8 @@ const ProductManagement = () => {
       console.log("Product deleted successfully");
     } catch (err) {
       console.error("Error in deleting the product", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -307,18 +318,25 @@ const ProductManagement = () => {
         )}
 
         {/* container */}
-        {!modal && (
-          <div className="overflow-auto h-[500px] w-full pb-4 px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.productId}
-                product={product}
-                handleDelete={(e) => handleDeleteProduct(e, product.productId)}
-                handleEdit={(e) => handleEditProduct(e, product)}
-              />
-            ))}
-          </div>
-        )}
+        {!modal &&
+          (loading ? (
+            <div className="w-full p-4 gap-4">
+              <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+            </div>
+          ) : (
+            <div className="overflow-auto h-[500px] w-full pb-4 px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.productId}
+                  product={product}
+                  handleDelete={(e) =>
+                    handleDeleteProduct(e, product.productId)
+                  }
+                  handleEdit={(e) => handleEditProduct(e, product)}
+                />
+              ))}
+            </div>
+          ))}
       </div>
     </div>
   );

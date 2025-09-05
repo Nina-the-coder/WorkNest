@@ -11,6 +11,7 @@ import TaskTable from "../components/tables/TaskTable"; // 🆕 add this like Em
 import VariantButton from "../components/buttons/VariantButton";
 import NoItemFoundModal from "../components/NoItemFoundModal";
 import { toast } from "react-toastify";
+import SkeletonLoader from "../components/SkeletonLoader";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -27,6 +28,7 @@ const TaskManagement = () => {
   const [employees, setEmployees] = useState([]);
   const [modal, setModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [editTaskId, setEditTaskId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -35,6 +37,7 @@ const TaskManagement = () => {
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const [taskRes, empRes] = await Promise.all([
         axios.get(`${BASE_URL}/api/admin/tasks`),
         axios.get(`${BASE_URL}/api/admin/employees`),
@@ -54,6 +57,8 @@ const TaskManagement = () => {
       setTasks(updatedTasks);
     } catch (err) {
       console.error("Error fetching tasks or employees", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,9 +82,12 @@ const TaskManagement = () => {
   };
 
   const handleSave = async (e) => {
+    setLoading(true);
     e.preventDefault();
     if (!formData.assignedTo || !formData.title || !formData.dueDate) {
-      toast.warn("Please fill in all required fields, including selecting an employee.");
+      toast.warn(
+        "Please fill in all required fields, including selecting an employee."
+      );
       return;
     }
     try {
@@ -96,7 +104,10 @@ const TaskManagement = () => {
         setEditTaskId(null);
       } else {
         await axios.post(`${BASE_URL}/api/admin/tasks`, payload, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         });
         toast.success("Task created successfully");
       }
@@ -112,8 +123,11 @@ const TaskManagement = () => {
       });
       setModal(false);
     } catch (err) {
-      const message = err.response?.data?.message || "An error occurred while saving task.";
+      const message =
+        err.response?.data?.message || "An error occurred while saving task.";
       toast.error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -133,11 +147,14 @@ const TaskManagement = () => {
 
   const handleDeleteTask = async (taskId) => {
     try {
+      setLoading(true);
       await axios.delete(`${BASE_URL}/api/admin/tasks/${taskId}`);
       await fetchData();
       toast.success("Task deleted successfully");
     } catch (err) {
       toast.error("Error deleting the task");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -161,8 +178,12 @@ const TaskManagement = () => {
       task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.assignedToName.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesFilter = statusFilter === "" || task.status.toLowerCase() === statusFilter.toLowerCase();
-    const matchesPriority = priorityFilter === "" || task.priority.toLowerCase() === priorityFilter.toLowerCase();
+    const matchesFilter =
+      statusFilter === "" ||
+      task.status.toLowerCase() === statusFilter.toLowerCase();
+    const matchesPriority =
+      priorityFilter === "" ||
+      task.priority.toLowerCase() === priorityFilter.toLowerCase();
 
     return matchesTask && matchesFilter && matchesPriority;
   });
@@ -179,7 +200,10 @@ const TaskManagement = () => {
             <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
               {isEdit ? "Edit Task" : "Add New Task"}
             </div>
-            <form className="flex flex-col items-center gap-1" onKeyDown={handleKeyDown}>
+            <form
+              className="flex flex-col items-center gap-1"
+              onKeyDown={handleKeyDown}
+            >
               <EmployeeComboBox
                 onSelect={(emp) =>
                   setFormData((prev) => ({
@@ -189,32 +213,85 @@ const TaskManagement = () => {
                 }
               />
               {/* fields */}
-              <label htmlFor="title" className="w-full text-[16px] ml-4 text-text/90">Task Title</label>
-              <input type="text" id="title" name="title" value={formData.title} onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white" />
+              <label
+                htmlFor="title"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
+                Task Title
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+              />
 
-              <label htmlFor="description" className="w-full text-[16px] ml-4 text-text/90">Description</label>
-              <textarea id="description" name="description" value={formData.description} onChange={handleChange}
-                className="w-[380px] h-[84px] p-0.5 rounded-xl mb-4 bg-white" placeholder="write description here..." />
+              <label
+                htmlFor="description"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                className="w-[380px] h-[84px] p-0.5 rounded-xl mb-4 bg-white"
+                placeholder="write description here..."
+              />
 
-              <label htmlFor="dueDate" className="w-full text-[16px] ml-4 text-text/90">Due Date</label>
-              <input type="date" id="dueDate" name="dueDate" value={formData.dueDate} onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white" />
+              <label
+                htmlFor="dueDate"
+                className="w-full text-[16px] ml-4 text-text/90"
+              >
+                Due Date
+              </label>
+              <input
+                type="date"
+                id="dueDate"
+                name="dueDate"
+                value={formData.dueDate}
+                onChange={handleChange}
+                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+              />
 
               <div className="flex w-full justify-between">
                 <div className="flex flex-col">
-                  <label htmlFor="status" className="w-full text-[16px] ml-4 text-text/90">Status</label>
-                  <select name="status" id="status" onChange={handleChange} value={formData.status}
-                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white">
+                  <label
+                    htmlFor="status"
+                    className="w-full text-[16px] ml-4 text-text/90"
+                  >
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    id="status"
+                    onChange={handleChange}
+                    value={formData.status}
+                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                  >
                     <option value="pending">Pending</option>
                     <option value="in-progress">In progress</option>
                     <option value="done">Done</option>
                   </select>
                 </div>
                 <div className="flex flex-col">
-                  <label htmlFor="priority" className="w-full text-[16px] ml-4 text-text/90">Priority</label>
-                  <select name="priority" id="priority" onChange={handleChange} value={formData.priority}
-                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white">
+                  <label
+                    htmlFor="priority"
+                    className="w-full text-[16px] ml-4 text-text/90"
+                  >
+                    Priority
+                  </label>
+                  <select
+                    name="priority"
+                    id="priority"
+                    onChange={handleChange}
+                    value={formData.priority}
+                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                  >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
@@ -223,8 +300,20 @@ const TaskManagement = () => {
               </div>
 
               <div className="flex justify-around items-center gap-[50px] mt-4">
-                <VariantButton onClick={handleCancel} variant="ghostRed" size="medium" text="Cancel" icon="x" />
-                <VariantButton onClick={handleSave} variant="cta" size="medium" text="Save" icon="check" />
+                <VariantButton
+                  onClick={handleCancel}
+                  variant="ghostRed"
+                  size="medium"
+                  text="Cancel"
+                  icon="x"
+                />
+                <VariantButton
+                  onClick={handleSave}
+                  variant="cta"
+                  size="medium"
+                  text="Save"
+                  icon="check"
+                />
               </div>
             </form>
           </div>
@@ -234,21 +323,34 @@ const TaskManagement = () => {
         {!modal && (
           <div className="flex py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
             <div className="flex gap-4">
-              <SearchBar placeholder="Search tasks by title, description, employee"
-                value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-              <FilterDropdown value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <SearchBar
+                placeholder="Search tasks by title, description, employee"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <FilterDropdown
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
                 <option value="">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="in-progress">In-Progress</option>
                 <option value="done">Done</option>
               </FilterDropdown>
-              <FilterDropdown value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
+              <FilterDropdown
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+              >
                 <option value="">All Priority</option>
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
               </FilterDropdown>
-              <CTAButton onClick={handleAddNewTask} icon="plus" className="ml-8">
+              <CTAButton
+                onClick={handleAddNewTask}
+                icon="plus"
+                className="ml-8"
+              >
                 <div className="text-left mb-1">Add new</div>
                 <div className="text-left">Task</div>
               </CTAButton>
@@ -266,29 +368,32 @@ const TaskManagement = () => {
         )}
 
         {/* container */}
-        {!modal &&
-          (tableView ? (
-            <TaskTable
-              tasks={filteredTasks}
-              handleEdit={handleEditTask}
-              handleDelete={handleDeleteTask}
-            />
-          ) : (
-            <div className="w-full p-2 flex flex-wrap gap-4">
-              {filteredTasks.length === 0 ? (
-                <NoItemFoundModal message="No tasks found" />
-              ) : (
-                filteredTasks.map((task) => (
-                  <TaskCard
-                    key={task.taskId}
-                    task={task}
-                    handleEdit={() => handleEditTask(task)}
-                    handleDelete={() => handleDeleteTask(task.taskId)}
-                  />
-                ))
-              )}
-            </div>
-          ))}
+        {!modal && loading ? (
+          <div className="w-full p-4 gap-4">
+            <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+          </div>
+        ) : tableView ? (
+          <TaskTable
+            tasks={filteredTasks}
+            handleEdit={handleEditTask}
+            handleDelete={handleDeleteTask}
+          />
+        ) : (
+          <div className="w-full p-2 flex flex-wrap gap-4">
+            {filteredTasks.length === 0 ? (
+              <NoItemFoundModal message="No tasks found" />
+            ) : (
+              filteredTasks.map((task) => (
+                <TaskCard
+                  key={task.taskId}
+                  task={task}
+                  handleEdit={() => handleEditTask(task)}
+                  handleDelete={() => handleDeleteTask(task.taskId)}
+                />
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
