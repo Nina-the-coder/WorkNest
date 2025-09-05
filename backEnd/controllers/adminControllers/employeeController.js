@@ -7,6 +7,12 @@ exports.addEmployee = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      if(existingUser.deleted){
+        existingUser.deleted = false;
+        existingUser.deletedAt = null;
+        await existingUser.save();
+        return res.status(200).json({message: "Employee restored successfully", user: existingUser});
+      }
       return res.status(400).json({ message: "Email already exists..." });
     }
     const nextEmpNumber = await getNextSequence("empId");

@@ -12,7 +12,7 @@ const OrderPreviewCard = ({
   return (
     <div className="w-[450px] h-fit mr-16">
       {/* buttons */}
-      <div className="flex justify-end mb-2 my-8 gap-4 mr-4">
+      <div className="flex justify-end mt-4 gap-4 mr-4">
         <VariantButton
           variant="ghostCta"
           text=""
@@ -113,7 +113,7 @@ const OrderPreviewCard = ({
           <div className="border-b-2 mb-2"></div>
           <div>Name: {order?.customerSnapshot?.name || "Not Set"}</div>
           <div>
-            Company: {order?.customerSnapshot?.address || "Not Set"}
+            Company: {order?.customerSnapshot?.companyType || "Not Set"}
           </div>
           <div>
             Contact: {order?.customerSnapshot?.contact || "Not Set"}

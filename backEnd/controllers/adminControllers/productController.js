@@ -1,5 +1,7 @@
 const Product = require("../../models/Product");
 const getNextSequence = require("../../utils/getNextSequence");
+const path = require("path");
+const fs = require("fs");
 
 exports.addProduct = async (req, res) => {
   try {
@@ -39,6 +41,13 @@ exports.updateProduct = async (req, res) => {
   try {
     const { productId } = req.params;
     const { name, description, price } = req.body;
+
+    // find the existing product first
+    const product = await Product.findOne({ productId });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
     const updatedData = {
       name,
       description,
@@ -46,42 +55,72 @@ exports.updateProduct = async (req, res) => {
     };
 
     if (req.file) {
+      // delete old image if it exists
+      if (product.image) {
+        const oldImagePath = path.join(
+          __dirname,
+          "../../uploads",
+          product.image
+        );
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlink(oldImagePath, (err) => {
+            if (err) console.error("Error deleting old image:", err);
+          });
+        }
+      }
+
+      // assign new image filename
       updatedData.image = req.file.filename;
     }
 
     const updatedProduct = await Product.findOneAndUpdate(
-      { productId: productId },
+      { productId },
       updatedData,
       { new: true }
     );
 
-    if (!updatedProduct) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    res
-      .status(200)
-      .json({ message: "Product Updaated...", product: updatedProduct });
+    res.status(200).json({
+      message: "Product updated successfully",
+      product: updatedProduct,
+    });
   } catch (err) {
+    console.error("Error in updating product:", err);
     res.status(500).json({
-      message: "Error in updating the product...",
+      message: "Error in updating the product",
       error: err.message,
     });
   }
 };
-
 exports.deleteProduct = async (req, res) => {
   try {
     const { productId } = req.params;
-    const deleted = await Product.deleteOne({ productId });
 
-    if (deleted.deletedCount === 0) {
+    // find the product first to know which image to delete
+    const product = await Product.findOne({ productId });
+
+    if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    res.status(200).json({ message: "Product deleted successfully" });
+
+    // delete product from DB
+    await Product.deleteOne({ productId });
+
+    // if product has an image, delete it from uploads folder
+    if (product.image) {
+      const imagePath = path.join(__dirname, "../../uploads", product.image);
+      fs.unlink(imagePath, (err) => {
+        if (err) {
+          console.error("Error deleting image:", err);
+          // optional: don't return error here, because product already deleted
+        }
+      });
+    }
+
+    res.status(200).json({ message: "Product and image deleted successfully" });
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "ERror in deleting the product", error: err.message });
+    res.status(500).json({
+      message: "Error in deleting the product",
+      error: err.message,
+    });
   }
 };

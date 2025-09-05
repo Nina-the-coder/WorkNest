@@ -34,7 +34,7 @@ exports.addTask = async (req, res) => {
 
 exports.getAllTasks = async (req, res) => {
   try {
-    const tasks = await Task.find()
+    const tasks = await Task.find({deleted: false})
       .populate("assignedTo")
       .populate("assignedBy");
     res.status(200).json(tasks);
@@ -48,11 +48,19 @@ exports.getAllTasks = async (req, res) => {
 exports.deleteTask = async (req, res) => {
   try {
     const { taskId } = req.params;
-    const deleted = await Task.deleteOne({ taskId });
+    // const deleted = await Task.deleteOne({ taskId });
 
-    if (deleted.deletedCount === 0) {
-      return res.status(404).json({ message: "Task not found" });
+    // if (deleted.deletedCount === 0) {
+    //   return res.status(404).json({ message: "Task not found" });
+    // }
+    const task = await Task.findOne({taskId});
+
+    if(!task){
+      return res.status(404).json({message: "No task found"});
     }
+    task.deleted = true;
+    task.deletedAt = new Date();
+    await task.save();
     res.status(200).json({ message: "Task deleted successfully" });
   } catch (err) {
     res

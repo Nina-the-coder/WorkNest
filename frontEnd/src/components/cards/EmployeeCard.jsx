@@ -15,7 +15,7 @@ const EmployeeCard = ({ emp, handleEdit, handleDelete }) => {
   return (
     <div
       key={emp.empId}
-      className="w-[332px] bg- h-[280px] p-4 flex flex-col bg-card-bg text-secondary-text rounded-2xl bg-gradient-to-r from-bg/80 to-card-bg/10 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+      className="w-[332px] bg- h-[280px] p-4 flex flex-col bg-card-bg text-secondary-text rounded-2xl bg-gradient-to-r from-bg/80 to-card-bg/10 hover:shadow-xl transition-all duration-300"
     >
       {/* top */}
       <div className="flex">

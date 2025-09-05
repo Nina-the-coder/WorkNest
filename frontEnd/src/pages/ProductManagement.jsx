@@ -289,7 +289,7 @@ const ProductManagement = () => {
 
         {/* Search Bar and CTA button */}
         {!modal && (
-          <div className="flex mt-16 mb-20 px-10 w-full">
+          <div className="flex my-14 px-10 w-full">
             <div className="flex gap-4">
               <SearchBar
                 placeholder="Searh for the product by name or description"
@@ -308,7 +308,7 @@ const ProductManagement = () => {
 
         {/* container */}
         {!modal && (
-          <div className="overflow-auto max-h-[500px] w-full pb-4 px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="overflow-auto h-[500px] w-full pb-4 px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.productId}

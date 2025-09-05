@@ -12,7 +12,7 @@ const ProductCard = ({ product, handleEdit, handleDelete }) => {
     <div
       onClick={handleProductClick}
       aria-expanded={expanded}
-      className="relative overflow-hidden bg-card-bg/50 rounded-2xl shadow-md text-secondary-text cursor-pointer select-none touch-manipulation"
+      className="relative h-[300px] overflow-hidden bg-card-bg/50 rounded-2xl shadow-md text-secondary-text cursor-pointer select-none touch-manipulation"
       role="button"
       tabIndex={0}
     >

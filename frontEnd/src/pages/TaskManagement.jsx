@@ -332,7 +332,7 @@ const TaskManagement = () => {
 
         {/* Search Bar and CTA button */}
         {!modal && (
-          <div className=" w-full my-16 px-10 flex">
+          <div className=" w-full my-14 px-10 flex">
             <div className="flex gap-4">
               <SearchBar
                 placeholder="Search tasks by title, description, employee"
@@ -369,7 +369,7 @@ const TaskManagement = () => {
 
         {/* container */}
         {!modal && (
-          <div className="w-300 max-h-120 p-2 overflow-auto h-fit flex flex-wrap gap-4 pt-8 text-white">
+        <div className="w-300 max-h-120 p-2 overflow-auto h-fit flex flex-wrap gap-4 text-white">
             {filteredTasks.length === 0 ? (
               <NoItemFoundModal message="No tasks found" />
             ) : (

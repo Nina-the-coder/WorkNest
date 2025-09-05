@@ -39,9 +39,9 @@ const Sidebar = () => {
             <Link
               key={index}
               to={item.path}
-              className={`flex items-center pl-5 py-3 pr-4 rounded-l-xl border border-transparent mb-2 transition-all duration-300 
+              className={`flex items-center pl-5 py-3 pr-4 border border-transparent mb-2 transition-all duration-300 
                 ${isActive 
-                  ? "bg-bg ml-4" 
+                  ? "bg-bg ml-4 rounded-l-2xl" 
                   : "hover:border-text text-text"
                 }`}
             >

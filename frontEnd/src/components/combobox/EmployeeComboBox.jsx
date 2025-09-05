@@ -13,8 +13,9 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
     const fetchEmployees = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/api/admin/employees`);
-        setEmployees(res.data);
-        setFilteredEmployees(res.data);
+        const activeEmployees = res.data.filter(emp => emp.status === 'active' && !emp.deleted);
+        setEmployees(activeEmployees);
+        setFilteredEmployees(activeEmployees);
       } catch (err) {
         console.error("Error fetching employees from the db: ", err);
       }

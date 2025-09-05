@@ -194,7 +194,7 @@ const QuotationManagement = () => {
         <Header title="Quotation Management" />
 
         {/* Search Bar and CTA button */}
-        <div className=" w-full my-16 px-10 flex">
+        <div className=" w-full my-10 py-4 px-10 flex sticky top-0 bg-bg z-50">
           <div className="flex gap-4">
             <SearchBar
               placeholder="Search for a Quotation"
@@ -220,7 +220,7 @@ const QuotationManagement = () => {
         </div>
 
         {/* container */}
-        <div className="h-120 w-fit flex flex-col overflow-auto px-4 pb-4 ml-8">
+        <div className="h-fit w-fit flex flex-col  px-4 pb-4 ml-8">
           {/* card */}
           {filteredQuotations.map((quotation) => (
             <QuotationCard

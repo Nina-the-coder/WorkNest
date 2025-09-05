@@ -9,6 +9,7 @@ import EmployeeCard from "../components/cards/EmployeeCard";
 import VariantButton from "../components/buttons/VariantButton";
 import NoItemFoundModal from "../components/NoItemFoundModal";
 import { toast } from "react-toastify";
+import EmployeeTable from "../components/tables/EmployeeTable";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const EmployeeManagement = () => {
@@ -27,6 +28,7 @@ const EmployeeManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [tableView, setTableView] = useState(true);
 
   const fetchEmployees = async () => {
     try {
@@ -326,9 +328,10 @@ const EmployeeManagement = () => {
           </div>
         )}
 
-        {/* Search Bar and CTA button */}
+        {/* Search Bar, Filters, and CTA */}
         {!modal && (
-          <div className="flex mt-16 mb-20 px-10 w-full">
+          <div className="flex py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
+            {/* Left side: Search + Filters */}
             <div className="flex gap-4">
               <SearchBar
                 placeholder="Search employee by name, email, empId"
@@ -353,35 +356,51 @@ const EmployeeManagement = () => {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </FilterDropdown>
-            </div>
-
-            <div className="ml-20">
-              <CTAButton onClick={handleAddNewEmployee} icon="plus">
+              {/* Add New Employee */}
+              <CTAButton onClick={handleAddNewEmployee} icon="plus" className="ml-8"> 
                 <div className="text-left mb-1">Add new</div>
                 <div className="text-left">Employee</div>
               </CTAButton>
             </div>
+
+            {/* Right side: Actions */}
+            <div className="flex gap-6 items-center">
+              {/* Toggle Button */}
+              <VariantButton
+                onClick={() => setTableView(!tableView)}
+                variant="ghostCta"
+                size="medium"
+                text={tableView ? "Card" : "Table"}
+                icon={tableView ? "layout-grid" : "table"}
+              />
+            </div>
           </div>
         )}
 
-        {/* container */}
-        {!modal && (
-          <div className="w-full flex p-2 flex-wrap gap-4 h-[480px] overflow-auto">
-            {/* cards */}
-            {filteredEmployees.length === 0 ? (
-              <NoItemFoundModal message="No employees found" />
-            ) : (
-              filteredEmployees.map((emp) => (
-                <EmployeeCard
-                  key={emp.empId}
-                  emp={emp}
-                  handleEdit={() => handleEditEmployee(emp)}
-                  handleDelete={() => handleDeleteEmployee(emp.empId)}
-                />
-              ))
-            )}
-          </div>
-        )}
+        {/* Container */}
+        {!modal &&
+          (tableView ? (
+            <EmployeeTable
+              employees={filteredEmployees}
+              handleEdit={handleEditEmployee}
+              handleDelete={handleDeleteEmployee}
+            />
+          ) : (
+            <div className="w-full p-2 flex flex-wrap gap-4">
+              {filteredEmployees.length === 0 ? (
+                <NoItemFoundModal message="No employees found" />
+              ) : (
+                filteredEmployees.map((emp) => (
+                  <EmployeeCard
+                    key={emp.empId}
+                    emp={emp}
+                    handleEdit={() => handleEditEmployee(emp)}
+                    handleDelete={() => handleDeleteEmployee(emp.empId)}
+                  />
+                ))
+              )}
+            </div>
+          ))}
       </div>
     </div>
   );
