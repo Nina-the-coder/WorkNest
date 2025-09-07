@@ -33,8 +33,8 @@ const EmployeeManagement = () => {
   const [tableView, setTableView] = useState(false);
 
   const fetchEmployees = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const res = await axios.get(`${BASE_URL}/api/admin/employees`);
       setEmployees(res.data);
     } catch (err) {

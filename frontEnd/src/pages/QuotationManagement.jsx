@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ import NoItemFoundModal from "../components/NoItemFoundModal";
 import { toast } from "react-toastify";
 import useDebounce from "../hooks/useDebounce";
 import SkeletonLoader from "../components/SkeletonLoader";
+import PaginationControls from "../components/PaginationControls";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -20,68 +21,92 @@ const QuotationManagement = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 450);
+
   const [statusFilter, setStatusFilter] = useState("");
   const [quotations, setQuotations] = useState([]);
-  const [tableView, setTableView] = useState(false); // toggle
+  const [tableView, setTableView] = useState(false);
 
+  // pagination state
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
   const [loading, setLoading] = useState(false);
-  const debouncedSearch = useDebounce(searchQuery, 450);
 
   const navigate = useNavigate();
 
+  // fetch function (uses AbortController to cancel stale requests)
+  const fetchQuotations = useCallback(
+    async ({ page = 1, limit = 10, search = "", status = "" } = {}) => {
+      setLoading(true);
+      const controller = new AbortController();
+      try {
+        const res = await axios.get(`${BASE_URL}/api/admin/quotations`, {
+          params: { page, limit, search, status },
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        });
+
+        const {
+          quotations: items = [],
+          total = 0,
+          page: p = 1,
+          totalPages: tp = 1,
+        } = res.data;
+
+        setQuotations(items);
+        setTotalItems(total);
+        setTotalPages(tp);
+        setPage(p); // sync page with server response (safe)
+        // if current page > totalPages (e.g., item deleted), adjust
+        if (tp > 0 && page > tp) {
+          setPage(tp);
+        }
+        console.log("Fetched quotations", res.data);
+      } catch (err) {
+        if (axios.isCancel(err)) {
+          // expected on abort
+        } else {
+          console.error("Error fetching quotations", err);
+          toast.error("Failed to fetch quotations");
+        }
+      } finally {
+        setLoading(false);
+      }
+
+      // cleanup: return controller so caller can abort if necessary
+      return () => controller.abort();
+    },
+    [token]
+  );
+
+  // main effect: fetch when page/limit/search/filter change
   useEffect(() => {
-    setPage(1); // reset to first page on new search or filter
     fetchQuotations({
-      page: 1,
+      page,
       limit,
       search: debouncedSearch,
       status: statusFilter,
     });
-  }, [debouncedSearch, statusFilter, limit]);
+  }, [page, limit, debouncedSearch, statusFilter, fetchQuotations]);
 
-  const fetchQuotations = async ({
-    page = 1,
-    limit = 10,
-    search = "",
-    status = "",
-  } = {}) => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${BASE_URL}/api/admin/quotations`, {
-        params: { page, limit, search, status },
-        headers: { Authorization: `Bearer ${token}` }, // if protected
-      });
-      setQuotations(res.data.quotations);
-      setTotalPages(res.data.totalPages);
-      setPage(res.data.page);
-    } catch (err) {
-      console.error("Error fetching quotations", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddNewQuotation = () => {
-    navigate("/admin/add-quotation");
-  };
+  // When user types a new search or changes filter, reset to page 1 (do it in onChange handler)
+  // handlers:
+  const handleAddNewQuotation = () => navigate("/admin/add-quotation");
 
   const handleApproveQuotation = async (e, quotation) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (quotation.status === "approved") {
-      toast.warn("You have already approved this quotation");
-      return;
-    }
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (quotation.status === "approved") return toast.warn("Already approved");
     try {
       await axios.put(
         `${BASE_URL}/api/admin/quotations/${quotation.quotationId}`,
         { status: "approved" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      // optimistic update
       setQuotations((prev) =>
         prev.map((q) =>
           q.quotationId === quotation.quotationId
@@ -89,19 +114,17 @@ const QuotationManagement = () => {
             : q
         )
       );
+      toast.success("Quotation approved");
     } catch (err) {
-      setError("Failed to approve quotation");
+      console.error(err);
+      toast.error("Failed to approve");
     }
   };
 
   const handleRejectQuotation = async (e, quotation) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (quotation.status === "rejected") {
-      toast.warn("You have already rejected this quotation");
-      return;
-    }
+    e?.preventDefault();
+    e?.stopPropagation();
+    if (quotation.status === "rejected") return toast.warn("Already rejected");
     try {
       await axios.put(
         `${BASE_URL}/api/admin/quotations/${quotation.quotationId}`,
@@ -115,89 +138,72 @@ const QuotationManagement = () => {
             : q
         )
       );
+      toast.success("Quotation rejected");
     } catch (err) {
-      setError("Failed to reject quotation");
+      console.error(err);
+      toast.error("Failed to reject");
     }
   };
 
   const handleEditQuotation = (e, quotation) => {
-    e.stopPropagation();
-    navigate("/admin/add-quotation", {
-      state: { mode: "edit", quotation },
-    });
+    e?.stopPropagation();
+    navigate("/admin/add-quotation", { state: { mode: "edit", quotation } });
   };
 
   const handleDeleteQuotation = async (e, quotationId) => {
-    e.stopPropagation();
+    e?.stopPropagation();
     if (!window.confirm(`Delete quotation ${quotationId}?`)) return;
-
     try {
       await axios.delete(`${BASE_URL}/api/admin/quotations/${quotationId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setQuotations((prev) =>
-        prev.filter((q) => q.quotationId !== quotationId)
-      );
-      toast.success("Quotation deleted successfully");
+      toast.success("Quotation deleted");
+      // refetch the current page (to keep totals consistent)
+      fetchQuotations({
+        page,
+        limit,
+        search: debouncedSearch,
+        status: statusFilter,
+      });
     } catch (err) {
-      toast.error("Error deleting quotation");
+      console.error(err);
+      toast.error("Failed to delete quotation");
     }
   };
 
   const handleMakeOrder = async (e, quotation) => {
-    e.stopPropagation();
-
-    if (quotation.status !== "approved") {
-      toast.warn("Only approved quotations can be converted into orders");
-      return;
-    }
-
+    e?.stopPropagation();
+    if (quotation.status !== "approved")
+      return toast.warn(
+        "Only approved quotations can be converted into orders"
+      );
     try {
       await axios.post(
         `${BASE_URL}/api/employee/order`,
-        {
-          quotationId: quotation._id,
-          addedBy: user._id,
-        },
+        { quotationId: quotation._id, addedBy: user._id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("Order created successfully");
+      toast.success("Order created");
+      // optionally refetch orders/quotations
     } catch (err) {
-      toast.error("Error creating order");
+      console.error(err);
+      toast.error("Failed to create order");
     }
   };
 
-  const filteredQuotations = quotations.filter((quotation) => {
-    const matchesSearch =
-      quotation.quotationId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (quotation.customerId?.customerId &&
-        quotation.customerId?.customerId
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase())) ||
-      (quotation.customerId?.name &&
-        quotation.customerId?.name
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase())) ||
-      (quotation.addedBy?.name &&
-        quotation.addedBy?.name
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase())) ||
-      (quotation.addedBy?.empId &&
-        quotation.addedBy?.empId
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()));
-
-    const matchesFilter =
-      statusFilter === "" ||
-      quotation.status.toLowerCase() === statusFilter.toLowerCase();
-
-    return matchesSearch && matchesFilter;
-  });
+  // UI handlers: reset page to 1 when user updates search or filter
+  const onSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setPage(1);
+  };
+  const onStatusChange = (e) => {
+    setStatusFilter(e.target.value);
+    setPage(1);
+  };
 
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-
       <div className="ml-64 w-full p-4 flex flex-col bg-bg">
         <Header title="Quotation Management" />
 
@@ -207,12 +213,9 @@ const QuotationManagement = () => {
             <SearchBar
               placeholder="Search for a Quotation"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={onSearchChange}
             />
-            <FilterDropdown
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
+            <FilterDropdown value={statusFilter} onChange={onStatusChange}>
               <option value="">All Status</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
@@ -237,40 +240,75 @@ const QuotationManagement = () => {
         </div>
 
         {/* Container */}
-        {tableView ? (
-          <QuotationTable
-            quotations={filteredQuotations}
-            editQuotation={handleEditQuotation}
-            deleteQuotation={handleDeleteQuotation}
-            approveQuotation={handleApproveQuotation}
-            rejectQuotation={handleRejectQuotation}
-            makeOrder={handleMakeOrder}
-          />
-        ) : loading ? (
-          <div className="w-full p-4 gap-4">
-            <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
-          </div>
-        ) : (
-          <div className="w-full p-2 flex flex-wrap gap-4">
-            {filteredQuotations.length === 0 ? (
-              <NoItemFoundModal message="No quotations found" />
-            ) : (
-              filteredQuotations.map((quotation) => (
-                <QuotationCard
-                  key={quotation.quotationId}
-                  quotation={quotation}
-                  editQuotation={(e) => handleEditQuotation(e, quotation)}
-                  deleteQuotation={(e) =>
-                    handleDeleteQuotation(e, quotation.quotationId)
-                  }
-                  approveQuotation={(e) => handleApproveQuotation(e, quotation)}
-                  rejectQuotation={(e) => handleRejectQuotation(e, quotation)}
-                  makeOrder={(e) => handleMakeOrder(e, quotation)}
+        <div className="px-6">
+          {tableView ? (
+            <>
+              <QuotationTable
+                quotations={quotations}
+                editQuotation={handleEditQuotation}
+                deleteQuotation={handleDeleteQuotation}
+                approveQuotation={handleApproveQuotation}
+                rejectQuotation={handleRejectQuotation}
+                makeOrder={handleMakeOrder}
+              />
+              <PaginationControls
+                page={page}
+                setPage={setPage}
+                totalPages={totalPages}
+                limit={limit}
+                setLimit={(l) => {
+                  setLimit(l);
+                  setPage(1);
+                }}
+                totalItems={totalItems}
+              />
+            </>
+          ) : loading ? (
+            <div className="w-full p-4 gap-4">
+              <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+            </div>
+          ) : (
+            <>
+              <div className="w-full p-2 flex flex-wrap gap-4">
+                {quotations.length === 0 ? (
+                  <NoItemFoundModal message="No quotations found" />
+                ) : (
+                  quotations.map((quotation) => (
+                    <QuotationCard
+                      key={quotation.quotationId}
+                      quotation={quotation}
+                      editQuotation={(e) => handleEditQuotation(e, quotation)}
+                      deleteQuotation={(e) =>
+                        handleDeleteQuotation(e, quotation.quotationId)
+                      }
+                      approveQuotation={(e) =>
+                        handleApproveQuotation(e, quotation)
+                      }
+                      rejectQuotation={(e) =>
+                        handleRejectQuotation(e, quotation)
+                      }
+                      makeOrder={(e) => handleMakeOrder(e, quotation)}
+                    />
+                  ))
+                )}
+              </div>
+
+              <div className="mt-4">
+                <PaginationControls
+                  page={page}
+                  setPage={setPage}
+                  totalPages={totalPages}
+                  limit={limit}
+                  setLimit={(l) => {
+                    setLimit(l);
+                    setPage(1);
+                  }}
+                  totalItems={totalItems}
                 />
-              ))
-            )}
-          </div>
-        )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

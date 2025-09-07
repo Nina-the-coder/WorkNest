@@ -70,46 +70,90 @@ exports.deleteQuotation = async (req, res) => {
 
 exports.listQuotation = async (req, res) => {
   try {
-    let { page = 1, limit = 10, search = "", sort = "-createdAt", status } = req.query;
+    let {
+      page = 1,
+      limit = 10,
+      search = "",
+      sort = "-createdAt",
+      status,
+    } = req.query;
     page = parseInt(page, 10);
     limit = parseInt(limit, 10);
 
-    const query = {};
-    if (status) query.status = status;
+    const pipeline = [];
 
-    if (search && search.trim().length > 0) {
-      const s = search.trim();
-
-      query.$or = [
-        { quotationId: { $regex: s, $options: "i" } },
-        { "customerId.customerId": { $regex: s, $options: "i" } },
-        { "customerId.name": { $regex: s, $options: "i" } },
-        { "addedBy.empId": { $regex: s, $options: "i" } },
-        { "addedBy.name": { $regex: s, $options: "i" } },
-      ];
+    if (status) {
+      pipeline.push({ $match: { status } });
     }
-    const projections = {
-      quotationId: 1,
-      customerId: 1,
-      addedBy: 1,
-      status: 1,
-      isApprovedByDoctor: 1,
-      total: 1,
-      products: 1,
-      createdAt: 1,
-    };
 
-    const [items, total] = await Promise.all([
-      Quotation.find(query, projections)
-        .populate({ path: "addedBy", select: "empId name" })
-        .populate({ path: "customerId", select: "customerId name" })
-        .sort(sort)
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean()
-        .exec(),
-      Quotation.countDocuments(query).exec(),
-    ]);
+    // join customer
+    pipeline.push({
+      $lookup: {
+        from: "customers", // actual Mongo collection name
+        localField: "customerId",
+        foreignField: "_id",
+        as: "customerId",
+      },
+    });
+    pipeline.push({ $unwind: "$customerId" });
+
+    // join addedBy
+    pipeline.push({
+      $lookup: {
+        from: "users", // or "users"
+        localField: "addedBy",
+        foreignField: "_id",
+        as: "addedBy",
+      },
+    });
+    pipeline.push({ $unwind: "$addedBy" });
+
+    if (search && search.trim()) {
+      const s = search.trim();
+      pipeline.push({
+        $match: {
+          $or: [
+            { quotationId: { $regex: s, $options: "i" } },
+            { "customerId.customerId": { $regex: s, $options: "i" } },
+            { "customerId.name": { $regex: s, $options: "i" } },
+            { "addedBy.empId": { $regex: s, $options: "i" } },
+            { "addedBy.name": { $regex: s, $options: "i" } },
+          ],
+        },
+      });
+    }
+
+    // total count before pagination
+    const countPipeline = [...pipeline, { $count: "total" }];
+    const totalDocs = await Quotation.aggregate(countPipeline);
+    const total = totalDocs[0]?.total || 0;
+
+    // sort + paginate
+    const sortObj = {};
+    const sortField = sort.replace("-", "");
+    sortObj[sortField] = sort.startsWith("-") ? -1 : 1;
+
+    pipeline.push({ $sort: sortObj });
+    pipeline.push({ $skip: (page - 1) * limit });
+    pipeline.push({ $limit: limit });
+
+    // final projection
+    pipeline.push({
+      $project: {
+        quotationId: 1,
+        status: 1,
+        total: 1,
+        isApprovedByDoctor: 1,
+        createdAt: 1,
+        products: 1,
+        "customerId.customerId": 1,
+        "customerId.name": 1,
+        "addedBy.empId": 1,
+        "addedBy.name": 1,
+      },
+    });
+
+    const items = await Quotation.aggregate(pipeline);
 
     res.json({
       quotations: items,
