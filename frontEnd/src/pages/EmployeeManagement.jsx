@@ -77,6 +77,12 @@ const EmployeeManagement = () => {
       return;
     }
 
+    const phone = formData.phone;
+    if (!/^\d+$/.test(phone)) {
+      toast.warn("Phone no. should only contain digits");
+      return;
+    }
+
     if (formData.phone.length !== 10) {
       toast.warn("Phone number must have 10 digits");
       return;

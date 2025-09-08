@@ -58,7 +58,7 @@ const TaskManagement = () => {
     } catch (err) {
       console.error("Error fetching tasks or employees", err);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
