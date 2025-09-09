@@ -47,8 +47,8 @@ const { submitQuotation } = require("../controllers/employeeController");
 router.post("/employees", verifyToken, addEmployee);
 router.get("/employees", getAllEmployees);
 router.get("/employees/:empId", getEmployeeById);
-router.delete("/employees/:empId", deleteEmployee);
-router.put("/employees/:empId", updateEmployee);
+router.delete("/employees/:empId", verifyToken, deleteEmployee);
+router.put("/employees/:empId", verifyToken, updateEmployee);
 
 // task routes
 router.post("/tasks", addTask);

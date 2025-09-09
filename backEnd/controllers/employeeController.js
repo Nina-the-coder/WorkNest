@@ -210,6 +210,7 @@ exports.addOrder = async (req, res) => {
     });
   }
 };
+
 exports.getOrders = async (req, res) => {
   try {
     const { empId } = req.params;

@@ -14,6 +14,7 @@ import SkeletonLoader from "../components/SkeletonLoader";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const EmployeeManagement = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -35,10 +36,14 @@ const EmployeeManagement = () => {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/admin/employees`);
+      const res = await axios.get(`${BASE_URL}/api/admin/employees`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       setEmployees(res.data);
+      console.log("employees", res.data);
     } catch (err) {
       console.error("Error fetching employees from the db : ...", err);
+      toast.error("Error fetching employees from the server");
     } finally {
       setLoading(false);
     }
@@ -80,6 +85,12 @@ const EmployeeManagement = () => {
     const phone = formData.phone;
     if (!/^\d+$/.test(phone)) {
       toast.warn("Phone no. should only contain digits");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.warn("Please enter a valid email address");
       return;
     }
 
@@ -139,6 +150,7 @@ const EmployeeManagement = () => {
         err.response?.data?.message ||
         "An error occurred while saving employee.";
       toast.error(message);
+      console.error("Error saving employee:...", err);
     }
   };
 
@@ -163,7 +175,12 @@ const EmployeeManagement = () => {
     );
     if (!confirmDelete) return;
     try {
-      await axios.delete(`${BASE_URL}/api/admin/employees/${empId}`);
+      await axios.delete(`${BASE_URL}/api/admin/employees/${empId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      console.log("successfully deleted the employee");
       await fetchEmployees();
       toast.success("successfully deleted the employee");
     } catch (err) {
@@ -185,7 +202,6 @@ const EmployeeManagement = () => {
     setModal(false);
     setIsEdit(false);
     setEditEmpId(null);
-    setError("");
   };
 
   const filteredEmployees = employees.filter((emp) => {

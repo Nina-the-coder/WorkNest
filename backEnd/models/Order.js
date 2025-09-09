@@ -34,7 +34,7 @@ const OrderSchema = new mongoose.Schema(
       ref: "Quotation", // still keep the link for traceability
       required: true,
     },
-
+    
     // 🔥 snapshot of customer & quotation details
     customerSnapshot: {
       type: customerSnapshotSchema,

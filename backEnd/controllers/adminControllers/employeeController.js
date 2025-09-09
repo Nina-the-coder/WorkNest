@@ -10,6 +10,12 @@ exports.addEmployee = async (req, res) => {
       if(existingUser.deleted){
         existingUser.deleted = false;
         existingUser.deletedAt = null;
+        existingUser.name = name; // update other details if needed
+        existingUser.phone = phone;
+        existingUser.password = password; // will be hashed by pre('save')
+        existingUser.role = role;
+        existingUser.status = status;
+        existingUser.updatedBy = req.user._id; // ✅ who restored
         await existingUser.save();
         return res.status(200).json({message: "Employee restored successfully", user: existingUser});
       }
@@ -26,6 +32,8 @@ exports.addEmployee = async (req, res) => {
       role,
       status,
       empId: newEmpId,
+      createdBy: req.user._id, 
+      updatedBy: req.user._id,
     });
 
     await newUser.save();
@@ -41,7 +49,7 @@ exports.addEmployee = async (req, res) => {
 exports.getEmployeeById = async (req, res) => {
   try {
     const { empId } = req.params;
-    const employee = await User.findOne({ empId: empId });
+    const employee = await User.findOne({ empId: empId }).select("-password");
     res.status(200).json(employee);
   } catch (err) {
     res
@@ -65,7 +73,7 @@ exports.deleteEmployee = async (req, res) => {
   try {
     const { empId } = req.params;
     // await User.deleteOne({ empId });
-    const emp = await User.findOne({ empId });
+    const emp = await User.findOne({ empId, deleted: false });
 
     if (!emp) {
       return res.status(404).json({ message: "Employee not found" });
@@ -73,7 +81,7 @@ exports.deleteEmployee = async (req, res) => {
 
     emp.deleted = true;
     emp.deletedAt = new Date();
-
+    emp.updatedBy = req.user._id; // ✅ who deleted
     await emp.save();
     res.status(200).json({ message: "Employee deleted successfully" });
   } catch (err) {
@@ -88,8 +96,9 @@ exports.updateEmployee = async (req, res) => {
     const { empId } = req.params;
     const { name, email, phone, password, role, status } = req.body;
 
-    const user = await User.findOne({ empId });
+    const user = await User.findOne({ empId, deleted: false });
     if (!user) {
+      console.log("req.user: ", req.user);
       return res.status(404).json({ message: "Employee not found" });
     }
 
@@ -108,11 +117,12 @@ exports.updateEmployee = async (req, res) => {
     if (role) user.role = role;
     if (status) user.status = status;
     if (password) user.password = password; // will be hashed by pre('save')
-
+    user.updatedBy = req.user._id;
     await user.save(); // triggers pre-save hook
 
     res.status(200).json({ message: "Employee Updated", user });
   } catch (err) {
+    console.error("Error in updateEmployee: ", err);
     res.status(500).json({
       message: "Error in updating the employee",
       error: err.message,
