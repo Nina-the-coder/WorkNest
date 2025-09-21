@@ -9,7 +9,8 @@ const VariantButton = ({ onClick, variant, size, text, icon, className }) => {
     tiny: "h-[28px] w-[28px]",
     small: "h-[28px] w-[90px]",
     medium: "h-[28px] w-[100px]",
-    large: "h-[40px] w-[150px]",
+    large: "h-[40px] w-[100px]",
+    "extra-large": "h-[40px] w-[100px]"
   };
 
   const variantClasses = {
