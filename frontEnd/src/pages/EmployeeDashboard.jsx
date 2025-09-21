@@ -4,9 +4,9 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-import EmployeeTaskManagement from "./employee/EmployeeTaskManagement";
-import EmployeeQuotationManagement from "./employee/employeeQuotationManagement";
-import EmployeeOrderManagement from "./employee/EmployeeOrderManagement";
+import EmployeeTaskManagement from "../pages/employee/EmployeeTaskManagement";
+import EmployeeQuotationManagement from "../pages/employee/EmployeeQuotationManagement";
+import EmployeeOrderManagement from "../pages/employee/EmployeeOrderManagement";
 
 const EmployeeDashboard = () => {
   const user = JSON.parse(localStorage.getItem("user"));
