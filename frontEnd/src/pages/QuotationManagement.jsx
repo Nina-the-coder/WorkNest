@@ -202,55 +202,94 @@ const QuotationManagement = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="ml-64 w-full p-4 flex flex-col bg-bg">
-        <Header title="Quotation Management" />
+    <div className="w-full p-4 flex flex-col bg-bg">
+      <Header title="Quotation Management" />
 
-        {/* Search, Filter, CTA, Toggle */}
-        <div className="flex py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
-          <div className="flex gap-4">
-            <SearchBar
-              placeholder="Search for a Quotation"
-              value={searchQuery}
-              onChange={onSearchChange}
-            />
-            <FilterDropdown value={statusFilter} onChange={onStatusChange}>
-              <option value="">All Status</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-              <option value="pending">Pending</option>
-            </FilterDropdown>
+      {/* Search, Filter, CTA, Toggle */}
+      <div className="flex py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
+        <div className="flex gap-4">
+          <SearchBar
+            placeholder="Search for a Quotation"
+            value={searchQuery}
+            onChange={onSearchChange}
+          />
+          <FilterDropdown value={statusFilter} onChange={onStatusChange}>
+            <option value="">All Status</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="pending">Pending</option>
+          </FilterDropdown>
 
-            <CTAButton onClick={handleAddNewQuotation} icon="plus">
-              <div className="text-left mb-1">Add new</div>
-              <div className="text-left">Quotation</div>
-            </CTAButton>
-          </div>
-
-          <div className="flex gap-6 items-center">
-            <VariantButton
-              onClick={() => setTableView(!tableView)}
-              variant="ghostCta"
-              size="medium"
-              text={tableView ? "Card" : "Table"}
-              icon={tableView ? "layout-grid" : "table"}
-            />
-          </div>
+          <CTAButton onClick={handleAddNewQuotation} icon="plus">
+            <div className="text-left mb-1">Add new</div>
+            <div className="text-left">Quotation</div>
+          </CTAButton>
         </div>
 
-        {/* Container */}
-        <div className="px-6">
-          {tableView ? (
-            <>
-              <QuotationTable
-                quotations={quotations}
-                editQuotation={handleEditQuotation}
-                deleteQuotation={handleDeleteQuotation}
-                approveQuotation={handleApproveQuotation}
-                rejectQuotation={handleRejectQuotation}
-                makeOrder={handleMakeOrder}
-              />
+        <div className="flex gap-6 items-center">
+          <VariantButton
+            onClick={() => setTableView(!tableView)}
+            variant="ghostCta"
+            size="medium"
+            text={tableView ? "Card" : "Table"}
+            icon={tableView ? "layout-grid" : "table"}
+          />
+        </div>
+      </div>
+
+      {/* Container */}
+      <div className="px-6">
+        {tableView ? (
+          <>
+            <QuotationTable
+              quotations={quotations}
+              editQuotation={handleEditQuotation}
+              deleteQuotation={handleDeleteQuotation}
+              approveQuotation={handleApproveQuotation}
+              rejectQuotation={handleRejectQuotation}
+              makeOrder={handleMakeOrder}
+            />
+            <PaginationControls
+              page={page}
+              setPage={setPage}
+              totalPages={totalPages}
+              limit={limit}
+              setLimit={(l) => {
+                setLimit(l);
+                setPage(1);
+              }}
+              totalItems={totalItems}
+            />
+          </>
+        ) : loading ? (
+          <div className="w-full p-4 gap-4">
+            <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+          </div>
+        ) : (
+          <>
+            <div className="w-full p-2 flex flex-wrap gap-4">
+              {quotations.length === 0 ? (
+                <NoItemFoundModal message="No quotations found" />
+              ) : (
+                quotations.map((quotation) => (
+                  <QuotationCard
+                    key={quotation.quotationId}
+                    quotation={quotation}
+                    editQuotation={(e) => handleEditQuotation(e, quotation)}
+                    deleteQuotation={(e) =>
+                      handleDeleteQuotation(e, quotation.quotationId)
+                    }
+                    approveQuotation={(e) =>
+                      handleApproveQuotation(e, quotation)
+                    }
+                    rejectQuotation={(e) => handleRejectQuotation(e, quotation)}
+                    makeOrder={(e) => handleMakeOrder(e, quotation)}
+                  />
+                ))
+              )}
+            </div>
+
+            <div className="mt-4">
               <PaginationControls
                 page={page}
                 setPage={setPage}
@@ -262,53 +301,9 @@ const QuotationManagement = () => {
                 }}
                 totalItems={totalItems}
               />
-            </>
-          ) : loading ? (
-            <div className="w-full p-4 gap-4">
-              <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
             </div>
-          ) : (
-            <>
-              <div className="w-full p-2 flex flex-wrap gap-4">
-                {quotations.length === 0 ? (
-                  <NoItemFoundModal message="No quotations found" />
-                ) : (
-                  quotations.map((quotation) => (
-                    <QuotationCard
-                      key={quotation.quotationId}
-                      quotation={quotation}
-                      editQuotation={(e) => handleEditQuotation(e, quotation)}
-                      deleteQuotation={(e) =>
-                        handleDeleteQuotation(e, quotation.quotationId)
-                      }
-                      approveQuotation={(e) =>
-                        handleApproveQuotation(e, quotation)
-                      }
-                      rejectQuotation={(e) =>
-                        handleRejectQuotation(e, quotation)
-                      }
-                      makeOrder={(e) => handleMakeOrder(e, quotation)}
-                    />
-                  ))
-                )}
-              </div>
-
-              <div className="mt-4">
-                <PaginationControls
-                  page={page}
-                  setPage={setPage}
-                  totalPages={totalPages}
-                  limit={limit}
-                  setLimit={(l) => {
-                    setLimit(l);
-                    setPage(1);
-                  }}
-                  totalItems={totalItems}
-                />
-              </div>
-            </>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

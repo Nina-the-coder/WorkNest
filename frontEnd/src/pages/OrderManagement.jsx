@@ -124,71 +124,66 @@ const OrderManagement = () => {
   });
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
+    <div className="w-full p-4 flex flex-col bg-bg">
+      {/* header */}
+      <Header title="Order Management" />
 
-      {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col bg-bg">
-        {/* header */}
-        <Header title="Order Management" />
-
-        {/* Search Bar and CTA button */}
-        <div className=" w-full mt-14 px-10 flex">
-          <div className="flex gap-4">
-            <SearchBar
-              placeholder="Search for a Quotation"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <FilterDropdown
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">All Status</option>
-              <option value="confirm">confirm</option>
-              <option value="dispatched">dispatched</option>
-              <option value="delivered">delivered</option>
-              <option value="closed">closed</option>
-            </FilterDropdown>
-          </div>
+      {/* Search Bar and CTA button */}
+      <div className=" w-full mt-14 px-10 flex">
+        <div className="flex gap-4">
+          <SearchBar
+            placeholder="Search for a Quotation"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <FilterDropdown
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">All Status</option>
+            <option value="confirm">confirm</option>
+            <option value="dispatched">dispatched</option>
+            <option value="delivered">delivered</option>
+            <option value="closed">closed</option>
+          </FilterDropdown>
         </div>
-
-        {/* container */}
-        {loading ? (
-          <div className="w-full p-4 gap-4">
-            <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <NoItemFoundModal message="No orders found" />
-        ) : (
-          <div className="flex justify-between">
-            <div className="h-[500px] mt-14 flex flex-col overflow-auto px-4 pb-4 ml-8">
-              {/* cards */}
-              {filteredOrders.map((order) => (
-                <OrderCard
-                  onOrderClick={() => handleActiveOrderChange(order)}
-                  key={order._id}
-                  order={order}
-                  deleteOrder={(e) => handleDeleteOrder(e, order)}
-                />
-              ))}
-            </div>
-            {ActiveOrder === null ? (
-              <div className="flex items-center justify-center h-120 mt-16 w-[450px] mr-16 text-text text-[18px] font-bold">
-                Select an order to preview
-              </div>
-            ) : (
-              <OrderPreviewCard
-                order={ActiveOrder}
-                downloadOrder={() => downloadOrder(ActiveOrder, "pdf")}
-                editOrder={null}
-                delteOrder={(e) => handleDeleteOrder(e, ActiveOrder)}
-                updateStatus={(e) => updateOrderStatus(e, ActiveOrder)}
-              />
-            )}
-          </div>
-        )}
       </div>
+
+      {/* container */}
+      {loading ? (
+        <div className="w-full p-4 gap-4">
+          <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+        </div>
+      ) : filteredOrders.length === 0 ? (
+        <NoItemFoundModal message="No orders found" />
+      ) : (
+        <div className="flex justify-between">
+          <div className="h-[500px] mt-14 flex flex-col overflow-auto px-4 pb-4 ml-8">
+            {/* cards */}
+            {filteredOrders.map((order) => (
+              <OrderCard
+                onOrderClick={() => handleActiveOrderChange(order)}
+                key={order._id}
+                order={order}
+                deleteOrder={(e) => handleDeleteOrder(e, order)}
+              />
+            ))}
+          </div>
+          {ActiveOrder === null ? (
+            <div className="flex items-center justify-center h-120 mt-16 w-[450px] mr-16 text-text text-[18px] font-bold">
+              Select an order to preview
+            </div>
+          ) : (
+            <OrderPreviewCard
+              order={ActiveOrder}
+              downloadOrder={() => downloadOrder(ActiveOrder, "pdf")}
+              editOrder={null}
+              delteOrder={(e) => handleDeleteOrder(e, ActiveOrder)}
+              updateStatus={(e) => updateOrderStatus(e, ActiveOrder)}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };

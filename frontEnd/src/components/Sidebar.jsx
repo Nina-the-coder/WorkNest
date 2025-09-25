@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import WorkNestDark from "../assets/WorkNest-dark.svg";
 import WorkNestLight from "../assets/WorkNest-light.svg";
 import Icon from "./Icons";
+import VariantButton from "./buttons/VariantButton";
 
 const Sidebar = () => {
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
 
   const items = [
     { name: "Dashboard", path: "/admin/dashboard", icon: "layout-dashboard" },
@@ -24,12 +26,23 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="w-64 min-h-screen fixed bg-card-bg text-text">
+    <div
+      className={`max-h-screen sticky pt-4 ${
+        collapsed ? " " : "pl-2"
+      } top-0 bg-card-bg text-text transition-all ease-in-out duration-300 z-50 `}
+    >
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="cursor-pointer mb-16 mt-4"
+      >
+        <Icon name="menu" className="w-20" />
+      </button>
+
       {/* logo */}
-      <div className="w-64 my-4 ml-4">
+      {/* <div className="my-4 ml-4">
         <img src={WorkNestLight} alt="WorkNest" className="block dark:hidden" />
         <img src={WorkNestDark} alt="WorkNest" className="hidden dark:block" />
-      </div>
+      </div> */}
 
       {/* navigation */}
       <nav className="flex flex-col">
@@ -39,17 +52,24 @@ const Sidebar = () => {
             <Link
               key={index}
               to={item.path}
-              className={`flex items-center pl-5 py-3 pr-4 border border-transparent mb-2 transition-all duration-300 
-                ${isActive 
-                  ? "bg-bg ml-4 rounded-l-2xl" 
-                  : "hover:border-text text-text"
+              className={`flex items-center pl-5 py-3 border border-transparent mb-2  
+                ${
+                  isActive
+                    ? "bg-bg ml-4 rounded-l-2xl"
+                    : "hover:border-text text-text"
                 }`}
             >
               <Icon
                 name={item.icon}
-                className={`mr-4 text-lg ${isActive ? "text-purple-400" : "text-text"}`}
+                className={`mr-4 text-lg ${
+                  isActive ? "text-purple-400" : "text-text"
+                }`}
               />
-              <span className="text-[15px] font-medium">{item.name}</span>
+              {!collapsed && (
+                <span className="text-[15px] font-medium w-[150px]">
+                  {item.name}
+                </span>
+              )}
             </Link>
           );
         })}

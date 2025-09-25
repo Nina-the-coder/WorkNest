@@ -190,10 +190,8 @@ const ProductManagement = () => {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
-
       {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col items-center bg-bg">
+      <div className="w-full p-4 flex flex-col items-center bg-bg">
         {/* header */}
         <Header title="Product Management" />
 

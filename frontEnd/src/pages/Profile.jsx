@@ -6,11 +6,8 @@ const Profile = () => {
   const user = JSON.parse(localStorage.getItem("user"));
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
 
-      {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col bg-bg">
+      <div className="w-full p-4 flex flex-col bg-bg">
         {/* header */}
         <Header title="Profile" />
 
@@ -45,7 +42,6 @@ const Profile = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

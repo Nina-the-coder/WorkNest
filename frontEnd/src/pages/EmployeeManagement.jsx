@@ -219,225 +219,220 @@ const EmployeeManagement = () => {
   });
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
+    <div className="w-full p-4 flex flex-col items-center bg-bg">
+      {/* header */}
+      <Header title="Employee Management" />
 
-      {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col items-center bg-bg">
-        {/* header */}
-        <Header title="Employee Management" />
-
-        {/* modal */}
-        {modal && (
-          <div className="rounded-2xl mt-16 p-8 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
-            <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
-              {isEdit ? "Edit Employee" : "Add New Employee"}
-            </div>
-            <form
-              className="flex flex-col items-center gap-1"
-              onKeyDown={(e) => handleKeyDown(e)}
+      {/* modal */}
+      {modal && (
+        <div className="rounded-2xl mt-16 p-8 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
+          <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
+            {isEdit ? "Edit Employee" : "Add New Employee"}
+          </div>
+          <form
+            className="flex flex-col items-center gap-1"
+            onKeyDown={(e) => handleKeyDown(e)}
+          >
+            <label
+              htmlFor="name"
+              className="w-full text-[16px] ml-4 text-text/90"
             >
-              <label
-                htmlFor="name"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-              />
-
-              <label
-                htmlFor="email"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                Email
-              </label>
-              <input
-                type="text"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-              />
-
-              <label
-                htmlFor="phone"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                Phone
-              </label>
-              <input
-                type="text"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-              />
-
-              <label
-                htmlFor="password"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-              />
-              <div className="flex">
-                <div className="flex flex-col mr-[60px]">
-                  <label
-                    htmlFor="role"
-                    className="w-full text-[16px] ml-4 text-text/90"
-                  >
-                    Role
-                  </label>
-                  <select
-                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                  >
-                    <option value="admin">Admin</option>
-                    <option value="employee">Employee</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="status"
-                    className="w-full text-[16px] ml-4 text-text/90"
-                  >
-                    Status
-                  </label>
-                  <select
-                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-                    id="status"
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex justify-around items-center gap-[50px] mt-4">
-                <VariantButton
-                  onClick={handleCancel}
-                  variant="ghostRed"
-                  size="medium"
-                  text="Cancel"
-                  icon="x"
-                />
-                <VariantButton
-                  onClick={handleSave}
-                  variant="cta"
-                  size="medium"
-                  text="Save"
-                  icon="check"
-                />
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Search Bar, Filters, and CTA */}
-        {!modal && (
-          <div className="flex py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
-            {/* Left side: Search + Filters */}
-            <div className="flex gap-4">
-              <SearchBar
-                placeholder="Search employee by name, email, empId"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-
-              <FilterDropdown
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-              >
-                <option value="">All Roles</option>
-                <option value="admin">Admin</option>
-                <option value="employee">Employee</option>
-              </FilterDropdown>
-
-              <FilterDropdown
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </FilterDropdown>
-              {/* Add New Employee */}
-              <CTAButton
-                onClick={handleAddNewEmployee}
-                icon="plus"
-                className="ml-8"
-              >
-                <div className="text-left mb-1">Add new</div>
-                <div className="text-left">Employee</div>
-              </CTAButton>
-            </div>
-
-            {/* Right side: Actions */}
-            <div className="flex gap-6 items-center">
-              {/* Toggle Button */}
-              <VariantButton
-                onClick={() => setTableView(!tableView)}
-                variant="ghostCta"
-                size="medium"
-                text={tableView ? "Card" : "Table"}
-                icon={tableView ? "layout-grid" : "table"}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Container */}
-        {!modal &&
-          (loading ? (
-            // Skeleton loader while fetching employees
-            <div className="w-full p-4 gap-4">
-              <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
-            </div>
-          ) : tableView ? (
-            <EmployeeTable
-              employees={filteredEmployees}
-              handleEdit={handleEditEmployee}
-              handleDelete={handleDeleteEmployee}
+              Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
             />
-          ) : (
-            <div className="w-full p-2 flex flex-wrap gap-4">
-              {filteredEmployees.length === 0 ? (
-                <NoItemFoundModal message="No employees found" />
-              ) : (
-                filteredEmployees.map((emp) => (
-                  <EmployeeCard
-                    key={emp.empId}
-                    emp={emp}
-                    handleEdit={() => handleEditEmployee(emp)}
-                    handleDelete={() => handleDeleteEmployee(emp.empId)}
-                  />
-                ))
-              )}
+
+            <label
+              htmlFor="email"
+              className="w-full text-[16px] ml-4 text-text/90"
+            >
+              Email
+            </label>
+            <input
+              type="text"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+            />
+
+            <label
+              htmlFor="phone"
+              className="w-full text-[16px] ml-4 text-text/90"
+            >
+              Phone
+            </label>
+            <input
+              type="text"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+            />
+
+            <label
+              htmlFor="password"
+              className="w-full text-[16px] ml-4 text-text/90"
+            >
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+            />
+            <div className="flex">
+              <div className="flex flex-col mr-[60px]">
+                <label
+                  htmlFor="role"
+                  className="w-full text-[16px] ml-4 text-text/90"
+                >
+                  Role
+                </label>
+                <select
+                  className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                >
+                  <option value="admin">Admin</option>
+                  <option value="employee">Employee</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col">
+                <label
+                  htmlFor="status"
+                  className="w-full text-[16px] ml-4 text-text/90"
+                >
+                  Status
+                </label>
+                <select
+                  className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                  id="status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
             </div>
-          ))}
-      </div>
+            <div className="flex justify-around items-center gap-[50px] mt-4">
+              <VariantButton
+                onClick={handleCancel}
+                variant="ghostRed"
+                size="medium"
+                text="Cancel"
+                icon="x"
+              />
+              <VariantButton
+                onClick={handleSave}
+                variant="cta"
+                size="medium"
+                text="Save"
+                icon="check"
+              />
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Search Bar, Filters, and CTA */}
+      {!modal && (
+        <div className="flex py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
+          {/* Left side: Search + Filters */}
+          <div className="flex gap-4">
+            <SearchBar
+              placeholder="Search employee by name, email, empId"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+
+            <FilterDropdown
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+            >
+              <option value="">All Roles</option>
+              <option value="admin">Admin</option>
+              <option value="employee">Employee</option>
+            </FilterDropdown>
+
+            <FilterDropdown
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </FilterDropdown>
+            {/* Add New Employee */}
+            <CTAButton
+              onClick={handleAddNewEmployee}
+              icon="plus"
+              className="ml-8"
+            >
+              <div className="text-left mb-1">Add new</div>
+              <div className="text-left">Employee</div>
+            </CTAButton>
+          </div>
+
+          {/* Right side: Actions */}
+          <div className="flex gap-6 items-center">
+            {/* Toggle Button */}
+            <VariantButton
+              onClick={() => setTableView(!tableView)}
+              variant="ghostCta"
+              size="medium"
+              text={tableView ? "Card" : "Table"}
+              icon={tableView ? "layout-grid" : "table"}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Container */}
+      {!modal &&
+        (loading ? (
+          // Skeleton loader while fetching employees
+          <div className="w-full p-4 gap-4">
+            <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+          </div>
+        ) : tableView ? (
+          <EmployeeTable
+            employees={filteredEmployees}
+            handleEdit={handleEditEmployee}
+            handleDelete={handleDeleteEmployee}
+          />
+        ) : (
+          <div className="w-full p-2 flex flex-wrap gap-4">
+            {filteredEmployees.length === 0 ? (
+              <NoItemFoundModal message="No employees found" />
+            ) : (
+              filteredEmployees.map((emp) => (
+                <EmployeeCard
+                  key={emp.empId}
+                  emp={emp}
+                  handleEdit={() => handleEditEmployee(emp)}
+                  handleDelete={() => handleDeleteEmployee(emp.empId)}
+                />
+              ))
+            )}
+          </div>
+        ))}
     </div>
   );
 };

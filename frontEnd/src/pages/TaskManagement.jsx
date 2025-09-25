@@ -189,212 +189,207 @@ const TaskManagement = () => {
   });
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="ml-64 w-full p-4 flex flex-col items-center bg-bg">
-        <Header title="Task Management" />
+    <div className="w-full p-4 flex flex-col items-center bg-bg">
+      <Header title="Task Management" />
 
-        {/* modal */}
-        {modal && (
-          <div className="rounded-2xl mt-16 p-8 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
-            <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
-              {isEdit ? "Edit Task" : "Add New Task"}
-            </div>
-            <form
-              className="flex flex-col items-center gap-1"
-              onKeyDown={handleKeyDown}
+      {/* modal */}
+      {modal && (
+        <div className="rounded-2xl mt-16 p-8 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
+          <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
+            {isEdit ? "Edit Task" : "Add New Task"}
+          </div>
+          <form
+            className="flex flex-col items-center gap-1"
+            onKeyDown={handleKeyDown}
+          >
+            <EmployeeComboBox
+              onSelect={(emp) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  assignedTo: emp._id,
+                }))
+              }
+            />
+            {/* fields */}
+            <label
+              htmlFor="title"
+              className="w-full text-[16px] ml-4 text-text/90"
             >
-              <EmployeeComboBox
-                onSelect={(emp) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    assignedTo: emp._id,
-                  }))
-                }
-              />
-              {/* fields */}
-              <label
-                htmlFor="title"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                Task Title
-              </label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-              />
+              Task Title
+            </label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+            />
 
-              <label
-                htmlFor="description"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="w-[380px] h-[84px] p-0.5 rounded-xl mb-4 bg-white"
-                placeholder="write description here..."
-              />
+            <label
+              htmlFor="description"
+              className="w-full text-[16px] ml-4 text-text/90"
+            >
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-[380px] h-[84px] p-0.5 rounded-xl mb-4 bg-white"
+              placeholder="write description here..."
+            />
 
-              <label
-                htmlFor="dueDate"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                Due Date
-              </label>
-              <input
-                type="date"
-                id="dueDate"
-                name="dueDate"
-                value={formData.dueDate}
-                onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-              />
+            <label
+              htmlFor="dueDate"
+              className="w-full text-[16px] ml-4 text-text/90"
+            >
+              Due Date
+            </label>
+            <input
+              type="date"
+              id="dueDate"
+              name="dueDate"
+              value={formData.dueDate}
+              onChange={handleChange}
+              className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+            />
 
-              <div className="flex w-full justify-between">
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="status"
-                    className="w-full text-[16px] ml-4 text-text/90"
-                  >
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    id="status"
-                    onChange={handleChange}
-                    value={formData.status}
-                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="in-progress">In progress</option>
-                    <option value="done">Done</option>
-                  </select>
-                </div>
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="priority"
-                    className="w-full text-[16px] ml-4 text-text/90"
-                  >
-                    Priority
-                  </label>
-                  <select
-                    name="priority"
-                    id="priority"
-                    onChange={handleChange}
-                    value={formData.priority}
-                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
+            <div className="flex w-full justify-between">
+              <div className="flex flex-col">
+                <label
+                  htmlFor="status"
+                  className="w-full text-[16px] ml-4 text-text/90"
+                >
+                  Status
+                </label>
+                <select
+                  name="status"
+                  id="status"
+                  onChange={handleChange}
+                  value={formData.status}
+                  className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in-progress">In progress</option>
+                  <option value="done">Done</option>
+                </select>
               </div>
-
-              <div className="flex justify-around items-center gap-[50px] mt-4">
-                <VariantButton
-                  onClick={handleCancel}
-                  variant="ghostRed"
-                  size="medium"
-                  text="Cancel"
-                  icon="x"
-                />
-                <VariantButton
-                  onClick={handleSave}
-                  variant="cta"
-                  size="medium"
-                  text="Save"
-                  icon="check"
-                />
+              <div className="flex flex-col">
+                <label
+                  htmlFor="priority"
+                  className="w-full text-[16px] ml-4 text-text/90"
+                >
+                  Priority
+                </label>
+                <select
+                  name="priority"
+                  id="priority"
+                  onChange={handleChange}
+                  value={formData.priority}
+                  className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
               </div>
-            </form>
-          </div>
-        )}
-
-        {/* Search Bar, Filters, CTA, Toggle */}
-        {!modal && (
-          <div className="flex py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
-            <div className="flex gap-4">
-              <SearchBar
-                placeholder="Search tasks by title, description, employee"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <FilterDropdown
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="in-progress">In-Progress</option>
-                <option value="done">Done</option>
-              </FilterDropdown>
-              <FilterDropdown
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-              >
-                <option value="">All Priority</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </FilterDropdown>
-              <CTAButton
-                onClick={handleAddNewTask}
-                icon="plus"
-                className="ml-8"
-              >
-                <div className="text-left mb-1">Add new</div>
-                <div className="text-left">Task</div>
-              </CTAButton>
             </div>
-            <div className="flex gap-6 items-center">
+
+            <div className="flex justify-around items-center gap-[50px] mt-4">
               <VariantButton
-                onClick={() => setTableView(!tableView)}
-                variant="ghostCta"
+                onClick={handleCancel}
+                variant="ghostRed"
                 size="medium"
-                text={tableView ? "Card" : "Table"}
-                icon={tableView ? "layout-grid" : "table"}
+                text="Cancel"
+                icon="x"
+              />
+              <VariantButton
+                onClick={handleSave}
+                variant="cta"
+                size="medium"
+                text="Save"
+                icon="check"
               />
             </div>
-          </div>
-        )}
+          </form>
+        </div>
+      )}
 
-        {/* container */}
-        {!modal && loading ? (
-          <div className="w-full p-4 gap-4">
-            <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+      {/* Search Bar, Filters, CTA, Toggle */}
+      {!modal && (
+        <div className="flex py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
+          <div className="flex gap-4">
+            <SearchBar
+              placeholder="Search tasks by title, description, employee"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <FilterDropdown
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="in-progress">In-Progress</option>
+              <option value="done">Done</option>
+            </FilterDropdown>
+            <FilterDropdown
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+            >
+              <option value="">All Priority</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </FilterDropdown>
+            <CTAButton onClick={handleAddNewTask} icon="plus" className="ml-8">
+              <div className="text-left mb-1">Add new</div>
+              <div className="text-left">Task</div>
+            </CTAButton>
           </div>
-        ) : tableView ? (
+          <div className="flex gap-6 items-center">
+            <VariantButton
+              onClick={() => setTableView(!tableView)}
+              variant="ghostCta"
+              size="medium"
+              text={tableView ? "Card" : "Table"}
+              icon={tableView ? "layout-grid" : "table"}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* container */}
+      {!modal && loading ? (
+        <div className="w-full p-4 gap-4">
+          <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+        </div>
+      ) : tableView ? (
+        <div className="w-full p-2">
           <TaskTable
             tasks={filteredTasks}
             handleEdit={handleEditTask}
             handleDelete={handleDeleteTask}
           />
-        ) : (
-          <div className="w-full p-2 flex flex-wrap gap-4">
-            {filteredTasks.length === 0 ? (
-              <NoItemFoundModal message="No tasks found" />
-            ) : (
-              filteredTasks.map((task) => (
-                <TaskCard
-                  key={task.taskId}
-                  task={task}
-                  handleEdit={() => handleEditTask(task)}
-                  handleDelete={() => handleDeleteTask(task.taskId)}
-                />
-              ))
-            )}
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="w-full p-2 flex flex-wrap gap-4">
+          {filteredTasks.length === 0 ? (
+            <NoItemFoundModal message="No tasks found" />
+          ) : (
+            filteredTasks.map((task) => (
+              <TaskCard
+                key={task.taskId}
+                task={task}
+                handleEdit={() => handleEditTask(task)}
+                handleDelete={() => handleDeleteTask(task.taskId)}
+              />
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };

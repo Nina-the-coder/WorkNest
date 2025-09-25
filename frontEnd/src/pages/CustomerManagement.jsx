@@ -211,221 +211,216 @@ const CustomerkManagement = () => {
   });
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
+    <div className="w-full p-4 flex flex-col items-center bg-bg">
+      {/* header */}
+      <Header title="Customer Management" />
 
-      {/* main */}
-      <div className="ml-64 w-full p-4 flex flex-col items-center bg-bg">
-        {/* header */}
-        <Header title="Customer Management" />
-
-        {/* modal */}
-        {modal && (
-          <div className="max-w-[460px] h-fit rounded-2xl mt-16 p-10 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
-            <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
-              {isEdit ? "Edit Customer" : "Add New Customer"}
-            </div>
-            <form
-              className="flex flex-col items-center gap-1"
-              onKeyDown={(e) => handleKeyDown(e)}
+      {/* modal */}
+      {modal && (
+        <div className="max-w-[460px] h-fit rounded-2xl mt-16 p-10 bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300">
+          <div className="text-[20px] flex items-center justify-center mb-8 ml-4 text-text">
+            {isEdit ? "Edit Customer" : "Add New Customer"}
+          </div>
+          <form
+            className="flex flex-col items-center gap-1"
+            onKeyDown={(e) => handleKeyDown(e)}
+          >
+            {" "}
+            <label
+              htmlFor="name"
+              className="w-full text-[16px] ml-4 text-text/90"
             >
+              Customer Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+            />
+            <label
+              htmlFor="address"
+              className="w-full text-[16px] ml-4 text-text/90"
+            >
+              Address
+            </label>
+            <input
+              type="text"
+              id="address"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+            />
+            <label
+              htmlFor="contact"
+              className="w-full text-[16px] ml-4 text-text/90"
+            >
+              Contact
+            </label>
+            <input
+              type="text"
+              id="contact"
+              name="contact"
+              value={formData.contact}
+              onChange={handleChange}
+              className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+            />
+            <label
+              htmlFor="gst"
+              className="w-full text-[16px] ml-4 text-text/90"
+            >
+              GST
+            </label>
+            <input
+              type="text"
+              id="gst"
+              name="gst"
+              value={formData.gst}
+              onChange={handleChange}
+              className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+            />
+            <label
+              htmlFor="email"
+              className="w-full text-[16px] ml-4 text-text/90"
+            >
+              Email
+            </label>
+            <input
+              type="text"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+            />
+            <EmployeeComboBox
+              onSelect={(emp) => {
+                console.log("Selected employee:", emp);
+                setFormData((prev) => ({
+                  ...prev,
+                  addedBy: emp._id,
+                }));
+              }}
+            />
+            <div className="flex w-full justify-between">
+              <div className="flex flex-col">
+                <label
+                  htmlFor="status"
+                  className="w-full text-[16px] ml-4 text-text/90"
+                >
+                  Status
+                </label>
+                <select
+                  name="status"
+                  id="status"
+                  onChange={handleChange}
+                  value={formData.status}
+                  className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <div className="flex flex-col">
+                <label
+                  htmlFor="companyType"
+                  className="w-full text-[16px] ml-4 text-text/90"
+                >
+                  Company
+                </label>
+                <select
+                  name="companyType"
+                  id="companyType"
+                  onChange={handleChange}
+                  value={formData.companyType}
+                  className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+                >
+                  <option value="dealer">dealer</option>
+                  <option value="doctor">doctor</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-around items-center gap-[50px] mt-4">
               {" "}
-              <label
-                htmlFor="name"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                Customer Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+              <VariantButton
+                onClick={handleCancel}
+                variant="ghostRed"
+                size="medium"
+                text="Cancel"
+                icon="x"
               />
-              <label
-                htmlFor="address"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                Address
-              </label>
-              <input
-                type="text"
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
+              <VariantButton
+                onClick={handleSave}
+                variant="cta"
+                size="medium"
+                text="Save"
+                icon="check"
               />
-              <label
-                htmlFor="contact"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                Contact
-              </label>
-              <input
-                type="text"
-                id="contact"
-                name="contact"
-                value={formData.contact}
-                onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-              />
-              <label
-                htmlFor="gst"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                GST
-              </label>
-              <input
-                type="text"
-                id="gst"
-                name="gst"
-                value={formData.gst}
-                onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-              />
-              <label
-                htmlFor="email"
-                className="w-full text-[16px] ml-4 text-text/90"
-              >
-                Email
-              </label>
-              <input
-                type="text"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-[380px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-              />
-              <EmployeeComboBox
-                onSelect={(emp) => {
-                  console.log("Selected employee:", emp);
-                  setFormData((prev) => ({
-                    ...prev,
-                    addedBy: emp._id,
-                  }));
-                }}
-              />
-              <div className="flex w-full justify-between">
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="status"
-                    className="w-full text-[16px] ml-4 text-text/90"
-                  >
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    id="status"
-                    onChange={handleChange}
-                    value={formData.status}
-                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-                <div className="flex flex-col">
-                  <label
-                    htmlFor="companyType"
-                    className="w-full text-[16px] ml-4 text-text/90"
-                  >
-                    Company
-                  </label>
-                  <select
-                    name="companyType"
-                    id="companyType"
-                    onChange={handleChange}
-                    value={formData.companyType}
-                    className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-                  >
-                    <option value="dealer">dealer</option>
-                    <option value="doctor">doctor</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex justify-around items-center gap-[50px] mt-4">
-                {" "}
-                <VariantButton
-                  onClick={handleCancel}
-                  variant="ghostRed"
-                  size="medium"
-                  text="Cancel"
-                  icon="x"
-                />
-                <VariantButton
-                  onClick={handleSave}
-                  variant="cta"
-                  size="medium"
-                  text="Save"
-                  icon="check"
-                />
-              </div>
-            </form>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Search Bar and CTA button */}
+      {!modal && (
+        <div className="flex my-14 px-10 w-full">
+          <div className="flex gap-4">
+            <SearchBar
+              placeholder="Search for a customer"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+
+            <FilterDropdown
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">All Status</option>
+              <option value="active">active</option>
+              <option value="inactive">Inactive</option>
+            </FilterDropdown>
+
+            <FilterDropdown
+              value={companyTypeFilter}
+              onChange={(e) => setCompanyTypeFilter(e.target.value)}
+            >
+              <option value="">All Company</option>
+              <option value="dealer">dealer</option>
+              <option value="doctor">doctor</option>
+            </FilterDropdown>
           </div>
-        )}
 
-        {/* Search Bar and CTA button */}
-        {!modal && (
-          <div className="flex my-14 px-10 w-full">
-            <div className="flex gap-4">
-              <SearchBar
-                placeholder="Search for a customer"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-
-              <FilterDropdown
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="">All Status</option>
-                <option value="active">active</option>
-                <option value="inactive">Inactive</option>
-              </FilterDropdown>
-
-              <FilterDropdown
-                value={companyTypeFilter}
-                onChange={(e) => setCompanyTypeFilter(e.target.value)}
-              >
-                <option value="">All Company</option>
-                <option value="dealer">dealer</option>
-                <option value="doctor">doctor</option>
-              </FilterDropdown>
-            </div>
-
-            <div className="ml-20">
-              <CTAButton onClick={handleAddNewCustomer} icon="plus">
-                <div className="text-left mb-1">Add new</div>
-                <div className="text-left">Customer</div>
-              </CTAButton>
-            </div>
+          <div className="ml-20">
+            <CTAButton onClick={handleAddNewCustomer} icon="plus">
+              <div className="text-left mb-1">Add new</div>
+              <div className="text-left">Customer</div>
+            </CTAButton>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* container */}
-        {!modal &&
-          (loading ? (
-            <div className="w-full p-4 gap-4">
-              <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
-            </div>
-          ) : (
-            <div className="w-300 max-h-120 overflow-y-auto h-fit flex flex-wrap text-white">
-              {filteredCustomers.length === 0 ? (
-                <div className="ml-40">No Customer found</div>
-              ) : (
-                <CustomerTable
-                  filteredCustomers={filteredCustomers}
-                  handleEdit={handleEditCustomer}
-                  handleDelete={handleDeleteCustomer}
-                />
-              )}
-            </div>
-          ))}
-      </div>
+      {/* container */}
+      {!modal &&
+        (loading ? (
+          <div className="w-full p-4 gap-4">
+            <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+          </div>
+        ) : (
+          <div className="w-300 max-h-120 overflow-y-auto h-fit flex flex-wrap text-white">
+            {filteredCustomers.length === 0 ? (
+              <div className="ml-40">No Customer found</div>
+            ) : (
+              <CustomerTable
+                filteredCustomers={filteredCustomers}
+                handleEdit={handleEditCustomer}
+                handleDelete={handleDeleteCustomer}
+              />
+            )}
+          </div>
+        ))}
     </div>
   );
 };
