@@ -10,7 +10,7 @@ const TaskCard = ({ task, handleEdit, handleDelete }) => {
   const isLong = task.description?.length > previewLength;
 
   return (
-    <div className="w-[460px] p-8 bg-card-bg text-secondary-text rounded-2xl bg-gradient-to-r from-bg/80 to-card-bg/10 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+    <div className="w-[460px] p-8 bg-card-bg text-secondary-text rounded-2xl bg-gradient-to-r from-bg/80 to-card-bg/10 hover:shadow-xl transition-all duration-300">
       <div className="flex justify-between mb-4">
         {/* top left */}
         <div className="flex flex-col mb-2">
