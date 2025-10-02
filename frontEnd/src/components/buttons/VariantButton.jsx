@@ -14,9 +14,9 @@ const VariantButton = ({
 
   const sizeClasses = {
     tiny: "h-[28px] w-[28px]",
-    small: "h-[28px] w-[90px]",
+    small: "h-[28px] w-[90px] gap-2",
     smsquare: "h-[40px] w-[40px]",
-    medium: "h-[28px] w-[100px]",
+    medium: "h-[28px] w-[100px] gap-3",
     large: "h-[35px] lg:h-[40px] w-[150px] text-[22px]",
     "extra-large":
       "w-[200px] lg:w-[400px] h-[60px] lg:h-[90px] text-[20px] lg:text-[32px]",
@@ -50,7 +50,7 @@ const VariantButton = ({
         <Icon
           name={icon}
           className={`${
-            size != "extra-large" ? "h-[20px] w-[20px]" : "h-[50px] w-[50px]"
+            size != "extra-large" ? "h-[14px] w-[14px]" : "h-[50px] w-[50px]"
           } `}
         />
       )}

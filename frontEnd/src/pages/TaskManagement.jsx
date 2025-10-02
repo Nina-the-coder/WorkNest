@@ -19,7 +19,7 @@ const TaskManagement = () => {
   const [formData, setFormData] = useState({
     assignedTo: "",
     title: "",
-    description: "",
+    description: "quick task description",
     dueDate: "",
     status: "pending",
     priority: "medium",
@@ -34,6 +34,17 @@ const TaskManagement = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
   const [tableView, setTableView] = useState(false); // 🆕 toggle state
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    handleResize();
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -90,6 +101,10 @@ const TaskManagement = () => {
       );
       return;
     }
+    if (!formData.description) {
+      toast.warn("Please provide a description for the task.");
+      return;
+    }
     try {
       const token = localStorage.getItem("token");
       const currentUser = JSON.parse(localStorage.getItem("user"));
@@ -116,7 +131,7 @@ const TaskManagement = () => {
       setFormData({
         assignedTo: "",
         title: "",
-        description: "",
+        description: "quick task description",
         dueDate: "",
         status: "pending",
         priority: "medium",
@@ -162,7 +177,7 @@ const TaskManagement = () => {
     setFormData({
       assignedTo: "",
       title: "",
-      description: "",
+      description: "quick task description",
       dueDate: "",
       status: "pending",
       priority: "medium",
@@ -319,13 +334,14 @@ const TaskManagement = () => {
 
       {/* Search Bar, Filters, CTA, Toggle */}
       {!modal && (
-        <div className="flex py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
+        <div className="flex flex-col gap-4 xl:flex-row py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
           <div className="flex gap-4">
             <SearchBar
               placeholder="Search tasks by title, description, employee"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+
             <FilterDropdown
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -335,6 +351,7 @@ const TaskManagement = () => {
               <option value="in-progress">In-Progress</option>
               <option value="done">Done</option>
             </FilterDropdown>
+
             <FilterDropdown
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
@@ -344,52 +361,58 @@ const TaskManagement = () => {
               <option value="medium">Medium</option>
               <option value="low">Low</option>
             </FilterDropdown>
+          </div>
+
+          <div className="flex gap-12 items-center lg:mr-10 justify-end">
+            {/* Add new Task */}
             <CTAButton onClick={handleAddNewTask} icon="plus" className="ml-8">
               <div className="text-left mb-1">Add new</div>
               <div className="text-left">Task</div>
             </CTAButton>
-          </div>
-          <div className="flex gap-6 items-center">
-            <VariantButton
-              onClick={() => setTableView(!tableView)}
-              variant="ghostCta"
-              size="medium"
-              text={tableView ? "Card" : "Table"}
-              icon={tableView ? "layout-grid" : "table"}
-            />
+            {/* Toggle Button */}
+            {!isMobile && (
+              <VariantButton
+                onClick={() => setTableView(!tableView)}
+                variant="ghostCta"
+                size="medium"
+                text={tableView ? "Card" : "Table"}
+                icon={tableView ? "layout-grid" : "table"}
+              />
+            )}
           </div>
         </div>
       )}
 
       {/* container */}
-      {!modal && loading ? (
-        <div className="w-full p-4 gap-4">
-          <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
-        </div>
-      ) : tableView ? (
-        <div className="w-full p-2">
-          <TaskTable
-            tasks={filteredTasks}
-            handleEdit={handleEditTask}
-            handleDelete={handleDeleteTask}
-          />
-        </div>
-      ) : (
-        <div className="w-full p-2 flex flex-wrap gap-4">
-          {filteredTasks.length === 0 ? (
-            <NoItemFoundModal message="No tasks found" />
-          ) : (
-            filteredTasks.map((task) => (
-              <TaskCard
-                key={task.taskId}
-                task={task}
-                handleEdit={() => handleEditTask(task)}
-                handleDelete={() => handleDeleteTask(task.taskId)}
-              />
-            ))
-          )}
-        </div>
-      )}
+      {!modal &&
+        (loading ? (
+          <div className="w-full p-4 gap-4">
+            <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
+          </div>
+        ) : tableView ? (
+          <div className="w-full h-[500px] px-8 overflow-auto ">
+            <TaskTable
+              tasks={filteredTasks}
+              handleEdit={handleEditTask}
+              handleDelete={handleDeleteTask}
+            />
+          </div>
+        ) : (
+          <div className="w-full p-2 flex flex-wrap gap-4">
+            {filteredTasks.length === 0 ? (
+              <NoItemFoundModal message="No tasks found" />
+            ) : (
+              filteredTasks.map((task) => (
+                <TaskCard
+                  key={task.taskId}
+                  task={task}
+                  handleEdit={() => handleEditTask(task)}
+                  handleDelete={() => handleDeleteTask(task.taskId)}
+                />
+              ))
+            )}
+          </div>
+        ))}
     </div>
   );
 };

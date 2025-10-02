@@ -140,7 +140,7 @@ const AddQuotation = (props) => {
       toast.warn("Please select an employee");
       return;
     }
-    if( !selectedCustomerObj) {
+    if (!selectedCustomerObj) {
       toast.warn("Please select a customer");
       return;
     }
@@ -286,7 +286,7 @@ const AddQuotation = (props) => {
   });
 
   return (
-    <div className="bg-bg min-h-screen">
+    <div className="bg-bg min-h-screen w-full">
       {/* main */}
       <div className="w-full flex justify-end p-4">
         <ThemeToggle></ThemeToggle>
@@ -318,26 +318,28 @@ const AddQuotation = (props) => {
                 )}
 
                 {/* products */}
-                <div className="text-text/90 mt-8">
-                  <label
-                    htmlFor="Products"
-                    className="text-[18px] ml-4 text-text/90"
-                  >
-                    Add Products
-                  </label>
-                  <VariantButton
-                    onClick={handleAddProductToQuotation}
-                    variant="blue"
-                    icon="plus"
-                    size="tiny"
-                    className="h-[32px] w-[35px] inline-flex ml-4"
-                  />
+                <div className="text-text/90 mt-8 flex-col items-center">
+                  <div className="flex items-center mb-4">
+                    <label
+                      htmlFor="Products"
+                      className="text-[18px] ml-4 text-text/90"
+                    >
+                      Add Products
+                    </label>
+                    <VariantButton
+                      onClick={handleAddProductToQuotation}
+                      variant="cta"
+                      icon="plus"
+                      size="tiny"
+                      className="h-[32px] w-[35px] inline-flex ml-4"
+                    />
+                  </div>
 
                   {/* products list */}
                   {selectedProducts.length > 0 && (
                     <div className="mt-8">
                       <table className="text-text w-full">
-                        <thead className="">
+                        <thead className="bg-card-bg border-b border-t border-l border-r">
                           <tr>
                             <th className="w-[50px] p-0.5 border">S. no.</th>
                             <th className="min-w-[200px] border px-1">
@@ -348,7 +350,10 @@ const AddQuotation = (props) => {
                           </tr>
                         </thead>
                         {selectedProducts.map((product, index) => (
-                          <tbody key={product.productId} className="border bg-bg">
+                          <tbody
+                            key={product.productId}
+                            className="border bg-bg"
+                          >
                             <tr>
                               <td className="text-center border h-[40px]">
                                 {index + 1}
@@ -369,10 +374,8 @@ const AddQuotation = (props) => {
                                   onClick={(e) =>
                                     decreaseProductQty(e, product.productId)
                                   }
-                                  ></VariantButton>
-                                <div className="mx-2">
-                                  {product.quantity}
-                                </div>
+                                ></VariantButton>
+                                <div className="mx-2">{product.quantity}</div>
                                 <VariantButton
                                   size="tiny"
                                   variant="ghostCta"
@@ -388,7 +391,7 @@ const AddQuotation = (props) => {
                           </tbody>
                         ))}
                       </table>
-                      <div className="w-full border-r border-b border-l py-2 text-[18px] text-text font-semibold text-right pr-24 mb-8">
+                      <div className="w-full border-r border-b border-l py-2 text-[18px] bg-card-bg text-text font-semibold text-right pr-24 mb-8">
                         Total - {quotationFormData.total}
                       </div>
                     </div>
@@ -465,7 +468,9 @@ const AddQuotation = (props) => {
         {/* product modal */}
         {productModal && (
           <div className="mx-8 lg:w-[1300px]  flex flex-col bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300 p-8 rounded-2xl">
-            <div className="text-[20px] text-text font-bold text-center mt-4">Add Products</div>
+            <div className="text-[20px] text-text font-bold text-center mt-4">
+              Add Products
+            </div>
             <div>
               <div className="m-8">
                 <SearchBar
@@ -475,8 +480,10 @@ const AddQuotation = (props) => {
                 />
               </div>
               {/* product container */}
-              <div className="overflow-auto max-h-[400px] w-full pb-4 px-4
-              flex flex-wrap gap-4">
+              <div
+                className="overflow-auto max-h-[400px] w-full pb-4 px-4
+              flex flex-wrap gap-4"
+              >
                 {filteredProducts.map((product) => (
                   <div
                     key={product._id}
@@ -490,27 +497,29 @@ const AddQuotation = (props) => {
                     }`}
                   >
                     <div className="p-2">
-                    {/* Image */}
-                    <div className="w-full h-[180px] rounded-2xl overflow-hidden mb-3 flex items-center justify-center">
-                      <img
-                        src={`${BASE_URL}/uploads/${product.image}`}
-                        alt={product.name}
-                        className="w-full h-full object-fill"
-                      />
-                    </div>
-                    {/* Title */}
-                    <div className="ml-4 mb-0.5 text-text text-[16px] font-semibold truncate">
-                      {product.name}
-                    </div>
-                    {/* ID & Price */}
-                    <div className="mx-2 flex justify-between text-secondary-text text-[14px] mb-2">
-                      <div>{product.productId}</div>
-                      <div className="text-text text-[16px] font-semibold">₹ {product.price}</div>
-                    </div>
-                    {/* Description */}
-                    <div className="mx-2 text-secondary-text h-[80px] text-sm line-clamp-4 text-justify">
-                      {product.description}
-                    </div>
+                      {/* Image */}
+                      <div className="w-full h-[180px] rounded-2xl overflow-hidden mb-3 flex items-center justify-center">
+                        <img
+                          src={`${BASE_URL}/uploads/${product.image}`}
+                          alt={product.name}
+                          className="w-full h-full object-fill"
+                        />
+                      </div>
+                      {/* Title */}
+                      <div className="ml-4 mb-0.5 text-text text-[16px] font-semibold truncate">
+                        {product.name}
+                      </div>
+                      {/* ID & Price */}
+                      <div className="mx-2 flex justify-between text-secondary-text text-[14px] mb-2">
+                        <div>{product.productId}</div>
+                        <div className="text-text text-[16px] font-semibold">
+                          ₹ {product.price}
+                        </div>
+                      </div>
+                      {/* Description */}
+                      <div className="mx-2 text-secondary-text h-[80px] text-sm line-clamp-4 text-justify">
+                        {product.description}
+                      </div>
                     </div>
                   </div>
                 ))}

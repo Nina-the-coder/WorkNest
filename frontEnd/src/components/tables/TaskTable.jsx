@@ -18,11 +18,11 @@ const TaskTable = ({ tasks, handleEdit, handleDelete }) => {
           <tr>
             <th className="px-6 py-3">Task ID</th>
             <th className="px-6 py-3">Title</th>
+            <th className="px-6 py-3">Description</th>
             <th className="px-6 py-3">Assigned To</th>
             <th className="px-6 py-3">Status</th>
             <th className="px-6 py-3">Priority</th>
             <th className="px-6 py-3">Due Date</th>
-            <th className="px-6 py-3">Description</th>
             <th className="px-6 py-3 text-center">Actions</th>
           </tr>
         </thead>
@@ -36,6 +36,9 @@ const TaskTable = ({ tasks, handleEdit, handleDelete }) => {
             >
               <td className="px-6 py-4 font-medium text-text">{task.taskId}</td>
               <td className="px-6 py-4">{task.title}</td>
+              <td className="px-6 py-4 max-w-[200px] truncate">
+                {task.description}
+              </td>
               <td className="px-6 py-4">
                 {task.assignedTo?.name} ({task.assignedTo?.empId})
               </td>
@@ -72,9 +75,7 @@ const TaskTable = ({ tasks, handleEdit, handleDelete }) => {
                   year: "numeric",
                 })}
               </td>
-              <td className="px-6 py-4 max-w-[200px] truncate">
-                {task.description}
-              </td>
+
               <td className="px-6 py-4 flex gap-2 justify-center">
                 <VariantButton
                   onClick={() => handleEdit(task)}

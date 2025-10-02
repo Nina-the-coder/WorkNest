@@ -42,6 +42,10 @@ const {
   deleteOrder,
 } = require("../controllers/adminControllers/orderController");
 const { submitQuotation } = require("../controllers/employeeController");
+const { fetchMetrics } = require("../controllers/adminController");
+
+// dashboard metrics
+router.get("/dashboard-metrics", fetchMetrics);
 
 // employee routes
 router.post("/employees", verifyToken, addEmployee);

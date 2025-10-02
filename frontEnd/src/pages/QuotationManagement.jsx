@@ -26,6 +26,7 @@ const QuotationManagement = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [quotations, setQuotations] = useState([]);
   const [tableView, setTableView] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
   // pagination state
   const [page, setPage] = useState(1);
@@ -36,6 +37,16 @@ const QuotationManagement = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    handleResize();
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // fetch function (uses AbortController to cancel stale requests)
   const fetchQuotations = useCallback(
@@ -206,34 +217,38 @@ const QuotationManagement = () => {
       <Header title="Quotation Management" />
 
       {/* Search, Filter, CTA, Toggle */}
-      <div className="flex py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
+      <div className="flex flex-col gap-4 xl:flex-row py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
         <div className="flex gap-4">
+        <div className="w-full lg:w-fit flex gap-4">
+
           <SearchBar
             placeholder="Search for a Quotation"
             value={searchQuery}
             onChange={onSearchChange}
           />
+        </div>
           <FilterDropdown value={statusFilter} onChange={onStatusChange}>
             <option value="">All Status</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
             <option value="pending">Pending</option>
           </FilterDropdown>
+        </div>
 
+        <div className="flex gap-12 items-center lg:mr-10 justify-end">
           <CTAButton onClick={handleAddNewQuotation} icon="plus">
             <div className="text-left mb-1">Add new</div>
             <div className="text-left">Quotation</div>
           </CTAButton>
-        </div>
-
-        <div className="flex gap-6 items-center">
-          <VariantButton
-            onClick={() => setTableView(!tableView)}
-            variant="ghostCta"
-            size="medium"
-            text={tableView ? "Card" : "Table"}
-            icon={tableView ? "layout-grid" : "table"}
-          />
+          {!isMobile && (
+            <VariantButton
+              onClick={() => setTableView(!tableView)}
+              variant="ghostCta"
+              size="medium"
+              text={tableView ? "Card" : "Table"}
+              icon={tableView ? "layout-grid" : "table"}
+            />
+          )}
         </div>
       </div>
 

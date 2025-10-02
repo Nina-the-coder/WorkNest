@@ -27,9 +27,9 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`max-h-screen sticky pt-4 ${
+      className={`h-screen sticky top-0 pt-4 ${
         collapsed ? " " : "pl-2"
-      } top-0 bg-card-bg text-text transition-all ease-in-out duration-300 z-50 `}
+      } bg-card-bg text-text transition-all ease-in-out duration-300 z-50 `}
     >
       <button
         onClick={() => setCollapsed(!collapsed)}

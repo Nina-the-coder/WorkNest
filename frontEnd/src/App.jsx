@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -18,9 +23,13 @@ import { ToastContainer } from "react-toastify";
 import Sidebar from "./components/Sidebar";
 
 function App() {
+  const location = useLocation();
+  const hideSidebarRoutes = ["/", "/employee/dashboard", "/admin/add-quotation", "/employee/quotation"]; // login page only
+
+  const shouldShowSidebar = !hideSidebarRoutes.includes(location.pathname);
   return (
     <div className="App flex min-h-screen">
-      <Sidebar />
+      {shouldShowSidebar && <Sidebar />}
       <Routes>
         {/* Public Route */}
         <Route path="/" element={<Login />}></Route>

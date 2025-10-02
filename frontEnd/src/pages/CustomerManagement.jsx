@@ -366,7 +366,7 @@ const CustomerkManagement = () => {
 
       {/* Search Bar and CTA button */}
       {!modal && (
-        <div className="flex my-14 px-10 w-full">
+        <div className="flex flex-col gap-4 xl:flex-row py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
           <div className="flex gap-4">
             <SearchBar
               placeholder="Search for a customer"
@@ -393,7 +393,7 @@ const CustomerkManagement = () => {
             </FilterDropdown>
           </div>
 
-          <div className="ml-20">
+          <div className="flex items-center lg:mr-10 justify-end">
             <CTAButton onClick={handleAddNewCustomer} icon="plus">
               <div className="text-left mb-1">Add new</div>
               <div className="text-left">Customer</div>
@@ -409,15 +409,17 @@ const CustomerkManagement = () => {
             <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
           </div>
         ) : (
-          <div className="w-300 max-h-120 overflow-y-auto h-fit flex flex-wrap text-white">
+          <div className="overflow-y-auto h-fit flex flex-wrap text-white">
             {filteredCustomers.length === 0 ? (
               <div className="ml-40">No Customer found</div>
             ) : (
-              <CustomerTable
-                filteredCustomers={filteredCustomers}
-                handleEdit={handleEditCustomer}
-                handleDelete={handleDeleteCustomer}
-              />
+              <div className="w-full rounded-2xl">
+                <CustomerTable
+                  filteredCustomers={filteredCustomers}
+                  handleEdit={handleEditCustomer}
+                  handleDelete={handleDeleteCustomer}
+                />
+              </div>
             )}
           </div>
         ))}

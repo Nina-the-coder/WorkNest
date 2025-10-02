@@ -298,15 +298,15 @@ const ProductManagement = () => {
 
         {/* Search Bar and CTA button */}
         {!modal && (
-          <div className="flex my-14 px-10 w-full">
-            <div className="flex gap-4">
+          <div className="flex gap-4 my-14 px-10 w-full">
+            <div className="w-full lg:w-fit flex gap-4">
               <SearchBar
                 placeholder="Searh for the product by name or description"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="ml-20">
+            <div className="lg:ml-10">
               <CTAButton onClick={handleAddNewProduct} icon="plus">
                 <div className="text-left mb-1">Add new</div>
                 <div className="text-left">Product</div>

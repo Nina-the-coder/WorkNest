@@ -32,6 +32,23 @@ const EmployeeManagement = () => {
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [tableView, setTableView] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    handleResize();
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!user || user.role !== "admin") {
+      window.location.href = "/";
+    }
+  }, []);
 
   const fetchEmployees = async () => {
     setLoading(true);
@@ -353,7 +370,7 @@ const EmployeeManagement = () => {
 
       {/* Search Bar, Filters, and CTA */}
       {!modal && (
-        <div className="flex py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
+        <div className="flex flex-col gap-4 xl:flex-row py-4 my-10 px-10 w-full sticky top-0 bg-bg z-50 justify-between">
           {/* Left side: Search + Filters */}
           <div className="flex gap-4">
             <SearchBar
@@ -379,27 +396,29 @@ const EmployeeManagement = () => {
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </FilterDropdown>
+          </div>
+
+          {/* Right side: Actions */}
+          <div className="flex gap-12 items-center lg:mr-10 justify-end">
             {/* Add New Employee */}
             <CTAButton
               onClick={handleAddNewEmployee}
               icon="plus"
-              className="ml-8"
+              className=""
             >
               <div className="text-left mb-1">Add new</div>
               <div className="text-left">Employee</div>
             </CTAButton>
-          </div>
-
-          {/* Right side: Actions */}
-          <div className="flex gap-6 items-center">
             {/* Toggle Button */}
-            <VariantButton
-              onClick={() => setTableView(!tableView)}
-              variant="ghostCta"
-              size="medium"
-              text={tableView ? "Card" : "Table"}
-              icon={tableView ? "layout-grid" : "table"}
-            />
+            {!isMobile && (
+              <VariantButton
+                onClick={() => setTableView(!tableView)}
+                variant="ghostCta"
+                size="medium"
+                text={tableView ? "Card" : "Table"}
+                icon={tableView ? "layout-grid" : "table"}
+              />
+            )}
           </div>
         </div>
       )}
@@ -412,11 +431,13 @@ const EmployeeManagement = () => {
             <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
           </div>
         ) : tableView ? (
-          <EmployeeTable
-            employees={filteredEmployees}
-            handleEdit={handleEditEmployee}
-            handleDelete={handleDeleteEmployee}
-          />
+          <div className="w-full h-[500px] px-8 overflow-auto ">
+            <EmployeeTable
+              employees={filteredEmployees}
+              handleEdit={handleEditEmployee}
+              handleDelete={handleDeleteEmployee}
+            />
+          </div>
         ) : (
           <div className="w-full p-2 flex flex-wrap gap-4">
             {filteredEmployees.length === 0 ? (

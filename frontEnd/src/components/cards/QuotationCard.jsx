@@ -14,7 +14,7 @@ const QuotationCard = ({
   return (
     <div
       onClick={() => setIsExpanded(!isExpanded)}
-      className="my-2 w-[850px] h-fit bg-card-bg text-secondary-text rounded-2xl bg-gradient-to-r from-bg/80 to-card-bg/10 hover:shadow-xl transition-all duration-300"
+      className="my-2 w-full max-w-[850px] h-fit bg-card-bg text-secondary-text rounded-2xl bg-gradient-to-r from-bg/80 to-card-bg/10 hover:shadow-xl transition-all duration-300"
       key={quotation.quotationId}
     >
       {/* top */}
