@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -68,7 +69,7 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
         value={inputValue}
         onChange={handleChange}
         onFocus={() => setShowDropdown(true)}
-        className="w-full h-[28px] p-0.5 px-2 rounded-xl mb-4 bg-white"
+        className="w-full h-7 p-0.5 px-2 rounded-xl mb-4 bg-white"
         autoComplete="off"
         placeholder="Type name or empId"
       />

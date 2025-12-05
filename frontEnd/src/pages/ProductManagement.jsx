@@ -189,8 +189,7 @@ const ProductManagement = () => {
   });
 
   return (
-    <div className="flex min-h-screen">
-      {/* main */}
+
       <div className="w-full p-4 flex flex-col items-center bg-bg">
         {/* header */}
         <Header title="Product Management" />
@@ -322,7 +321,7 @@ const ProductManagement = () => {
               <SkeletonLoader count={6} className="flex flex-wrap gap-4" />
             </div>
           ) : (
-            <div className="overflow-auto h-[500px] w-full pb-4 px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="h-fit w-full pb-4 px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.productId}
@@ -336,7 +335,6 @@ const ProductManagement = () => {
             </div>
           ))}
       </div>
-    </div>
   );
 };
 
