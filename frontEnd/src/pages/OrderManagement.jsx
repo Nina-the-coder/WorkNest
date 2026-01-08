@@ -26,7 +26,11 @@ const OrderManagement = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/admin/orders`);
+      const res = await axios.get(`${BASE_URL}/api/admin/orders`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       setOrders(res.data);
       console.log("orders being fetched", res.data);
     } catch (err) {
@@ -45,7 +49,11 @@ const OrderManagement = () => {
     if (!confirmDelete) return;
     console.log("deleting order", order);
     try {
-      await axios.delete(`${BASE_URL}/api/admin/orders/${order.orderId}`);
+      await axios.delete(`${BASE_URL}/api/admin/orders/${order.orderId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       setOrders((prev) => prev.filter((o) => o.orderId !== order.orderId));
       if (ActiveOrder && ActiveOrder.orderId === order.orderId) {
         setActiveOrder(null);
@@ -65,6 +73,10 @@ const OrderManagement = () => {
     try {
       await axios.put(`${BASE_URL}/api/admin/orders/${order.orderId}`, {
         status: newStatus,
+      }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
       setOrders((prev) =>
         prev.map((o) =>
@@ -88,7 +100,11 @@ const OrderManagement = () => {
           ? `${BASE_URL}/api/admin/orders/${order.orderId}/download-csv`
           : `${BASE_URL}/api/admin/orders/${order.orderId}/download`;
 
-      const res = await axios.get(endpoint, { responseType: "blob" });
+      const res = await axios.get(endpoint, { responseType: "blob" }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       // Create blob and trigger download
       const url = window.URL.createObjectURL(new Blob([res.data]));

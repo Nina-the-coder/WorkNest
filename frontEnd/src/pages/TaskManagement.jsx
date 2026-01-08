@@ -50,8 +50,16 @@ const TaskManagement = () => {
     try {
       setLoading(true);
       const [taskRes, empRes] = await Promise.all([
-        axios.get(`${BASE_URL}/api/admin/tasks`),
-        axios.get(`${BASE_URL}/api/admin/employees`),
+        axios.get(`${BASE_URL}/api/admin/tasks`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }),
+        axios.get(`${BASE_URL}/api/admin/employees`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }),
       ]);
 
       const employeeMap = {};
@@ -163,7 +171,11 @@ const TaskManagement = () => {
   const handleDeleteTask = async (taskId) => {
     try {
       setLoading(true);
-      await axios.delete(`${BASE_URL}/api/admin/tasks/${taskId}`);
+      await axios.delete(`${BASE_URL}/api/admin/tasks/${taskId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       await fetchData();
       toast.success("Task deleted successfully");
     } catch (err) {

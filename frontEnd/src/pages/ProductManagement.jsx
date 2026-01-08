@@ -59,7 +59,11 @@ const ProductManagement = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${BASE_URL}/api/admin/products`);
+      const res = await axios.get(`${BASE_URL}/api/admin/products`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       setProducts(res.data);
     } catch (err) {
       console.error("Error in fetching the products form the database...", err);
@@ -169,7 +173,11 @@ const ProductManagement = () => {
     if (!confirmDelete) return;
     console.log("deleting the product", productId);
     try {
-      await axios.delete(`${BASE_URL}/api/admin/products/${productId}`);
+      await axios.delete(`${BASE_URL}/api/admin/products/${productId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       await fetchProducts();
       console.log("Product deleted successfully");
     } catch (err) {

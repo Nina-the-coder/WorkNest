@@ -48,11 +48,11 @@ const { fetchMetrics } = require("../controllers/adminController");
 router.get("/dashboard-metrics", fetchMetrics);
 
 // employee routes
-router.post("/employees", verifyToken, addEmployee);
+router.post("/employees", addEmployee);
 router.get("/employees", getAllEmployees);
 router.get("/employees/:empId", getEmployeeById);
-router.delete("/employees/:empId", verifyToken, deleteEmployee);
-router.put("/employees/:empId", verifyToken, updateEmployee);
+router.delete("/employees/:empId", deleteEmployee);
+router.put("/employees/:empId", updateEmployee);
 
 // task routes
 router.post("/tasks", addTask);

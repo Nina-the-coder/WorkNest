@@ -14,7 +14,11 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/admin/dashboard-metrics`);
+      const res = await axios.get(`${BASE_URL}/api/admin/dashboard-metrics`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       const data = res.data;
       setMetrics({
         tasks: data.pendingTasks,

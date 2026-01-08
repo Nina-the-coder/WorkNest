@@ -79,7 +79,9 @@ const AddQuotation = (props) => {
       const fetchCustomerById = async () => {
         try {
           const res = await axios.get(
-            `${BASE_URL}/api/employee/customers/${existingQuotation.addedBy._id}`
+            `${BASE_URL}/api/employee/customers/${existingQuotation.addedBy._id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }
           );
           setSelectedCustomerObj(res.data); // ✅ pass the whole object
           // console.log("fetched customer from db", res.data);
@@ -94,7 +96,8 @@ const AddQuotation = (props) => {
         try {
           // console.log("existing quotation :", existingQuotation);
           const res = await axios.get(
-            `${BASE_URL}/api/admin/employees/${existingQuotation.addedBy.empId}`
+            `${BASE_URL}/api/admin/employees/${existingQuotation.addedBy.empId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
           setSelectedEmployeeObj(res.data); // ✅ set full employee object
           setSelectedEmployeeId(res.data._id); // ✅ set ID for form
@@ -119,7 +122,9 @@ const AddQuotation = (props) => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/admin/products`);
+      const res = await axios.get(`${BASE_URL}/api/admin/products`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setProducts(res.data);
     } catch (err) {
       console.error("Error in fetching the products form the database...", err);

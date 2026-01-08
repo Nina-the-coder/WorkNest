@@ -48,7 +48,9 @@ const EmployeeDashboard = () => {
   const fetchCustomers = async (emp) => {
     try {
       const res = await axios.get(
-        `${BASE_URL}/api/employee/customers/${emp}`
+        `${BASE_URL}/api/employee/customers/${emp}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       setCustomers(res.data);
     } catch (err) {

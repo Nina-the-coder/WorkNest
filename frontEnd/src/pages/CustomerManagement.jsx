@@ -35,7 +35,11 @@ const CustomerkManagement = () => {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${BASE_URL}/api/admin/customers`);
+      const res = await axios.get(`${BASE_URL}/api/admin/customers`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       setCustomers(res.data);
     } catch (err) {
       console.error(
@@ -160,7 +164,11 @@ const CustomerkManagement = () => {
     setLoading(true);
     if (!confirmDelete) return;
     try {
-      await axios.delete(`${BASE_URL}/api/admin/customers/${customerId}`);
+      await axios.delete(`${BASE_URL}/api/admin/customers/${customerId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       await fetchCustomers();
       console.log("Customer deleted successfully");
       toast.success("Customer deleted successfully");
