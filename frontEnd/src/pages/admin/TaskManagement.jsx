@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
-import EmployeeComboBox from "../components/combobox/EmployeeComboBox";
-import axios from "axios";
-import Header from "../components/Header";
-import SearchBar from "../components/SearchBar";
-import FilterDropdown from "../components/FilterDropdown";
-import CTAButton from "../components/buttons/CTAButton";
-import TaskCard from "../components/cards/TaskCard";
-import TaskTable from "../components/tables/TaskTable"; // 🆕 add this like EmployeeTable
-import VariantButton from "../components/buttons/VariantButton";
-import NoItemFoundModal from "../components/NoItemFoundModal";
+import Sidebar from "../../components/Sidebar";
+import EmployeeComboBox from "../../components/combobox/EmployeeComboBox";
+import Header from "../../components/Header";
+import SearchBar from "../../components/SearchBar";
+import FilterDropdown from "../../components/FilterDropdown";
+import CTAButton from "../../components/buttons/CTAButton";
+import TaskCard from "../../components/cards/TaskCard";
+import TaskTable from "../../components/tables/TaskTable"; // 🆕 add this like EmployeeTable
+import VariantButton from "../../components/buttons/VariantButton";
+import NoItemFoundModal from "../../components/NoItemFoundModal";
 import { toast } from "react-toastify";
-import SkeletonLoader from "../components/SkeletonLoader";
+import SkeletonLoader from "../../components/SkeletonLoader";
+import api from "../../api/axios";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -50,16 +50,8 @@ const TaskManagement = () => {
     try {
       setLoading(true);
       const [taskRes, empRes] = await Promise.all([
-        axios.get(`${BASE_URL}/api/admin/tasks`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }),
-        axios.get(`${BASE_URL}/api/admin/employees`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }),
+        api.get(`${BASE_URL}/api/admin/tasks`),
+        api.get(`${BASE_URL}/api/admin/employees`),
       ]);
 
       const employeeMap = {};
@@ -114,24 +106,16 @@ const TaskManagement = () => {
       return;
     }
     try {
-      const token = localStorage.getItem("token");
       const currentUser = JSON.parse(localStorage.getItem("user"));
       const payload = { ...formData, assignedBy: currentUser._id };
 
       if (isEdit) {
-        await axios.put(`${BASE_URL}/api/admin/tasks/${editTaskId}`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.put(`${BASE_URL}/api/admin/tasks/${editTaskId}`, payload);
         toast.success("Task updated successfully");
         setIsEdit(false);
         setEditTaskId(null);
       } else {
-        await axios.post(`${BASE_URL}/api/admin/tasks`, payload, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        await api.post(`${BASE_URL}/api/admin/tasks`, payload);
         toast.success("Task created successfully");
       }
 
@@ -171,11 +155,7 @@ const TaskManagement = () => {
   const handleDeleteTask = async (taskId) => {
     try {
       setLoading(true);
-      await axios.delete(`${BASE_URL}/api/admin/tasks/${taskId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await api.delete(`${BASE_URL}/api/admin/tasks/${taskId}`);
       await fetchData();
       toast.success("Task deleted successfully");
     } catch (err) {

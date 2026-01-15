@@ -1,8 +1,8 @@
-import axios from "axios";
 import React from "react";
 import { useEffect } from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import api from "../../api/axios";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const EmployeeQuotationManagement = () => {
@@ -21,9 +21,7 @@ const EmployeeQuotationManagement = () => {
 
   const fetchQuotation = async (empId) => {
     try {
-      const res = await axios.get(
-        `${BASE_URL}/api/employee/quotation/${empId}`
-      );
+      const res = await api.get(`${BASE_URL}/api/employee/quotation/${empId}`);
       setQuotations(res.data);
       console.log("Quotations fetched", res.data);
     } catch (err) {
@@ -73,13 +71,10 @@ const EmployeeQuotationManagement = () => {
       // return;
     }
     try {
-      const res = await axios.post(
-        `${BASE_URL}/api/employee/order`,
-        { quotationId: quotation._id, addedBy: user._id},   /////////////////////////////////////////
-        {
-          headers: { Authorization: `bearer ${token}` },
-        }
-      );
+      const res = await api.post(`${BASE_URL}/api/employee/order`, {
+        quotationId: quotation._id,
+        addedBy: user._id,
+      });
       updateQuotationStatus(quotation.quotationId);
 
       console.log("making the order ", res.data);

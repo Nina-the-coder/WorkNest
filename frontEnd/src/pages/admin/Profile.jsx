@@ -1,6 +1,6 @@
 import React from "react";
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
+import Sidebar from "../../components/Sidebar";
+import Header from "../../components/Header";
 
 const Profile = () => {
   const user = JSON.parse(localStorage.getItem("user"));

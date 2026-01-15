@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import api from "../../api/axios";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -13,7 +14,7 @@ const EmployeeComboBox = ({ selected, onSelect }) => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/api/admin/employees`);
+        const res = await api.get(`${BASE_URL}/api/admin/employees`);
         const activeEmployees = res.data.filter(emp => emp.status === 'active' && !emp.deleted);
         setEmployees(activeEmployees);
         setFilteredEmployees(activeEmployees);

@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../../components/Sidebar";
 import axios from "axios";
-import Header from "../components/Header";
-import SearchBar from "../components/SearchBar";
-import FilterDropdown from "../components/FilterDropdown";
-import CustomerTable from "../components/tables/CustomerTable";
-import EmployeeComboBox from "../components/combobox/EmployeeComboBox";
-import VariantButton from "../components/buttons/VariantButton";
-import CTAButton from "../components/buttons/CTAButton";
+import Header from "../../components/Header";
+import SearchBar from "../../components/SearchBar";
+import FilterDropdown from "../../components/FilterDropdown";
+import CustomerTable from "../../components/tables/CustomerTable";
+import EmployeeComboBox from "../../components/combobox/EmployeeComboBox";
+import VariantButton from "../../components/buttons/VariantButton";
+import CTAButton from "../../components/buttons/CTAButton";
 import { toast } from "react-toastify";
-import SkeletonLoader from "../components/SkeletonLoader";
+import SkeletonLoader from "../../components/SkeletonLoader";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const CustomerkManagement = () => {
@@ -35,11 +35,7 @@ const CustomerkManagement = () => {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${BASE_URL}/api/admin/customers`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const res = await api.get(`${BASE_URL}/api/admin/customers`);
       setCustomers(res.data);
     } catch (err) {
       console.error(
@@ -104,16 +100,7 @@ const CustomerkManagement = () => {
           alert("Please select the employee name");
           return;
         }
-        const res = await axios.post(
-          `${BASE_URL}/api/admin/customers`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const res = await axios.post(`${BASE_URL}/api/customers`,formData);
         console.log("Sending Customers data: ", res.data);
         toast.success("Customer added successfully");
       }

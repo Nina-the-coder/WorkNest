@@ -3,6 +3,7 @@ import React from "react";
 import { useEffect } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../../api/axios";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const EmployeeTaskManagement = () => {
@@ -21,7 +22,7 @@ const EmployeeTaskManagement = () => {
     
   const fetchEmployeeTasks = async (empId) => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/employee/tasks/${empId}`);
+      const res = await api.get(`${BASE_URL}/api/employee/tasks/${empId}`);
       setTasks(res.data);
     } catch (err) {
       console.error("Error fetching employee tasks:", err);
@@ -40,7 +41,7 @@ const EmployeeTaskManagement = () => {
         newStatus = "in-progress";
       }
 
-      const res = await axios.put(
+      const res = await api.put(
         `${BASE_URL}/api/employee/tasks/${task.taskId}`,
         { status: newStatus }
       );
@@ -68,7 +69,7 @@ const EmployeeTaskManagement = () => {
     );
     if (!confirmDelete) return;
     try {
-      await axios.delete(`${BASE_URL}/api/employee/tasks/${taskId}`);
+      await api.delete(`${BASE_URL}/api/employee/tasks/${taskId}`);
       console.log("Task deleted", taskId);
       setTasks((prevTasks) => prevTasks.filter((t) => t.taskId !== taskId));
     } catch (err) {

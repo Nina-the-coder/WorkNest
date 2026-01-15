@@ -1,35 +1,35 @@
 const Customer = require("../../models/Customer");
 const getNextSequence = require("../../utils/getNextSequence");
 
-exports.addCustomer = async (req, res) => {
-  try {
-    const { name, address, contact, gst, email, status, companyType, addedBy } =
-      req.body;
+// exports.addCustomer = async (req, res) => {
+//   try {
+//     const { name, address, contact, gst, email, status, companyType, addedBy } =
+//       req.body;
 
-    const nextCustomerNumber = await getNextSequence("customerId");
-    const CustomerId = `CUST${String(nextCustomerNumber).padStart(3, "0")}`;
+//     const nextCustomerNumber = await getNextSequence("customerId");
+//     const CustomerId = `CUST${String(nextCustomerNumber).padStart(3, "0")}`;
 
-    const newCustomer = new Customer({
-      customerId: CustomerId,
-      name,
-      address,
-      contact,
-      gst,
-      email,
-      status,
-      companyType,
-      addedBy,
-    });
+//     const newCustomer = new Customer({
+//       customerId: CustomerId,
+//       name,
+//       address,
+//       contact,
+//       gst,
+//       email,
+//       status,
+//       companyType,
+//       addedBy,
+//     });
 
-    await newCustomer.save();
-    res
-      .status(201)
-      .json({ message: "Customer added successfully", customer: newCustomer });
-  } catch (err) {
-    console.error("Error in adding the customer...", err);
-    res.status(500).json({ message: "SErver error" });
-  }
-};
+//     await newCustomer.save();
+//     res
+//       .status(201)
+//       .json({ message: "Customer added successfully", customer: newCustomer });
+//   } catch (err) {
+//     console.error("Error in adding the customer...", err);
+//     res.status(500).json({ message: "SErver error" });
+//   }
+// };
 
 exports.getAllCustomers = async (req, res) => {
   try {

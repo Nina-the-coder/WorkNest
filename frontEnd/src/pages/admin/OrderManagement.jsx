@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../../components/Sidebar";
 import axios from "axios";
-import Header from "../components/Header";
-import SearchBar from "../components/SearchBar";
-import FilterDropdown from "../components/FilterDropdown";
-import CTAButton from "../components/buttons/CTAButton";
-import OrderCard from "../components/cards/OrderCard";
-import OrderPreviewCard from "../components/cards/OrderPreviewCard";
+import Header from "../../components/Header";
+import SearchBar from "../../components/SearchBar";
+import FilterDropdown from "../../components/FilterDropdown";
+import CTAButton from "../../components/buttons/CTAButton";
+import OrderCard from "../../components/cards/OrderCard";
+import OrderPreviewCard from "../../components/cards/OrderPreviewCard";
 import { toast } from "react-toastify";
-import SkeletonLoader from "../components/SkeletonLoader";
-import NoItemFoundModal from "../components/NoItemFoundModal";
+import SkeletonLoader from "../../components/SkeletonLoader";
+import NoItemFoundModal from "../../components/NoItemFoundModal";
+import api from "../../api/axios";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const OrderManagement = () => {
@@ -26,11 +27,7 @@ const OrderManagement = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/admin/orders`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const res = await api.get(`${BASE_URL}/api/admin/orders`);
       setOrders(res.data);
       console.log("orders being fetched", res.data);
     } catch (err) {
@@ -49,11 +46,7 @@ const OrderManagement = () => {
     if (!confirmDelete) return;
     console.log("deleting order", order);
     try {
-      await axios.delete(`${BASE_URL}/api/admin/orders/${order.orderId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await api.delete(`${BASE_URL}/api/admin/orders/${order.orderId}`);
       setOrders((prev) => prev.filter((o) => o.orderId !== order.orderId));
       if (ActiveOrder && ActiveOrder.orderId === order.orderId) {
         setActiveOrder(null);
@@ -71,13 +64,7 @@ const OrderManagement = () => {
     const newStatus = e.target.value;
     console.log("updating order status", order, newStatus);
     try {
-      await axios.put(`${BASE_URL}/api/admin/orders/${order.orderId}`, {
-        status: newStatus,
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await api.put(`${BASE_URL}/api/admin/orders/${order.orderId}`, {status: newStatus});
       setOrders((prev) =>
         prev.map((o) =>
           o.orderId === order.orderId ? { ...o, status: newStatus } : o
@@ -100,11 +87,7 @@ const OrderManagement = () => {
           ? `${BASE_URL}/api/admin/orders/${order.orderId}/download-csv`
           : `${BASE_URL}/api/admin/orders/${order.orderId}/download`;
 
-      const res = await axios.get(endpoint, { responseType: "blob" }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const res = await api.get(endpoint, { responseType: "blob" });
 
       // Create blob and trigger download
       const url = window.URL.createObjectURL(new Blob([res.data]));

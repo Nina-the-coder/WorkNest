@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../../components/Sidebar";
 import axios from "axios";
-import Header from "../components/Header";
-import SearchBar from "../components/SearchBar";
-import CTAButton from "../components/buttons/CTAButton";
-import ProductCard from "../components/cards/ProductCard";
-import VariantButton from "../components/buttons/VariantButton";
+import Header from "../../components/Header";
+import SearchBar from "../../components/SearchBar";
+import CTAButton from "../../components/buttons/CTAButton";
+import ProductCard from "../../components/cards/ProductCard";
+import VariantButton from "../../components/buttons/VariantButton";
 import { toast } from "react-toastify";
-import SkeletonLoader from "../components/SkeletonLoader";
+import SkeletonLoader from "../../components/SkeletonLoader";
+import api from "../../api/axios";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const ProductManagement = () => {
@@ -59,11 +60,7 @@ const ProductManagement = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${BASE_URL}/api/admin/products`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const res = await api.get(`${BASE_URL}/api/admin/products`);
       setProducts(res.data);
     } catch (err) {
       console.error("Error in fetching the products form the database...", err);
@@ -99,15 +96,7 @@ const ProductManagement = () => {
     try {
       const token = localStorage.getItem("token");
       if (isEdit) {
-        await axios.put(
-          `${BASE_URL}/api/admin/products/${editProductId}`,
-          formDataToSend,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        await api.put(`${BASE_URL}/api/admin/products/${editProductId}`,formDataToSend,);
         console.log("product updated successfullly");
         toast.success("Product updated successfully");
         setIsEdit(false);
@@ -117,15 +106,7 @@ const ProductManagement = () => {
           toast.warn("Please upload an image");
           return;
         }
-        const res = await axios.post(
-          `${BASE_URL}/api/admin/products`,
-          formDataToSend,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await api.post(`${BASE_URL}/api/admin/products`,formDataToSend,);
         console.log("Sending Product: ", res.data);
         toast.success("Product added successfully");
       }
@@ -173,11 +154,7 @@ const ProductManagement = () => {
     if (!confirmDelete) return;
     console.log("deleting the product", productId);
     try {
-      await axios.delete(`${BASE_URL}/api/admin/products/${productId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await api.delete(`${BASE_URL}/api/admin/products/${productId}`);
       await fetchProducts();
       console.log("Product deleted successfully");
     } catch (err) {

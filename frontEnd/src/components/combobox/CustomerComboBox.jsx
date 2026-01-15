@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import api from "../../api/axios";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -33,9 +34,7 @@ const CustomerComboBox = ({ user, onSelect, selectedCustomer }) => {
           user.role === "admin"
             ? `${BASE_URL}/api/admin/customers`
             : `${BASE_URL}/api/employee/customers/${user.empId}`;
-        const res = await axios.get(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get(url);
         setCustomers(res.data);
         console.log(
           "Customers being fetched to choose from for quotation",

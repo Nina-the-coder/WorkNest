@@ -8,6 +8,7 @@ import ThemeToggle from "../components/buttons/ThemeToggle";
 import VariantButton from "../components/buttons/VariantButton";
 import SearchBar from "../components/SearchBar";
 import { toast } from "react-toastify";
+import api from "../api/axios";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const AddQuotation = (props) => {
@@ -78,11 +79,7 @@ const AddQuotation = (props) => {
 
       const fetchCustomerById = async () => {
         try {
-          const res = await axios.get(
-            `${BASE_URL}/api/employee/customers/${existingQuotation.addedBy._id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+          const res = await api.get(`${BASE_URL}/api/employee/customers/${existingQuotation.addedBy._id}`);
           setSelectedCustomerObj(res.data); // ✅ pass the whole object
           // console.log("fetched customer from db", res.data);
         } catch (err) {
@@ -95,10 +92,7 @@ const AddQuotation = (props) => {
       const fetchEmployeeById = async () => {
         try {
           // console.log("existing quotation :", existingQuotation);
-          const res = await axios.get(
-            `${BASE_URL}/api/admin/employees/${existingQuotation.addedBy.empId}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
+          const res = await api.get(`${BASE_URL}/api/admin/employees/${existingQuotation.addedBy.empId}`);
           setSelectedEmployeeObj(res.data); // ✅ set full employee object
           setSelectedEmployeeId(res.data._id); // ✅ set ID for form
           // console.log("fetched employee from db", res.data);
@@ -122,9 +116,7 @@ const AddQuotation = (props) => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/admin/products`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get(`${BASE_URL}/api/admin/products`);
       setProducts(res.data);
     } catch (err) {
       console.error("Error in fetching the products form the database...", err);
@@ -168,15 +160,7 @@ const AddQuotation = (props) => {
 
     if (isEditMode) {
       try {
-        await axios.put(
-          `${BASE_URL}/api/employee/quotation/${existingQuotation.quotationId}`,
-          finalQuotation,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        await api.put(`${BASE_URL}/api/employee/quotation/${existingQuotation.quotationId}`,finalQuotation,);
         // setQuotationFormData({});
         navigate(
           role === "admin" ? "/admin/quotations" : "/employee/dashboard"
@@ -193,11 +177,7 @@ const AddQuotation = (props) => {
     } else {
       console.log("Final quotation being saved:", finalQuotation);
       try {
-        const res = await axios.post(
-          `${BASE_URL}/api/employee/quotation`,
-          finalQuotation,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await api.post(`${BASE_URL}/api/employee/quotation`,finalQuotation,);
         toast.success("Quotation saved successfully");
       } catch (err) {
         const message =

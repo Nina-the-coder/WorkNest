@@ -7,18 +7,22 @@ import {
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
 import "react-toastify/dist/ReactToastify.css";
+
 import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard";
-import EmployeeManagement from "./pages/EmployeeManagement";
-import TaskManagement from "./pages/TaskManagement";
-import CustomerManagement from "./pages/CustomerManagement";
-import ProductManagement from "./pages/ProductManagement";
-import EmployeeDashboard from "./pages/EmployeeDashboard";
-import QuotationManagement from "./pages/QuotationManagement";
-import OrderManagement from "./pages/OrderManagement";
-import ConversationManagement from "./pages/ConversationManagement";
-import Profile from "./pages/Profile";
 import AddQuotation from "./pages/AddQuotation";
+
+import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
+
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import EmployeeManagement from "./pages/admin/EmployeeManagement";
+import TaskManagement from "./pages/admin/TaskManagement";
+import CustomerManagement from "./pages/admin/CustomerManagement";
+import ProductManagement from "./pages/admin/ProductManagement";
+import QuotationManagement from "./pages/admin/QuotationManagement";
+import OrderManagement from "./pages/admin/OrderManagement";
+import ConversationManagement from "./pages/admin/ConversationManagement";
+import Profile from "./pages/admin/Profile";
+
 import { ToastContainer } from "react-toastify";
 import Sidebar from "./components/Sidebar";
 

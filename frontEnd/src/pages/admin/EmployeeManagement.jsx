@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../../components/Sidebar";
 import axios from "axios";
-import Header from "../components/Header";
-import CTAButton from "../components/buttons/CTAButton";
-import SearchBar from "../components/SearchBar";
-import FilterDropdown from "../components/FilterDropdown";
-import EmployeeCard from "../components/cards/EmployeeCard";
-import VariantButton from "../components/buttons/VariantButton";
-import NoItemFoundModal from "../components/NoItemFoundModal";
+import Header from "../../components/Header";
+import CTAButton from "../../components/buttons/CTAButton";
+import SearchBar from "../../components/SearchBar";
+import FilterDropdown from "../../components/FilterDropdown";
+import EmployeeCard from "../../components/cards/EmployeeCard";
+import VariantButton from "../../components/buttons/VariantButton";
+import NoItemFoundModal from "../../components/NoItemFoundModal";
 import { toast } from "react-toastify";
-import EmployeeTable from "../components/tables/EmployeeTable";
-import SkeletonLoader from "../components/SkeletonLoader";
+import EmployeeTable from "../../components/tables/EmployeeTable";
+import SkeletonLoader from "../../components/SkeletonLoader";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const EmployeeManagement = () => {
@@ -53,9 +53,7 @@ const EmployeeManagement = () => {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/admin/employees`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      const res = await axios.get(`${BASE_URL}/api/admin/employees`);
       setEmployees(res.data);
       console.log("employees", res.data);
     } catch (err) {
@@ -138,15 +136,7 @@ const EmployeeManagement = () => {
         setIsEdit(false);
         setEditEmpId(null);
       } else {
-        const res = await axios.post(
-          `${BASE_URL}/api/admin/employees`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.post(`${BASE_URL}/api/admin/employees`, formData);
         toast.success("Employee addedd successfully");
         console.log("Employee added successfully to the DB:", res.data);
       }
@@ -192,11 +182,7 @@ const EmployeeManagement = () => {
     );
     if (!confirmDelete) return;
     try {
-      await axios.delete(`${BASE_URL}/api/admin/employees/${empId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      await axios.delete(`${BASE_URL}/api/admin/employees/${empId}`);
       console.log("successfully deleted the employee");
       await fetchEmployees();
       toast.success("successfully deleted the employee");

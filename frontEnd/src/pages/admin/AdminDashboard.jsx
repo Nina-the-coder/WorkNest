@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import Header from "../components/Header";
+import Header from "../../components/Header";
 import { toast } from "react-toastify";
 import axios from "axios";
+import api from "../../api/axios";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const AdminDashboard = () => {
@@ -14,11 +15,7 @@ const AdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/admin/dashboard-metrics`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const res = await api.get(`${BASE_URL}/api/admin/dashboard-metrics`);
       const data = res.data;
       setMetrics({
         tasks: data.pendingTasks,

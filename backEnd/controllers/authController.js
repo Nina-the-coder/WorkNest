@@ -7,13 +7,11 @@ exports.registerUser = async (req, res) => {
   try {
     const { name, email, password, role, phone, designation } = req.body;
 
-    // checking if the user exists or not
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists..." });
     }
 
-    //create a new user and save
     const user = new User({ name, email, password, role, phone, designation });
     await user.save();
 
@@ -25,25 +23,21 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// function to login
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     console.log("Login Request Body:", req.body);
 
-    //checking if user exists
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "Invalid email or password." });
     }
 
-    // compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password." });
     }
 
-    // create jwt
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,

@@ -3,6 +3,7 @@ import React from "react";
 import { useEffect } from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import api from "../../api/axios";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const EmployeeOrderManagement = () => {
@@ -22,7 +23,7 @@ const EmployeeOrderManagement = () => {
 
   const fetchOrders = async (empId) => {
     try {
-      const res = await axios.get(`${BASE_URL}/api/employee/order/${empId}`);
+      const res = await api.get(`${BASE_URL}/api/employee/order/${empId}`);
       setOrders(res.data);
       console.log("ORders beign fetched ", res.data);
     } catch (err) {

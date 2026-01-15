@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
+import Navbar from "../../components/Navbar";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
-import EmployeeTaskManagement from "../pages/employee/EmployeeTaskManagement";
-import EmployeeQuotationManagement from "../pages/employee/EmployeeQuotationManagement";
-import EmployeeOrderManagement from "../pages/employee/EmployeeOrderManagement";
+import EmployeeTaskManagement from "./EmployeeTaskManagement";
+import EmployeeQuotationManagement from "./EmployeeQuotationManagement";
+import EmployeeOrderManagement from "./EmployeeOrderManagement";
+import api from "../../api/axios";
 
 const EmployeeDashboard = () => {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -47,11 +48,7 @@ const EmployeeDashboard = () => {
 // customers
   const fetchCustomers = async (emp) => {
     try {
-      const res = await axios.get(
-        `${BASE_URL}/api/employee/customers/${emp}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await api.get(`${BASE_URL}/api/employee/customers/${emp}`);
       setCustomers(res.data);
     } catch (err) {
       console.error("Error in fetching the customers...");
@@ -78,16 +75,9 @@ const EmployeeDashboard = () => {
     console.log("FormData being submitted:", customerFormData);
 
     try {
-      const res = await axios.post(
-        `${BASE_URL}/api/admin/customers`,
-        customerFormData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await api.post(`${BASE_URL}/api/customers`,customerFormData);
       console.log("Sending the customers data", res.data);
+
       setCustomerFormData({
         name: "",
         address: "",

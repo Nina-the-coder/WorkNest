@@ -30,12 +30,8 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await axios.post(`${BASE_URL}/api/auth/login`, formData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      console.log(res.data); // 👀 Check this in the browser console
+      const res = await axios.post(`${BASE_URL}/api/auth/login`, formData);
+      console.log(res.data);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));

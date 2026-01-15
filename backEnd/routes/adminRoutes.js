@@ -72,7 +72,7 @@ router.put(
 router.delete("/products/:productId", deleteProduct);
 
 // customer routes
-router.post("/customers", addCustomer);
+// router.post("/customers", addCustomer);           --> now a public route
 router.get("/customers", getAllCustomers);
 router.delete("/customers/:customerId", deleteCustomer);
 router.put("/customers/:customerId", updateCustomer);

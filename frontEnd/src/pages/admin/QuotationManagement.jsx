@@ -1,19 +1,19 @@
 import React, { useEffect, useState, useCallback } from "react";
-import Sidebar from "../components/Sidebar";
-import axios from "axios";
+import Sidebar from "../../components/Sidebar";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
-import SearchBar from "../components/SearchBar";
-import FilterDropdown from "../components/FilterDropdown";
-import CTAButton from "../components/buttons/CTAButton";
-import VariantButton from "../components/buttons/VariantButton";
-import QuotationCard from "../components/cards/QuotationCard";
-import QuotationTable from "../components/tables/QuotationTable";
-import NoItemFoundModal from "../components/NoItemFoundModal";
+import Header from "../../components/Header";
+import SearchBar from "../../components/SearchBar";
+import FilterDropdown from "../../components/FilterDropdown";
+import CTAButton from "../../components/buttons/CTAButton";
+import VariantButton from "../../components/buttons/VariantButton";
+import QuotationCard from "../../components/cards/QuotationCard";
+import QuotationTable from "../../components/tables/QuotationTable";
+import NoItemFoundModal from "../../components/NoItemFoundModal";
 import { toast } from "react-toastify";
-import useDebounce from "../hooks/useDebounce";
-import SkeletonLoader from "../components/SkeletonLoader";
-import PaginationControls from "../components/PaginationControls";
+import useDebounce from "../../hooks/useDebounce";
+import SkeletonLoader from "../../components/SkeletonLoader";
+import PaginationControls from "../../components/PaginationControls";
+import api from "../../api/axios";
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -54,9 +54,8 @@ const QuotationManagement = () => {
       setLoading(true);
       const controller = new AbortController();
       try {
-        const res = await axios.get(`${BASE_URL}/api/admin/quotations`, {
+        const res = await api.get(`${BASE_URL}/api/admin/quotations`, {
           params: { page, limit, search, status },
-          headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         });
 
@@ -112,10 +111,9 @@ const QuotationManagement = () => {
     e?.stopPropagation();
     if (quotation.status === "approved") return toast.warn("Already approved");
     try {
-      await axios.put(
+      await api.put(
         `${BASE_URL}/api/admin/quotations/${quotation.quotationId}`,
         { status: "approved" },
-        { headers: { Authorization: `Bearer ${token}` } }
       );
       // optimistic update
       setQuotations((prev) =>
@@ -137,10 +135,9 @@ const QuotationManagement = () => {
     e?.stopPropagation();
     if (quotation.status === "rejected") return toast.warn("Already rejected");
     try {
-      await axios.put(
+      await api.put(
         `${BASE_URL}/api/admin/quotations/${quotation.quotationId}`,
         { status: "rejected" },
-        { headers: { Authorization: `Bearer ${token}` } }
       );
       setQuotations((prev) =>
         prev.map((q) =>
@@ -165,9 +162,7 @@ const QuotationManagement = () => {
     e?.stopPropagation();
     if (!window.confirm(`Delete quotation ${quotationId}?`)) return;
     try {
-      await axios.delete(`${BASE_URL}/api/admin/quotations/${quotationId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`${BASE_URL}/api/admin/quotations/${quotationId}`);
       toast.success("Quotation deleted");
       // refetch the current page (to keep totals consistent)
       fetchQuotations({
@@ -189,10 +184,9 @@ const QuotationManagement = () => {
         "Only approved quotations can be converted into orders"
       );
     try {
-      await axios.post(
+      await api.post(
         `${BASE_URL}/api/employee/order`,
         { quotationId: quotation._id, addedBy: user._id },
-        { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Order created");
       // optionally refetch orders/quotations

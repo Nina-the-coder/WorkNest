@@ -7,6 +7,7 @@ require("dotenv").config();
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
+const publicRoutes = require("./routes/publicRoutes");
 const { verifyToken } = require("./middleware/verifyToken");
 const isEmployee = require("./middleware/isEmployee");
 const isAdmin = require("./middleware/isAdmin");
@@ -20,6 +21,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", verifyToken, isAdmin, adminRoutes);
 app.use("/api/employee", verifyToken, isEmployee, employeeRoutes);
+app.use("/api", verifyToken, publicRoutes);
 
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
