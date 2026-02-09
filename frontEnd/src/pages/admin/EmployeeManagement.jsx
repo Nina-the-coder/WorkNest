@@ -11,6 +11,7 @@ import NoItemFoundModal from "../../components/NoItemFoundModal";
 import { toast } from "react-toastify";
 import EmployeeTable from "../../components/tables/EmployeeTable";
 import SkeletonLoader from "../../components/SkeletonLoader";
+import api from "../../api/axios";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const EmployeeManagement = () => {
@@ -53,7 +54,7 @@ const EmployeeManagement = () => {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/api/admin/employees`);
+      const res = await api.get(`${BASE_URL}/api/admin/employees`);
       setEmployees(res.data);
       console.log("employees", res.data);
     } catch (err) {
@@ -136,7 +137,7 @@ const EmployeeManagement = () => {
         setIsEdit(false);
         setEditEmpId(null);
       } else {
-        const res = await axios.post(`${BASE_URL}/api/admin/employees`, formData);
+        const res = await api.post(`${BASE_URL}/api/admin/employees`, formData);
         toast.success("Employee addedd successfully");
         console.log("Employee added successfully to the DB:", res.data);
       }

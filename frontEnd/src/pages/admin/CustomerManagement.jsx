@@ -10,6 +10,7 @@ import VariantButton from "../../components/buttons/VariantButton";
 import CTAButton from "../../components/buttons/CTAButton";
 import { toast } from "react-toastify";
 import SkeletonLoader from "../../components/SkeletonLoader";
+import api from "../../api/axios";
 const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const CustomerkManagement = () => {
@@ -83,7 +84,7 @@ const CustomerkManagement = () => {
       const token = localStorage.getItem("token");
       if (isEdit) {
         console.log(customers);
-        await axios.put(
+        await api.put(
           `${BASE_URL}/api/admin/customers/${editCustomerId}`,
           formData,
           {
@@ -100,7 +101,7 @@ const CustomerkManagement = () => {
           alert("Please select the employee name");
           return;
         }
-        const res = await axios.post(`${BASE_URL}/api/customers`,formData);
+        const res = await api.post(`${BASE_URL}/api/customers`,formData);
         console.log("Sending Customers data: ", res.data);
         toast.success("Customer added successfully");
       }
@@ -151,7 +152,7 @@ const CustomerkManagement = () => {
     setLoading(true);
     if (!confirmDelete) return;
     try {
-      await axios.delete(`${BASE_URL}/api/admin/customers/${customerId}`, {
+      await api.delete(`${BASE_URL}/api/admin/customers/${customerId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
