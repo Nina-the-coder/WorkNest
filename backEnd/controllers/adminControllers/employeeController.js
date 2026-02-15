@@ -1,49 +1,10 @@
 const User = require("../../models/User");
 const getNextSequence = require("../../utils/getNextSequence");
+const EmployeeService = require("../../service/employeeService");
 
 exports.addEmployee = async (req, res) => {
-  try {
-    const { name, email, phone, password, role, status } = req.body;
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      if(existingUser.deleted){
-        existingUser.deleted = false;
-        existingUser.deletedAt = null;
-        existingUser.name = name; // update other details if needed
-        existingUser.phone = phone;
-        existingUser.password = password; // will be hashed by pre('save')
-        existingUser.role = role;
-        existingUser.status = status;
-        existingUser.updatedBy = req.user._id; // ✅ who restored
-        await existingUser.save();
-        return res.status(200).json({message: "Employee restored successfully", user: existingUser});
-      }
-      return res.status(400).json({ message: "Email already exists..." });
-    }
-    const nextEmpNumber = await getNextSequence("empId");
-    const newEmpId = `EMP${String(nextEmpNumber).padStart(3, "0")}`;
-
-    const newUser = new User({
-      name,
-      email,
-      phone,
-      password,
-      role,
-      status,
-      empId: newEmpId,
-      createdBy: req.user._id, 
-      updatedBy: req.user._id,
-    });
-
-    await newUser.save();
-    res
-      .status(201)
-      .json({ message: "Employee added successfully", user: newUser });
-  } catch (err) {
-    console.error("Error in addEmployee: ", err);
-    res.status(500).json({ message: "Server errrror...." });
-  }
+  const user = await EmployeeService.addEmployee(req.body, req.user._id);
+  res.status(201).json(user);
 };
 
 exports.getEmployeeById = async (req, res) => {

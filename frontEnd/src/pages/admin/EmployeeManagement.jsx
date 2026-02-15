@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
-import axios from "axios";
 import Header from "../../components/Header";
 import CTAButton from "../../components/buttons/CTAButton";
 import SearchBar from "../../components/SearchBar";
@@ -123,7 +122,7 @@ const EmployeeManagement = () => {
           delete updatedFormData.password;
         }
 
-        await axios.put(
+        await api.put(
           `${BASE_URL}/api/admin/employees/${editEmpId}`,
           updatedFormData,
           {
@@ -183,7 +182,7 @@ const EmployeeManagement = () => {
     );
     if (!confirmDelete) return;
     try {
-      await axios.delete(`${BASE_URL}/api/admin/employees/${empId}`);
+      await api.delete(`${BASE_URL}/api/admin/employees/${empId}`);
       console.log("successfully deleted the employee");
       await fetchEmployees();
       toast.success("successfully deleted the employee");
