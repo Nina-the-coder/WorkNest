@@ -1,16 +1,17 @@
 const mongoose = require("mongoose");
+const auditPlugin = require("../../utils/auditPlugin");
 
 const QUOTATION_STATUS = [
   "DRAFT",
   "SUBMITTED",
   "APPROVED",
   "REJECTED",
-  "EXPIRED",
+  "CONVERTED",
 ];
 
 const quotationSchema = new mongoose.Schema(
   {
-    quotationNumber: {
+    quotationId: {
       type: String,
       required: true,
       unique: true,
@@ -40,6 +41,7 @@ const quotationSchema = new mongoose.Schema(
       index: true,
     },
 
+    // Pricing fields
     subtotal: {
       type: Number,
       required: true,
@@ -53,10 +55,30 @@ const quotationSchema = new mongoose.Schema(
       min: 0,
     },
 
+    discountPercentage: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+
+    taxableAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     gstAmount: {
       type: Number,
       default: 0,
       min: 0,
+    },
+
+    gstRate: {
+      type: Number,
+      default: 18,
+      min: 0,
+      max: 100,
     },
 
     grandTotal: {
@@ -66,6 +88,7 @@ const quotationSchema = new mongoose.Schema(
       default: 0,
     },
 
+    // Quotation details
     validUntil: {
       type: Date,
     },
@@ -76,6 +99,36 @@ const quotationSchema = new mongoose.Schema(
       default: "",
     },
 
+    // Approval tracking
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+
+    rejectionReason: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
+    rejectedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    rejectedAt: {
+      type: Date,
+      default: null,
+    },
+
+    // Soft delete
     deleted: {
       type: Boolean,
       default: false,
@@ -88,10 +141,10 @@ const quotationSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
+// Apply audit plugin to track createdBy and updatedBy
+quotationSchema.plugin(auditPlugin);
+
 module.exports = mongoose.model("Quotation", quotationSchema);
-
-
-

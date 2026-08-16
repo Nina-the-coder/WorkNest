@@ -1,79 +1,34 @@
-const QuotationController = require("../../src/modules/quotation/quotation.controller");
-const QuotationService = require("../../src/modules/quotation/quotation.service");
+const controller = require("../../src/modules/quotation/quotation.controller");
+const quotationService = require("../../src/modules/quotation/quotation.service");
 
 jest.mock("../../src/modules/quotation/quotation.service");
 
 describe("Quotation Controller", () => {
+  const response = () => ({ status: jest.fn().mockReturnThis(), json: jest.fn() });
+  const next = jest.fn();
+  afterEach(() => jest.clearAllMocks());
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  test("getAllQuotations should return quotations", async () => {
-
-    const req = {};
-
-    const res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn()
-    };
-
-    const quotations = [{ quotationId: "Q001" }];
-
-    QuotationService.getAllQuotations.mockResolvedValue(quotations);
-
-    await QuotationController.getAllQuotations(req, res);
-
+  test("lists quotations using pagination filters", async () => {
+    quotationService.getAllQuotations.mockResolvedValue({ quotations: [], total: 0, page: 1, limit: 10, totalPages: 0 });
+    const res = response();
+    await controller.listQuotations({ query: {}, user: { _id: "admin", role: "admin" } }, res, next);
+    expect(quotationService.getAllQuotations).toHaveBeenCalledWith(expect.objectContaining({ page: 1, limit: 10 }));
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(quotations);
-
   });
 
-  test("updateQuotationStatus should update quotation", async () => {
+  test("does not expose another employee's quotation", async () => {
+    quotationService.getQuotationById.mockResolvedValue({ employeeId: "owner" });
+    const res = response();
+    await controller.getQuotation({ params: { quotationId: "q1" }, user: { _id: "other", role: "employee" } }, res, next);
+    expect(next.mock.calls[0][0].statusCode).toBe(403);
+  });
 
-    const req = {
-      params: { quotationId: "Q001" },
-      body: { status: "approved" }
-    };
-
-    const res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn()
-    };
-
-    const updatedQuotation = { quotationId: "Q001", status: "approved" };
-
-    QuotationService.updateQuotationStatus.mockResolvedValue(updatedQuotation);
-
-    await QuotationController.updateQuotationStatus(req, res);
-
-    expect(QuotationService.updateQuotationStatus).toHaveBeenCalledWith(
-      "Q001",
-      "approved"
-    );
-
+  test("submits through the service action instead of accepting a status field", async () => {
+    quotationService.getQuotationById.mockResolvedValue({ employeeId: "employee" });
+    quotationService.submitQuotation.mockResolvedValue({ _id: "q1", status: "SUBMITTED" });
+    const res = response();
+    await controller.submitQuotation({ params: { quotationId: "q1" }, body: {}, user: { _id: "employee", role: "employee" } }, res, next);
+    expect(quotationService.submitQuotation).toHaveBeenCalledWith("q1", "employee");
     expect(res.status).toHaveBeenCalledWith(200);
-
   });
-
-  test("deleteQuotation should delete quotation", async () => {
-
-    const req = {
-      params: { quotationId: "Q001" }
-    };
-
-    const res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn()
-    };
-
-    QuotationService.deleteQuotation.mockResolvedValue();
-
-    await QuotationController.deleteQuotation(req, res);
-
-    expect(QuotationService.deleteQuotation).toHaveBeenCalledWith("Q001");
-    expect(res.status).toHaveBeenCalledWith(200);
-
-  });
-
 });

@@ -1,540 +1,918 @@
-import React, { useEffect, useState } from "react";
-import Navbar from "../../../shared/components/Navbar";
-import axios from "axios";
-import CustomerComboBox from "../../../shared/components/combobox/CustomerComboBox";
-import EmployeeComboBox from "../../../shared/components/combobox/EmployeeComboBox";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import ThemeToggle from "../../../shared/components/buttons/ThemeToggle";
-import VariantButton from "../../../shared/components/buttons/VariantButton";
-import SearchBar from "../../../shared/components/SearchBar";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import api from "../../../api/axios";
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import {
+  FiArrowLeft,
+  FiCalendar,
+  FiChevronDown,
+  FiFileText,
+  FiMinus,
+  FiPackage,
+  FiPlus,
+  FiTrash2,
+  FiUser,
+  FiUsers,
+} from "react-icons/fi";
 
-const AddQuotation = (props) => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const role = props.role || user?.role;
-  const token = localStorage.getItem("token");
+import Header from "../../../shared/components/Header";
+import VariantButton from "../../../shared/components/buttons/VariantButton";
+import api from "../../../api/axios";
+
+import { calculateQuotationTotals, formatCurrency } from "../quotation.util";
+import {
+  createQuotationAPI,
+  fetchQuotationAPI,
+  submitQuotationAPI,
+  updateQuotationAPI,
+} from "../services/quotation.api";
+
+const blank = {
+  customerId: "",
+  employeeId: "",
+  validUntil: "",
+  notes: "",
+  items: [],
+};
+
+/* -------------------------------------------------------------------------- */
+/* Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+const inputClass =
+  "mt-2 w-full rounded-xl border border-border-color bg-bg px-3.5 py-3 text-sm text-text outline-none transition placeholder:text-gray-400 focus:border-cta focus:ring-2 focus:ring-cta/10";
+
+const selectClass =
+  "mt-2 w-full appearance-none rounded-xl border border-border-color bg-bg px-3.5 py-3 pr-10 text-sm text-text outline-none transition focus:border-cta focus:ring-2 focus:ring-cta/10";
+
+const numberInputClass =
+  "w-full rounded-lg border border-border-color bg-bg px-2.5 py-2 text-sm text-text outline-none transition focus:border-cta focus:ring-2 focus:ring-cta/10";
+
+/* -------------------------------------------------------------------------- */
+/* Form Field                                                                 */
+/* -------------------------------------------------------------------------- */
+
+const FormField = ({
+  label,
+  icon: Icon,
+  required,
+  children,
+  className = "",
+}) => {
+  return (
+    <label className={`block ${className}`}>
+      <span className="flex items-center gap-2 text-sm font-medium text-text">
+        {Icon && <Icon className="text-gray-500" size={15} />}
+        {label}
+        {required && <span className="text-red">*</span>}
+      </span>
+
+      {children}
+    </label>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* Section                                                                    */
+/* -------------------------------------------------------------------------- */
+
+const Section = ({ icon: Icon, title, description, children }) => {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-border-color bg-card-bg">
+      <div className="border-b border-border-color px-4 py-4 sm:px-6">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cta/10 text-cta">
+            <Icon size={18} />
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-text sm:text-base">
+              {title}
+            </h2>
+
+            {description && (
+              <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
+                {description}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 sm:p-6">{children}</div>
+    </section>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* Product Row - Desktop                                                      */
+/* -------------------------------------------------------------------------- */
+
+const ProductTableRow = ({ item, index, updateItem, removeItem }) => {
+  const lineTotal =
+    (Number(item.quantity) * Number(item.unitPrice) -
+      Number(item.discountAmount || 0)) *
+    (1 + Number(item.gstRate ?? 18) / 100);
+
+  return (
+    <tr className="border-b border-border-color last:border-0">
+      <td className="px-4 py-4">
+        <div className="font-medium text-text">{item.productName}</div>
+        <div className="mt-0.5 text-xs text-gray-500">
+          Product #{String(item.productId?._id || item.productId).slice(-6)}
+        </div>
+      </td>
+
+      <td className="px-3 py-4">
+        <div className="w-28">
+          <input
+            className={numberInputClass}
+            type="number"
+            min="0"
+            value={item.unitPrice}
+            onChange={(e) => updateItem(index, "unitPrice", e.target.value)}
+          />
+        </div>
+      </td>
+
+      <td className="px-3 py-4">
+        <div className="flex w-24 items-center rounded-lg border border-border-color bg-bg">
+          <button
+            type="button"
+            className="flex h-9 w-8 items-center justify-center text-gray-500 transition hover:text-text"
+            onClick={() =>
+              updateItem(
+                index,
+                "quantity",
+                Math.max(1, Number(item.quantity || 1) - 1),
+              )
+            }
+          >
+            <FiMinus size={13} />
+          </button>
+
+          <input
+            className="h-9 min-w-0 flex-1 border-x border-border-color bg-transparent text-center text-sm text-text outline-none"
+            type="number"
+            min="1"
+            step="1"
+            value={item.quantity}
+            onChange={(e) => updateItem(index, "quantity", e.target.value)}
+          />
+
+          <button
+            type="button"
+            className="flex h-9 w-8 items-center justify-center text-gray-500 transition hover:text-text"
+            onClick={() =>
+              updateItem(index, "quantity", Number(item.quantity || 0) + 1)
+            }
+          >
+            <FiPlus size={13} />
+          </button>
+        </div>
+      </td>
+
+      <td className="px-3 py-4">
+        <div className="w-24">
+          <input
+            className={numberInputClass}
+            type="number"
+            min="0"
+            value={item.discountAmount || 0}
+            onChange={(e) =>
+              updateItem(index, "discountAmount", e.target.value)
+            }
+          />
+        </div>
+      </td>
+
+      <td className="px-3 py-4">
+        <div className="w-20">
+          <input
+            className={numberInputClass}
+            type="number"
+            min="0"
+            max="100"
+            value={item.gstRate ?? 18}
+            onChange={(e) => updateItem(index, "gstRate", e.target.value)}
+          />
+        </div>
+      </td>
+
+      <td className="whitespace-nowrap px-3 py-4 text-right font-semibold text-text">
+        {formatCurrency(lineTotal)}
+      </td>
+
+      <td className="px-4 py-4 text-right">
+        <button
+          type="button"
+          title="Remove product"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition hover:bg-red/10 hover:text-red"
+          onClick={() => removeItem(index)}
+        >
+          <FiTrash2 size={16} />
+        </button>
+      </td>
+    </tr>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* Product Card - Mobile                                                      */
+/* -------------------------------------------------------------------------- */
+
+const ProductCard = ({ item, index, updateItem, removeItem }) => {
+  const lineTotal =
+    (Number(item.quantity) * Number(item.unitPrice) -
+      Number(item.discountAmount || 0)) *
+    (1 + Number(item.gstRate ?? 18) / 100);
+
+  return (
+    <div className="rounded-xl border border-border-color bg-bg p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="truncate text-sm font-semibold text-text">
+            {item.productName}
+          </h3>
+
+          <p className="mt-1 text-xs text-gray-500">
+            Product #{String(item.productId?._id || item.productId).slice(-6)}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          title="Remove product"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400 transition hover:bg-red/10 hover:text-red"
+          onClick={() => removeItem(index)}
+        >
+          <FiTrash2 size={15} />
+        </button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <label>
+          <span className="text-xs font-medium text-gray-500">Unit Price</span>
+
+          <input
+            className={`${numberInputClass} mt-1.5`}
+            type="number"
+            min="0"
+            value={item.unitPrice}
+            onChange={(e) => updateItem(index, "unitPrice", e.target.value)}
+          />
+        </label>
+
+        <label>
+          <span className="text-xs font-medium text-gray-500">Quantity</span>
+
+          <div className="mt-1.5 flex items-center rounded-lg border border-border-color bg-card-bg">
+            <button
+              type="button"
+              className="flex h-9 w-9 items-center justify-center text-gray-500"
+              onClick={() =>
+                updateItem(
+                  index,
+                  "quantity",
+                  Math.max(1, Number(item.quantity || 1) - 1),
+                )
+              }
+            >
+              <FiMinus size={13} />
+            </button>
+
+            <input
+              className="h-9 min-w-0 flex-1 border-x border-border-color bg-transparent text-center text-sm text-text outline-none"
+              type="number"
+              min="1"
+              value={item.quantity}
+              onChange={(e) => updateItem(index, "quantity", e.target.value)}
+            />
+
+            <button
+              type="button"
+              className="flex h-9 w-9 items-center justify-center text-gray-500"
+              onClick={() =>
+                updateItem(index, "quantity", Number(item.quantity || 0) + 1)
+              }
+            >
+              <FiPlus size={13} />
+            </button>
+          </div>
+        </label>
+
+        <label>
+          <span className="text-xs font-medium text-gray-500">Discount</span>
+
+          <input
+            className={`${numberInputClass} mt-1.5`}
+            type="number"
+            min="0"
+            value={item.discountAmount || 0}
+            onChange={(e) =>
+              updateItem(index, "discountAmount", e.target.value)
+            }
+          />
+        </label>
+
+        <label>
+          <span className="text-xs font-medium text-gray-500">GST %</span>
+
+          <input
+            className={`${numberInputClass} mt-1.5`}
+            type="number"
+            min="0"
+            max="100"
+            value={item.gstRate ?? 18}
+            onChange={(e) => updateItem(index, "gstRate", e.target.value)}
+          />
+        </label>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between border-t border-border-color pt-3">
+        <span className="text-xs font-medium text-gray-500">Line Total</span>
+
+        <span className="text-sm font-bold text-text">
+          {formatCurrency(lineTotal)}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* Add Quotation                                                              */
+/* -------------------------------------------------------------------------- */
+
+const AddQuotation = ({ role }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [error, setError] = useState("");
-  // const [employeeList, setEmployeeList] = useState([]);
+  const editingId = location.state?.quotation?._id;
 
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
-  const [selectedEmployeeObj, setSelectedEmployeeObj] = useState(null);
-  const [selectedCustomerObj, setSelectedCustomerObj] = useState(null);
-
+  const [form, setForm] = useState(blank);
+  const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [employees, setEmployees] = useState([]);
 
-  const isEditMode = location.state?.mode === "edit";
-  const existingQuotation = location.state?.quotation;
+  const [loadingOptions, setLoadingOptions] = useState(true);
+  const [loadingQuotation, setLoadingQuotation] = useState(Boolean(editingId));
+  const [saving, setSaving] = useState(false);
 
-  const [quotationModal, setQuotationModal] = useState(true);
-  const [productModal, setProductModal] = useState(false);
-
-  const [quotationFormData, setQuotationFormData] = useState({
-    addedBy: role === "admin" ? "" : user?.empId,
-    customerId: "",
-    total: 0,
-    products: [], // [{productId, productName, quotedPrice, total}]
-    isApprovedByDoctor: "pending",
-    status: "pending",
-  });
+  /* ------------------------------------------------------------------------ */
+  /* Load quotation options                                                   */
+  /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
-    if (role === "employee") {
-      setQuotationFormData((prev) => ({
-        ...prev,
-        addedBy: user.empId,
-      }));
-    }
-    // if (role === "admin") {
-    //   const fetchEmployees = async () => {
-    //     try {
-    //       const res = await axios.get(`${BASE_URL}/api/admin/employees`, {
-    //         headers: { Authorization: `Bearer ${token}` },
-    //       });
-    //       setEmployeeList(res.data);
-    //     } catch (err) {
-    //       console.error("Error fetching employees:", err);
-    //     }
-    //   };
-    //   fetchEmployees();
-    // }
-  }, []);
+    const loadOptions = async () => {
+      setLoadingOptions(true);
 
-  useEffect(() => {
-    updateTotalPrice();
-  }, [selectedProducts]);
+      try {
+        const [customerResponse, productResponse, employeeResponse] =
+          await Promise.all([
+            api.get("/api/customers"),
+            api.get("/api/products"),
+            role === "admin"
+              ? api.get("/api/employees")
+              : Promise.resolve({ data: [] }),
+          ]);
 
-  useEffect(() => {
-    if (isEditMode && existingQuotation) {
-      console.log("yes it is the edit mode");
-      // Pre-fill the form
-      setQuotationFormData(existingQuotation);
-      setSelectedProducts(existingQuotation.products);
-
-      const fetchCustomerById = async () => {
-        try {
-          const res = await api.get(`${BASE_URL}/api/employee/customers/${existingQuotation.addedBy._id}`);
-          setSelectedCustomerObj(res.data); // ✅ pass the whole object
-          // console.log("fetched customer from db", res.data);
-        } catch (err) {
-          console.error("Error fetching customer:", err);
-        }
-      };
-
-      fetchCustomerById();
-
-      const fetchEmployeeById = async () => {
-        try {
-          // console.log("existing quotation :", existingQuotation);
-          const res = await api.get(`${BASE_URL}/api/admin/employees/${existingQuotation.addedBy.empId}`);
-          setSelectedEmployeeObj(res.data); // ✅ set full employee object
-          setSelectedEmployeeId(res.data._id); // ✅ set ID for form
-          // console.log("fetched employee from db", res.data);
-        } catch (err) {
-          console.error("Error fetching employee:", err);
-        }
-      };
-
-      if (role === "admin") {
-        fetchEmployeeById();
+        setCustomers(customerResponse.data || []);
+        setProducts(productResponse.data || []);
+        setEmployees(employeeResponse.data || []);
+      } catch (error) {
+        toast.error(
+          error.response?.data?.message || "Unable to load quotation options",
+        );
+      } finally {
+        setLoadingOptions(false);
       }
-    }
-  }, [isEditMode, existingQuotation]);
-
-  const handleChange = (e) => {
-    setQuotationFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const fetchProducts = async () => {
-    try {
-      const res = await api.get(`${BASE_URL}/api/admin/products`);
-      setProducts(res.data);
-    } catch (err) {
-      console.error("Error in fetching the products form the database...", err);
-    }
-  };
-
-  const handleCustomerSelect = (customer) => {
-    setSelectedCustomerObj(customer); // whole object
-    setQuotationFormData((prev) => ({
-      ...prev,
-      customerId: customer._id, // only ID goes into the form
-    }));
-  };
-
-  const handleSaveQuotationModal = async (e) => {
-    e.preventDefault();
-    if (user?.role === "admin" && !selectedEmployeeId) {
-      toast.warn("Please select an employee");
-      return;
-    }
-    if (!selectedCustomerObj) {
-      toast.warn("Please select a customer");
-      return;
-    }
-    if (selectedProducts.length === 0) {
-      toast.warn("Please add at least one product.");
-      return;
-    }
-
-    setQuotationFormData((prev) => ({
-      ...prev,
-      products: selectedProducts,
-      addedBy: user.role === "admin" ? selectedEmployeeId : user.empId,
-    }));
-
-    const finalQuotation = {
-      ...quotationFormData,
-      products: selectedProducts,
-      addedBy: role === "admin" ? selectedEmployeeId : user.empId,
     };
 
-    if (isEditMode) {
+    loadOptions();
+  }, [role]);
+
+  /* ------------------------------------------------------------------------ */
+  /* Load quotation when editing                                              */
+  /* ------------------------------------------------------------------------ */
+
+  useEffect(() => {
+    if (!editingId) return;
+
+    const loadQuotation = async () => {
+      setLoadingQuotation(true);
+
       try {
-        await api.put(`${BASE_URL}/api/employee/quotation/${existingQuotation.quotationId}`,finalQuotation,);
-        // setQuotationFormData({});
-        navigate(
-          role === "admin" ? "/admin/quotations" : "/employee/dashboard"
-        );
-        toast.success("Quotation updated successfully");
-      } catch (err) {
+        const { data } = await fetchQuotationAPI(editingId);
+        const quotation = data.quotation;
+
+        setForm({
+          customerId: quotation.customerId?._id || quotation.customerId || "",
+
+          employeeId: quotation.employeeId?._id || quotation.employeeId || "",
+
+          validUntil: quotation.validUntil
+            ? quotation.validUntil.slice(0, 10)
+            : "",
+
+          notes: quotation.notes || "",
+
+          items: (quotation.items || []).map((item) => ({
+            ...item,
+
+            // Convert populated product object back to its ObjectId
+            productId: item.productId?._id || item.productId,
+
+            productName: item.productName || item.productId?.name || "",
+
+            sku: item.sku || item.productId?.productId || "",
+
+            description: item.description || item.productId?.description || "",
+          })),
+        });
+      } catch (error) {
         toast.error(
-          err?.response?.data?.message || "Error updating the quotation"
+          error.response?.data?.message || "Unable to load quotation",
         );
-        console.error(
-          err?.response?.data?.message || "Error updating the quotation"
-        );
+      } finally {
+        setLoadingQuotation(false);
       }
-    } else {
-      console.log("Final quotation being saved:", finalQuotation);
-      try {
-        const res = await api.post(`${BASE_URL}/api/employee/quotation`,finalQuotation,);
-        toast.success("Quotation saved successfully");
-      } catch (err) {
-        const message =
-          err.response?.data?.message ||
-          "An error occured while saving the quotation";
-        toast.error(message);
-      }
+    };
+
+    loadQuotation();
+  }, [editingId]);
+
+  /* ------------------------------------------------------------------------ */
+  /* Calculations                                                             */
+  /* ------------------------------------------------------------------------ */
+
+  const totals = useMemo(
+    () => calculateQuotationTotals(form.items),
+    [form.items],
+  );
+
+  /* ------------------------------------------------------------------------ */
+  /* Form helpers                                                             */
+  /* ------------------------------------------------------------------------ */
+
+  const update = (field, value) => {
+    setForm((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  };
+
+  const addProduct = (id) => {
+    if (!id) return;
+
+    const product = products.find((p) => p._id === id);
+
+    if (!product) return;
+
+    const alreadyAdded = form.items.some(
+      (item) => String(item.productId?._id || item.productId) === String(id),
+    );
+
+    if (alreadyAdded) {
+      toast.info("This product is already added.");
+      return;
     }
 
-    navigate(role === "admin" ? "/admin/quotations" : "/employee/dashboard");
+    update("items", [
+      ...form.items,
+      {
+        productId: id,
+        productName: product.name,
+        quantity: 1,
+        unitPrice: product.price,
+        discountAmount: 0,
+        gstRate: 18,
+      },
+    ]);
   };
 
-  const handleAddProductToQuotation = () => {
-    fetchProducts();
-    setProductModal(true);
-    setQuotationModal(false);
-  };
-
-  const handleCancelProductModal = () => {
-    setProductModal(false);
-    setQuotationModal(true);
-  };
-
-  const handleSaveProductModal = (e) => {
-    e.preventDefault();
-    setProductModal(false);
-    setQuotationModal(true);
-    updateTotalPrice();
-  };
-
-  const handleProductClick = (product) => {
-    const alreadySelected = selectedProducts.find(
-      (p) => p.productId === product.productId || p.productId === product._id
+  const updateItem = (index, field, value) => {
+    update(
+      "items",
+      form.items.map((item, itemIndex) =>
+        itemIndex === index
+          ? {
+              ...item,
+              [field]: value === "" ? "" : Number(value),
+            }
+          : item,
+      ),
     );
-    if (alreadySelected) {
-      setSelectedProducts((prev) =>
-        // remove
-        prev.filter((p) => p.productId !== product.productId)
+  };
+
+  const removeItem = (index) => {
+    update(
+      "items",
+      form.items.filter((_, itemIndex) => itemIndex !== index),
+    );
+  };
+
+  /* ------------------------------------------------------------------------ */
+  /* Save quotation                                                           */
+  /* ------------------------------------------------------------------------ */
+
+  const save = async (submit) => {
+    if (!form.customerId) {
+      return toast.error("Please select a customer.");
+    }
+
+    if (!form.validUntil) {
+      return toast.error("Please select a validity date.");
+    }
+
+    if (form.items.length === 0) {
+      return toast.error("Please add at least one product.");
+    }
+
+    if (role === "admin" && !form.employeeId) {
+      return toast.error("Please select an employee.");
+    }
+
+    setSaving(true);
+
+    try {
+      const payload = {
+        ...form,
+        employeeId: role === "admin" ? form.employeeId : undefined,
+      };
+
+      const response = editingId
+        ? await updateQuotationAPI(editingId, payload)
+        : await createQuotationAPI(payload);
+
+      if (submit) {
+        await submitQuotationAPI(response.data.quotation._id);
+      }
+
+      toast.success(
+        submit
+          ? "Quotation submitted successfully"
+          : "Draft saved successfully",
       );
-    } else {
-      // add
-      setSelectedProducts((prev) => [
-        ...prev,
-        {
-          productId: product.productId || product._id,
-          name: product.name,
-          price: product.price,
-          quantity: 1,
-        },
-      ]);
+
+      navigate(role === "admin" ? "/admin/quotations" : "/employee/quotations");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Unable to save quotation");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const increaseProductQty = (e, productId) => {
-    e.preventDefault();
-    setSelectedProducts((prev) =>
-      prev.map((p) =>
-        p.productId === productId
-          ? { ...p, quantity: (p.quantity || 0) + 1 }
-          : p
-      )
+  /* ------------------------------------------------------------------------ */
+  /* Loading state                                                             */
+  /* ------------------------------------------------------------------------ */
+
+  if (loadingQuotation) {
+    return (
+      <div className="flex flex-col gap-5">
+        <Header title={editingId ? "Edit Quotation" : "New Quotation"} />
+
+        <div className="flex min-h-[400px] items-center justify-center rounded-2xl border border-border-color bg-card-bg">
+          <div className="text-center">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-border-color border-t-cta" />
+
+            <p className="mt-3 text-sm text-gray-500">Loading quotation...</p>
+          </div>
+        </div>
+      </div>
     );
-  };
+  }
 
-  const decreaseProductQty = (e, productId) => {
-    e.preventDefault();
-    setSelectedProducts((prev) =>
-      prev.map((p) =>
-        p.productId === productId
-          ? { ...p, quantity: p.quantity > 1 ? p.quantity - 1 : p.quantity }
-          : p
-      )
-    );
-  };
-
-  const updateTotalPrice = () => {
-    let sum = 0;
-    selectedProducts.forEach((product) => {
-      sum += product.price * product.quantity;
-    });
-    setQuotationFormData((prev) => ({ ...prev, total: sum }));
-  };
-
-  const filteredProducts = products.filter((product) => {
-    const matchesProduct =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.productId.toLowerCase().includes(searchQuery.toLowerCase());
-
-    return matchesProduct;
-  });
+  /* ------------------------------------------------------------------------ */
+  /* Render                                                                   */
+  /* ------------------------------------------------------------------------ */
 
   return (
-    <div className="bg-bg min-h-screen w-full">
-      {/* main */}
-      <div className="w-full flex justify-end p-4">
-        <ThemeToggle></ThemeToggle>
+    <div className="flex min-w-0 flex-col gap-5 pb-8">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-color bg-card-bg text-gray-500 transition hover:text-text"
+          title="Go back"
+        >
+          <FiArrowLeft size={18} />
+        </button>
+
+        <div className="min-w-0 flex-1">
+          <Header title={editingId ? "Edit Quotation" : "New Quotation"} />
+        </div>
       </div>
-      <div className="flex justify-evenly">
-        {/* quotation modal */}
-        {quotationModal && (
-          <div className="h-fit flex flex-col bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300 p-8 rounded-2xl">
-            <div className="text-[20px] font-bold flex items-center justify-center mb-8 ml-4 text-text">
-              Make Quotation
-            </div>
-            <div>
-              <form className="mx-4 pt-8">
-                {role === "admin" && (
-                  <div className="mb-4">
-                    <EmployeeComboBox
-                      onSelect={(emp) => setSelectedEmployeeId(emp._id)}
-                      selected={selectedEmployeeObj}
-                    />
-                  </div>
-                )}
 
-                {(!isEditMode || role === "admin") && (
-                  <CustomerComboBox
-                    user={user}
-                    onSelect={handleCustomerSelect}
-                    selectedCustomer={selectedCustomerObj}
-                  />
-                )}
-
-                {/* products */}
-                <div className="text-text/90 mt-8 flex-col items-center">
-                  <div className="flex items-center mb-4">
-                    <label
-                      htmlFor="Products"
-                      className="text-[18px] ml-4 text-text/90"
-                    >
-                      Add Products
-                    </label>
-                    <VariantButton
-                      onClick={handleAddProductToQuotation}
-                      variant="cta"
-                      icon="plus"
-                      size="tiny"
-                      className="h-[32px] w-[35px] inline-flex ml-4"
-                    />
-                  </div>
-
-                  {/* products list */}
-                  {selectedProducts.length > 0 && (
-                    <div className="mt-8">
-                      <table className="text-text w-full">
-                        <thead className="bg-card-bg border-b border-t border-l border-r">
-                          <tr>
-                            <th className="w-[50px] p-0.5 border">S. no.</th>
-                            <th className="min-w-[200px] border px-1">
-                              Product Name
-                            </th>
-                            <th className="border w-[100px]">Price</th>
-                            <th className="border px-8">Quantity</th>
-                          </tr>
-                        </thead>
-                        {selectedProducts.map((product, index) => (
-                          <tbody
-                            key={product.productId}
-                            className="border bg-bg"
-                          >
-                            <tr>
-                              <td className="text-center border h-[40px]">
-                                {index + 1}
-                              </td>
-                              <td className="border text-center">
-                                {product.name}
-                              </td>
-                              <td className="border text-center">
-                                {product.price}
-                              </td>
-                              <td className="flex pt-2 gap-0.5 justify-center items-center">
-                                <VariantButton
-                                  size="tiny"
-                                  variant="ghostRed"
-                                  text=""
-                                  icon="minus"
-                                  className="max-h-[24px] max-w-[24px]"
-                                  onClick={(e) =>
-                                    decreaseProductQty(e, product.productId)
-                                  }
-                                ></VariantButton>
-                                <div className="mx-2">{product.quantity}</div>
-                                <VariantButton
-                                  size="tiny"
-                                  variant="ghostCta"
-                                  text=""
-                                  icon="plus"
-                                  className="max-h-[24px] max-w-[24px]"
-                                  onClick={(e) =>
-                                    increaseProductQty(e, product.productId)
-                                  }
-                                ></VariantButton>
-                              </td>
-                            </tr>
-                          </tbody>
-                        ))}
-                      </table>
-                      <div className="w-full border-r border-b border-l py-2 text-[18px] bg-card-bg text-text font-semibold text-right pr-24 mb-8">
-                        Total - {quotationFormData.total}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-around gap-8 mt-8">
-                  <div className="flex flex-col">
-                    <label
-                      htmlFor="isApprovedByDoctor"
-                      className="w-full text-[16px] ml-4 text-text/90"
-                    >
-                      Doctor Approved
-                    </label>
-                    <select
-                      name="isApprovedByDoctor"
-                      id="isApprovedByDoctor"
-                      onChange={handleChange}
-                      value={quotationFormData.isApprovedByDoctor}
-                      className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-                    >
-                      <option value="pending">pending</option>
-                      <option value="approved">approved</option>
-                      <option value="rejected">rejected</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col">
-                    <label
-                      htmlFor="status"
-                      className="w-full text-[16px] ml-4 text-text/90"
-                    >
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      id="status"
-                      onChange={handleChange}
-                      value={quotationFormData.status}
-                      className="w-[160px] h-[28px] p-0.5 rounded-xl mb-4 bg-white"
-                    >
-                      <option value="pending">pending</option>
-                      <option value="approved">approved</option>
-                      <option value="rejected">rejected</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex justify-around items-center mt-8">
-                  <Link
-                    to={`${
-                      role === "employee"
-                        ? "/employee/dashboard"
-                        : "/admin/quotations"
-                    }`}
+      {/* Main content */}
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+        {/* Left column */}
+        <div className="min-w-0 space-y-5">
+          {/* Quotation details */}
+          <Section
+            icon={FiFileText}
+            title="Quotation Details"
+            description="Select the customer and define the quotation validity."
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField label="Customer" icon={FiUser} required>
+                <div className="relative">
+                  <select
+                    className={selectClass}
+                    value={form.customerId}
+                    onChange={(e) => update("customerId", e.target.value)}
+                    disabled={loadingOptions}
                   >
-                    <VariantButton
-                      variant="ghostRed"
-                      text="Cancel"
-                      icon="x"
-                      size="medium"
-                    ></VariantButton>
-                  </Link>
-                  <VariantButton
-                    onClick={handleSaveQuotationModal}
-                    variant="cta"
-                    text={isEditMode ? "Update" : "Save"}
-                    icon="check"
-                    size="medium"
-                  ></VariantButton>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+                    <option value="">Select customer</option>
 
-        {/* product modal */}
-        {productModal && (
-          <div className="mx-8 lg:w-[1300px]  flex flex-col bg-card-bg bg-gradient-to-r from-bg/80 to-card-bg/0 transition-all duration-300 p-8 rounded-2xl">
-            <div className="text-[20px] text-text font-bold text-center mt-4">
-              Add Products
+                    {customers
+                      .filter(
+                        (customer) =>
+                          !customer.deleted &&
+                          (!customer.status || customer.status === "active"),
+                      )
+                      .map((customer) => (
+                        <option key={customer._id} value={customer._id}>
+                          {customer.name} ({customer.customerId})
+                        </option>
+                      ))}
+                  </select>
+
+                  <FiChevronDown
+                    className="pointer-events-none absolute right-3 top-1/2 mt-1 -translate-y-1/2 text-gray-400"
+                    size={16}
+                  />
+                </div>
+              </FormField>
+
+              {role === "admin" && (
+                <FormField label="Created For" icon={FiUsers} required>
+                  <div className="relative">
+                    <select
+                      className={selectClass}
+                      value={form.employeeId}
+                      onChange={(e) => update("employeeId", e.target.value)}
+                      disabled={loadingOptions}
+                    >
+                      <option value="">Select employee</option>
+
+                      {employees
+                        .filter(
+                          (employee) =>
+                            employee.status === "active" && !employee.deleted,
+                        )
+                        .map((employee) => (
+                          <option key={employee._id} value={employee._id}>
+                            {employee.name} ({employee.empId})
+                          </option>
+                        ))}
+                    </select>
+
+                    <FiChevronDown
+                      className="pointer-events-none absolute right-3 top-1/2 mt-1 -translate-y-1/2 text-gray-400"
+                      size={16}
+                    />
+                  </div>
+                </FormField>
+              )}
+
+              <FormField
+                label="Valid Until"
+                icon={FiCalendar}
+                required
+                className={role !== "admin" ? "md:max-w-[50%]" : ""}
+              >
+                <input
+                  className={inputClass}
+                  type="date"
+                  min={new Date(Date.now() + 86400000)
+                    .toISOString()
+                    .slice(0, 10)}
+                  value={form.validUntil}
+                  onChange={(e) => update("validUntil", e.target.value)}
+                />
+              </FormField>
             </div>
-            <div>
-              <div className="m-8">
-                <SearchBar
-                  placeholder="Search Product by name, description"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+          </Section>
+
+          {/* Products */}
+          <Section
+            icon={FiPackage}
+            title="Products & Services"
+            description="Add products and configure their pricing."
+          >
+            {/* Product selector */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="min-w-0 flex-1">
+                <FormField label="Add Product">
+                  <div className="relative">
+                    <select
+                      className={selectClass}
+                      value=""
+                      onChange={(e) => addProduct(e.target.value)}
+                      disabled={loadingOptions}
+                    >
+                      <option value="">
+                        {loadingOptions
+                          ? "Loading products..."
+                          : "Select a product to add"}
+                      </option>
+
+                      {products.map((product) => (
+                        <option key={product._id} value={product._id}>
+                          {product.name} — {formatCurrency(product.price)}
+                        </option>
+                      ))}
+                    </select>
+
+                    <FiChevronDown
+                      className="pointer-events-none absolute right-3 top-1/2 mt-1 -translate-y-1/2 text-gray-400"
+                      size={16}
+                    />
+                  </div>
+                </FormField>
+              </div>
+
+              <div className="hidden pb-0.5 text-xs text-gray-500 sm:block">
+                {form.items.length} {form.items.length === 1 ? "item" : "items"}{" "}
+                added
+              </div>
+            </div>
+
+            {/* Empty state */}
+            {form.items.length === 0 ? (
+              <div className="mt-5 rounded-xl border border-dashed border-border-color px-5 py-10 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-cta/10 text-cta">
+                  <FiPackage size={22} />
+                </div>
+
+                <h3 className="mt-3 text-sm font-semibold text-text">
+                  No products added
+                </h3>
+
+                <p className="mx-auto mt-1 max-w-sm text-xs text-gray-500 sm:text-sm">
+                  Select a product above to start building this quotation.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop */}
+                <div className="mt-5 hidden overflow-hidden rounded-xl border border-border-color lg:block">
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[850px] text-left">
+                      <thead className="bg-bg">
+                        <tr className="text-xs uppercase tracking-wide text-gray-500">
+                          <th className="px-4 py-3 font-medium">Product</th>
+                          <th className="px-3 py-3 font-medium">Unit Price</th>
+                          <th className="px-3 py-3 font-medium">Qty</th>
+                          <th className="px-3 py-3 font-medium">Discount</th>
+                          <th className="px-3 py-3 font-medium">GST</th>
+                          <th className="px-3 py-3 text-right font-medium">
+                            Total
+                          </th>
+                          <th className="w-14 px-4 py-3" />
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {form.items.map((item, index) => (
+                          <ProductTableRow
+                            key={`${item.productId}-${index}`}
+                            item={item}
+                            index={index}
+                            updateItem={updateItem}
+                            removeItem={removeItem}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Mobile / Tablet */}
+                <div className="mt-5 space-y-3 lg:hidden">
+                  {form.items.map((item, index) => (
+                    <ProductCard
+                      key={`${item.productId}-${index}`}
+                      item={item}
+                      index={index}
+                      updateItem={updateItem}
+                      removeItem={removeItem}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </Section>
+
+          {/* Notes */}
+          <Section
+            icon={FiFileText}
+            title="Additional Notes"
+            description="Add any terms, delivery information, or remarks."
+          >
+            <textarea
+              className={`${inputClass} min-h-[120px] resize-y`}
+              placeholder="Add notes or special terms..."
+              value={form.notes}
+              onChange={(e) => update("notes", e.target.value)}
+            />
+          </Section>
+        </div>
+
+        {/* Right column / Summary */}
+        <aside className="min-w-0">
+          <div className="sticky top-5 overflow-hidden rounded-2xl border border-border-color bg-card-bg">
+            <div className="border-b border-border-color px-5 py-4">
+              <h2 className="text-base font-semibold text-text">
+                Quotation Summary
+              </h2>
+
+              <p className="mt-0.5 text-xs text-gray-500">
+                Review the final quotation amount.
+              </p>
+            </div>
+
+            <div className="space-y-4 p-5">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">Items</span>
+
+                <span className="font-medium text-text">
+                  {form.items.length}
+                </span>
+              </div>
+
+              <div className="h-px bg-border-color" />
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Subtotal</span>
+
+                  <span className="font-medium text-text">
+                    {formatCurrency(totals.subtotal)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Discount</span>
+
+                  <span className="font-medium text-red">
+                    - {formatCurrency(totals.discountAmount)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">GST</span>
+
+                  <span className="font-medium text-text">
+                    {formatCurrency(totals.gstAmount)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-bg p-4">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Grand Total</p>
+
+                    <p className="mt-1 text-xl font-bold text-text sm:text-2xl">
+                      {formatCurrency(totals.grandTotal)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-1">
+                <VariantButton
+                  onClick={() => save(true)}
+                  variant="cta"
+                  size="medium"
+                  text={
+                    saving
+                      ? "Submitting..."
+                      : editingId
+                        ? "Update & Submit"
+                        : "Save & Submit"
+                  }
                 />
               </div>
-              {/* product container */}
-              <div
-                className="overflow-auto max-h-[400px] w-full pb-4 px-4
-              flex flex-wrap gap-4"
-              >
-                {filteredProducts.map((product) => (
-                  <div
-                    key={product._id}
-                    onClick={() => handleProductClick(product)}
-                    className={`rounded-2xl shadow-md flex flex-col h-[360px] w-[280px] cursor-pointer border-2 ${
-                      selectedProducts.find(
-                        (p) => p.productId === product.productId
-                      )
-                        ? "border-cta/50 bg-card-bg"
-                        : "border-transparent bg-bg"
-                    }`}
-                  >
-                    <div className="p-2">
-                      {/* Image */}
-                      <div className="w-full h-[180px] rounded-2xl overflow-hidden mb-3 flex items-center justify-center">
-                        <img
-                          src={`${BASE_URL}/uploads/${product.image}`}
-                          alt={product.name}
-                          className="w-full h-full object-fill"
-                        />
-                      </div>
-                      {/* Title */}
-                      <div className="ml-4 mb-0.5 text-text text-[16px] font-semibold truncate">
-                        {product.name}
-                      </div>
-                      {/* ID & Price */}
-                      <div className="mx-2 flex justify-between text-secondary-text text-[14px] mb-2">
-                        <div>{product.productId}</div>
-                        <div className="text-text text-[16px] font-semibold">
-                          ₹ {product.price}
-                        </div>
-                      </div>
-                      {/* Description */}
-                      <div className="mx-2 text-secondary-text h-[80px] text-sm line-clamp-4 text-justify">
-                        {product.description}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {error && (
-              <div className="text-rose-500 mb-2 text-sm mt-4">{error}</div>
-            )}
-            <div>
-              <div className="flex justify-center gap-16 pt-8 items-center">
-                <VariantButton
-                  onClick={handleCancelProductModal}
-                  variant="ghostRed"
-                  text="Cancel"
-                  icon="x"
-                  size="large"
-                  className={"justify-center gap-4"}
-                ></VariantButton>
-                <VariantButton
-                  onClick={handleSaveProductModal}
-                  variant="cta"
-                  text="Save"
-                  icon="check"
-                  size="large"
-                  className={"justify-center gap-4"}
-                ></VariantButton>
-              </div>
+
+              <VariantButton
+                onClick={() => save(false)}
+                variant="ghostCta"
+                size="medium"
+                text={saving ? "Saving..." : "Save as Draft"}
+              />
+
+              <VariantButton
+                onClick={() => navigate(-1)}
+                variant="ghostRed"
+                size="medium"
+                text="Cancel"
+              />
             </div>
           </div>
-        )}
+        </aside>
       </div>
     </div>
   );
