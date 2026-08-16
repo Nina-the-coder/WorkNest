@@ -1,29 +1,71 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import WorkNestDark from "../../assets/WorkNest-dark.svg";
 import WorkNestLight from "../../assets/WorkNest-light.svg";
 import Icon from "./Icons";
 import VariantButton from "./buttons/VariantButton";
+import { hasPermission } from "../../utils/permissions";
 
-const Sidebar = () => {
+const Sidebar = ({ role }) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
-  const items = [
-    { name: "Dashboard", path: "/admin/dashboard", icon: "layout-dashboard" },
-    { name: "Employees", path: "/admin/employees", icon: "circle-user-round" },
-    { name: "Tasks", path: "/admin/tasks", icon: "list-checks" },
-    { name: "Products", path: "/admin/Products", icon: "shopping-cart" },
-    { name: "Customers", path: "/admin/customers", icon: "notepad-text" },
-    { name: "Quotations", path: "/admin/quotations", icon: "users" },
-    { name: "Orders", path: "/admin/orders", icon: "scroll" },
-    // {
-    //   name: "Conversations",
-    //   path: "/admin/conversations",
-    //   icon: "message-circle-more",
-    // },
-    { name: "Profile", path: "/admin/profile", icon: "user" },
+  // Define all navigation items with their required permissions
+  const allItems = [
+    {
+      name: "Dashboard",
+      path: "/admin/dashboard",
+      icon: "layout-dashboard",
+      permission: "DASHBOARD_READ",
+    },
+    {
+      name: "Employees",
+      path: "/admin/employees",
+      icon: "circle-user-round",
+      permission: "EMPLOYEE_READ",
+    },
+    {
+      name: "Tasks",
+      path: "/admin/tasks",
+      icon: "list-checks",
+      permission: "TASK_READ",
+    },
+    {
+      name: "Products",
+      path: "/admin/Products",
+      icon: "shopping-cart",
+      permission: "PRODUCT_READ",
+    },
+    {
+      name: "Customers",
+      path: "/admin/customers",
+      icon: "notepad-text",
+      permission: "CUSTOMER_READ",
+    },
+    {
+      name: "Quotations",
+      path: "/admin/quotations",
+      icon: "users",
+      permission: "QUOTATION_READ",
+    },
+    {
+      name: "Orders",
+      path: "/admin/orders",
+      icon: "scroll",
+      permission: "ORDER_READ",
+    },
+    {
+      name: "Profile",
+      path: "/admin/profile",
+      icon: "user",
+      permission: "DASHBOARD_READ", // Profile accessible to all authenticated users
+    },
   ];
+
+  // Filter items based on user permissions
+  const items = useMemo(() => {
+    return allItems.filter((item) => hasPermission(item.permission));
+  }, []);
 
   return (
     <div
@@ -44,7 +86,7 @@ const Sidebar = () => {
         <img src={WorkNestDark} alt="WorkNest" className="hidden dark:block" />
       </div> */}
 
-      {/* navigation */}
+      {/* navigation - filtered by permissions */}
       <nav className="flex flex-col">
         {items.map((item, index) => {
           const isActive = item.path === location.pathname;

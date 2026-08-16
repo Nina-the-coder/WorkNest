@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
+const { getPermissionsForRole } = require("../utils/rolePermissions");
 
 const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -14,13 +15,18 @@ const verifyToken = async (req, res, next) => {
     const user = await User.findById(decoded.id).select("_id name email role");
     if (!user) return res.status(401).json({ message: "User not found" });
 
+    // Load permissions based on user's role
+    const permissions = getPermissionsForRole(user.role);
+
+    // Attach user and permissions to request
     req.user = user; // ✅ full user document
+    req.user.permissions = permissions; // ✅ permissions array
+
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
-
 
 // const isAdmin = (req, res, next) => {
 //     if(req.user.role !== "admin"){
@@ -40,7 +46,7 @@ const authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
-        message: "Access denied"
+        message: "Access denied",
       });
     }
     next();

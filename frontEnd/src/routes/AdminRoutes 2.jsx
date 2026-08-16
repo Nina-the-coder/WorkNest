@@ -11,7 +11,6 @@ import ProductManagement from "../modules/product/pages/ProductManagement";
 import QuotationManagement from "../modules/quotation/pages/QuotationManagement";
 import OrderManagement from "../modules/order/pages/OrderManagement";
 import AddQuotation from "../modules/quotation/pages/AddQuotation";
-import QuotationDetails from "../modules/quotation/pages/QuotationDetails";
 import Profile from "../modules/profile/Profile";
 
 export const AdminRoutes = (
@@ -29,7 +28,6 @@ export const AdminRoutes = (
     <Route path="/admin/products" element={<ProductManagement />} />
     <Route path="/admin/quotations" element={<QuotationManagement />} />
     <Route path="/admin/add-quotation" element={<AddQuotation role="admin" />} />
-    <Route path="/admin/quotations/:quotationId" element={<QuotationDetails />} />
     <Route path="/admin/orders" element={<OrderManagement />} />
     <Route path="/admin/profile" element={<Profile />} />
   </Route>
