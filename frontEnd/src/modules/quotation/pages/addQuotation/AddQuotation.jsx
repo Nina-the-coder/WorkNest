@@ -6,25 +6,27 @@ import {
   FiCalendar,
   FiChevronDown,
   FiFileText,
-  FiMinus,
   FiPackage,
-  FiPlus,
-  FiTrash2,
   FiUser,
   FiUsers,
 } from "react-icons/fi";
-
-import Header from "../../../shared/components/Header";
-import VariantButton from "../../../shared/components/buttons/VariantButton";
-import api from "../../../api/axios";
-
-import { calculateQuotationTotals, formatCurrency } from "../quotation.util";
+import Header from "../../../../shared/components/Header";
+import VariantButton from "../../../../shared/components/buttons/VariantButton";
+import api from "../../../../api/axios";
+import { calculateQuotationTotals, formatCurrency } from "../../quotation.util";
 import {
   createQuotationAPI,
   fetchQuotationAPI,
   submitQuotationAPI,
   updateQuotationAPI,
-} from "../services/quotation.api";
+} from "../../services/quotation.api";
+import Section from "./components/Section";
+import FormField from "./components/FormField";
+import ProductCard from "./components/ProductCard";
+import ProductTableRow from "./components/ProductTableRow";
+import ProductSelector from "./components/ProductSelector";
+import CustomerSelector from "./components/CustomerSelector";
+import EmployeeSelector from "./components/EmployeeSelector";
 
 const blank = {
   customerId: "",
@@ -32,6 +34,12 @@ const blank = {
   validUntil: "",
   notes: "",
   items: [],
+
+  customerDetails: {
+    contact: "",
+    address: "",
+    gst: "",
+  },
 };
 
 /* -------------------------------------------------------------------------- */
@@ -43,301 +51,6 @@ const inputClass =
 
 const selectClass =
   "mt-2 w-full appearance-none rounded-xl border border-border-color bg-bg px-3.5 py-3 pr-10 text-sm text-text outline-none transition focus:border-cta focus:ring-2 focus:ring-cta/10";
-
-const numberInputClass =
-  "w-full rounded-lg border border-border-color bg-bg px-2.5 py-2 text-sm text-text outline-none transition focus:border-cta focus:ring-2 focus:ring-cta/10";
-
-/* -------------------------------------------------------------------------- */
-/* Form Field                                                                 */
-/* -------------------------------------------------------------------------- */
-
-const FormField = ({
-  label,
-  icon: Icon,
-  required,
-  children,
-  className = "",
-}) => {
-  return (
-    <label className={`block ${className}`}>
-      <span className="flex items-center gap-2 text-sm font-medium text-text">
-        {Icon && <Icon className="text-gray-500" size={15} />}
-        {label}
-        {required && <span className="text-red">*</span>}
-      </span>
-
-      {children}
-    </label>
-  );
-};
-
-/* -------------------------------------------------------------------------- */
-/* Section                                                                    */
-/* -------------------------------------------------------------------------- */
-
-const Section = ({ icon: Icon, title, description, children }) => {
-  return (
-    <section className="overflow-hidden rounded-2xl border border-border-color bg-card-bg">
-      <div className="border-b border-border-color px-4 py-4 sm:px-6">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cta/10 text-cta">
-            <Icon size={18} />
-          </div>
-
-          <div>
-            <h2 className="text-sm font-semibold text-text sm:text-base">
-              {title}
-            </h2>
-
-            {description && (
-              <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
-                {description}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="p-4 sm:p-6">{children}</div>
-    </section>
-  );
-};
-
-/* -------------------------------------------------------------------------- */
-/* Product Row - Desktop                                                      */
-/* -------------------------------------------------------------------------- */
-
-const ProductTableRow = ({ item, index, updateItem, removeItem }) => {
-  const lineTotal =
-    (Number(item.quantity) * Number(item.unitPrice) -
-      Number(item.discountAmount || 0)) *
-    (1 + Number(item.gstRate ?? 18) / 100);
-
-  return (
-    <tr className="border-b border-border-color last:border-0">
-      <td className="px-4 py-4">
-        <div className="font-medium text-text">{item.productName}</div>
-        <div className="mt-0.5 text-xs text-gray-500">
-          Product #{String(item.productId?._id || item.productId).slice(-6)}
-        </div>
-      </td>
-
-      <td className="px-3 py-4">
-        <div className="w-28">
-          <input
-            className={numberInputClass}
-            type="number"
-            min="0"
-            value={item.unitPrice}
-            onChange={(e) => updateItem(index, "unitPrice", e.target.value)}
-          />
-        </div>
-      </td>
-
-      <td className="px-3 py-4">
-        <div className="flex w-24 items-center rounded-lg border border-border-color bg-bg">
-          <button
-            type="button"
-            className="flex h-9 w-8 items-center justify-center text-gray-500 transition hover:text-text"
-            onClick={() =>
-              updateItem(
-                index,
-                "quantity",
-                Math.max(1, Number(item.quantity || 1) - 1),
-              )
-            }
-          >
-            <FiMinus size={13} />
-          </button>
-
-          <input
-            className="h-9 min-w-0 flex-1 border-x border-border-color bg-transparent text-center text-sm text-text outline-none"
-            type="number"
-            min="1"
-            step="1"
-            value={item.quantity}
-            onChange={(e) => updateItem(index, "quantity", e.target.value)}
-          />
-
-          <button
-            type="button"
-            className="flex h-9 w-8 items-center justify-center text-gray-500 transition hover:text-text"
-            onClick={() =>
-              updateItem(index, "quantity", Number(item.quantity || 0) + 1)
-            }
-          >
-            <FiPlus size={13} />
-          </button>
-        </div>
-      </td>
-
-      <td className="px-3 py-4">
-        <div className="w-24">
-          <input
-            className={numberInputClass}
-            type="number"
-            min="0"
-            value={item.discountAmount || 0}
-            onChange={(e) =>
-              updateItem(index, "discountAmount", e.target.value)
-            }
-          />
-        </div>
-      </td>
-
-      <td className="px-3 py-4">
-        <div className="w-20">
-          <input
-            className={numberInputClass}
-            type="number"
-            min="0"
-            max="100"
-            value={item.gstRate ?? 18}
-            onChange={(e) => updateItem(index, "gstRate", e.target.value)}
-          />
-        </div>
-      </td>
-
-      <td className="whitespace-nowrap px-3 py-4 text-right font-semibold text-text">
-        {formatCurrency(lineTotal)}
-      </td>
-
-      <td className="px-4 py-4 text-right">
-        <button
-          type="button"
-          title="Remove product"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition hover:bg-red/10 hover:text-red"
-          onClick={() => removeItem(index)}
-        >
-          <FiTrash2 size={16} />
-        </button>
-      </td>
-    </tr>
-  );
-};
-
-/* -------------------------------------------------------------------------- */
-/* Product Card - Mobile                                                      */
-/* -------------------------------------------------------------------------- */
-
-const ProductCard = ({ item, index, updateItem, removeItem }) => {
-  const lineTotal =
-    (Number(item.quantity) * Number(item.unitPrice) -
-      Number(item.discountAmount || 0)) *
-    (1 + Number(item.gstRate ?? 18) / 100);
-
-  return (
-    <div className="rounded-xl border border-border-color bg-bg p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-text">
-            {item.productName}
-          </h3>
-
-          <p className="mt-1 text-xs text-gray-500">
-            Product #{String(item.productId?._id || item.productId).slice(-6)}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          title="Remove product"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-400 transition hover:bg-red/10 hover:text-red"
-          onClick={() => removeItem(index)}
-        >
-          <FiTrash2 size={15} />
-        </button>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <label>
-          <span className="text-xs font-medium text-gray-500">Unit Price</span>
-
-          <input
-            className={`${numberInputClass} mt-1.5`}
-            type="number"
-            min="0"
-            value={item.unitPrice}
-            onChange={(e) => updateItem(index, "unitPrice", e.target.value)}
-          />
-        </label>
-
-        <label>
-          <span className="text-xs font-medium text-gray-500">Quantity</span>
-
-          <div className="mt-1.5 flex items-center rounded-lg border border-border-color bg-card-bg">
-            <button
-              type="button"
-              className="flex h-9 w-9 items-center justify-center text-gray-500"
-              onClick={() =>
-                updateItem(
-                  index,
-                  "quantity",
-                  Math.max(1, Number(item.quantity || 1) - 1),
-                )
-              }
-            >
-              <FiMinus size={13} />
-            </button>
-
-            <input
-              className="h-9 min-w-0 flex-1 border-x border-border-color bg-transparent text-center text-sm text-text outline-none"
-              type="number"
-              min="1"
-              value={item.quantity}
-              onChange={(e) => updateItem(index, "quantity", e.target.value)}
-            />
-
-            <button
-              type="button"
-              className="flex h-9 w-9 items-center justify-center text-gray-500"
-              onClick={() =>
-                updateItem(index, "quantity", Number(item.quantity || 0) + 1)
-              }
-            >
-              <FiPlus size={13} />
-            </button>
-          </div>
-        </label>
-
-        <label>
-          <span className="text-xs font-medium text-gray-500">Discount</span>
-
-          <input
-            className={`${numberInputClass} mt-1.5`}
-            type="number"
-            min="0"
-            value={item.discountAmount || 0}
-            onChange={(e) =>
-              updateItem(index, "discountAmount", e.target.value)
-            }
-          />
-        </label>
-
-        <label>
-          <span className="text-xs font-medium text-gray-500">GST %</span>
-
-          <input
-            className={`${numberInputClass} mt-1.5`}
-            type="number"
-            min="0"
-            max="100"
-            value={item.gstRate ?? 18}
-            onChange={(e) => updateItem(index, "gstRate", e.target.value)}
-          />
-        </label>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between border-t border-border-color pt-3">
-        <span className="text-xs font-medium text-gray-500">Line Total</span>
-
-        <span className="text-sm font-bold text-text">
-          {formatCurrency(lineTotal)}
-        </span>
-      </div>
-    </div>
-  );
-};
 
 /* -------------------------------------------------------------------------- */
 /* Add Quotation                                                              */
@@ -355,6 +68,11 @@ const AddQuotation = ({ role }) => {
   const [employees, setEmployees] = useState([]);
 
   const [loadingOptions, setLoadingOptions] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [employeesLoading, setEmployeesLoading] = useState(true);
+  const [employeesError, setEmployeesError] = useState("");
+  const [customersLoading, setCustomersLoading] = useState(true);
+  const [customersError, setCustomersError] = useState("");
   const [loadingQuotation, setLoadingQuotation] = useState(Boolean(editingId));
   const [saving, setSaving] = useState(false);
 
@@ -364,27 +82,40 @@ const AddQuotation = ({ role }) => {
 
   useEffect(() => {
     const loadOptions = async () => {
-      setLoadingOptions(true);
+      setProductsLoading(true);
+
+      if (role === "admin") {
+        setEmployeesLoading(true);
+        setEmployeesError("");
+      }
 
       try {
-        const [customerResponse, productResponse, employeeResponse] =
-          await Promise.all([
-            api.get("/api/customers"),
-            api.get("/api/products"),
-            role === "admin"
-              ? api.get("/api/employees")
-              : Promise.resolve({ data: [] }),
-          ]);
+        const requests = [
+          api.get("/api/products"),
+          role === "admin"
+            ? api.get("/api/employees")
+            : Promise.resolve({ data: [] }),
+        ];
 
-        setCustomers(customerResponse.data || []);
+        const [productResponse, employeeResponse] = await Promise.all(requests);
+
         setProducts(productResponse.data || []);
         setEmployees(employeeResponse.data || []);
       } catch (error) {
-        toast.error(
-          error.response?.data?.message || "Unable to load quotation options",
-        );
+        const message =
+          error.response?.data?.message || "Unable to load quotation options";
+
+        toast.error(message);
+
+        if (role === "admin") {
+          setEmployeesError(message);
+        }
       } finally {
-        setLoadingOptions(false);
+        setProductsLoading(false);
+
+        if (role === "admin") {
+          setEmployeesLoading(false);
+        }
       }
     };
 
@@ -416,10 +147,15 @@ const AddQuotation = ({ role }) => {
 
           notes: quotation.notes || "",
 
+          customerDetails: {
+            contact: quotation.customerDetails?.contact || "",
+            address: quotation.customerDetails?.address || "",
+            gst: quotation.customerDetails?.gst || "",
+          },
+
           items: (quotation.items || []).map((item) => ({
             ...item,
 
-            // Convert populated product object back to its ObjectId
             productId: item.productId?._id || item.productId,
 
             productName: item.productName || item.productId?.name || "",
@@ -461,35 +197,6 @@ const AddQuotation = ({ role }) => {
     }));
   };
 
-  const addProduct = (id) => {
-    if (!id) return;
-
-    const product = products.find((p) => p._id === id);
-
-    if (!product) return;
-
-    const alreadyAdded = form.items.some(
-      (item) => String(item.productId?._id || item.productId) === String(id),
-    );
-
-    if (alreadyAdded) {
-      toast.info("This product is already added.");
-      return;
-    }
-
-    update("items", [
-      ...form.items,
-      {
-        productId: id,
-        productName: product.name,
-        quantity: 1,
-        unitPrice: product.price,
-        discountAmount: 0,
-        gstRate: 18,
-      },
-    ]);
-  };
-
   const updateItem = (index, field, value) => {
     update(
       "items",
@@ -511,6 +218,64 @@ const AddQuotation = ({ role }) => {
     );
   };
 
+  const fetchCustomers = async () => {
+    setCustomersLoading(true);
+    setCustomersError("");
+
+    try {
+      const response = await api.get("/api/customers");
+
+      setCustomers(response.data || []);
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "Unable to load customers";
+
+      setCustomersError(message);
+
+      toast.error(message);
+    } finally {
+      setCustomersLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    setProductsLoading(true);
+
+    try {
+      const response = await api.get("/api/products");
+      setProducts(response.data || []);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Unable to load products");
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  const fetchEmployees = async () => {
+    setEmployeesLoading(true);
+    setEmployeesError("");
+
+    try {
+      const response = await api.get("/api/employees");
+
+      setEmployees(response.data || []);
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "Unable to load employees";
+
+      setEmployeesError(message);
+      toast.error(message);
+    } finally {
+      setEmployeesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+    fetchProducts();
+    fetchEmployees();
+  }, []);
+
   /* ------------------------------------------------------------------------ */
   /* Save quotation                                                           */
   /* ------------------------------------------------------------------------ */
@@ -518,6 +283,30 @@ const AddQuotation = ({ role }) => {
   const save = async (submit) => {
     if (!form.customerId) {
       return toast.error("Please select a customer.");
+    }
+
+    const isValidCustomer = customers.some(
+      (customer) =>
+        String(customer._id) === String(form.customerId) &&
+        !customer.deleted &&
+        (!customer.status || customer.status === "active"),
+    );
+
+    if (!isValidCustomer) {
+      return toast.error("Please select a valid existing customer.");
+    }
+
+    const isValidEmployee =
+      role !== "admin" ||
+      employees.some(
+        (employee) =>
+          String(employee._id) === String(form.employeeId) &&
+          !employee.deleted &&
+          (!employee.status || employee.status === "active"),
+      );
+
+    if (!isValidEmployee) {
+      return toast.error("Please select a valid existing employee.");
     }
 
     if (!form.validUntil) {
@@ -616,63 +405,29 @@ const AddQuotation = ({ role }) => {
           >
             <div className="grid gap-4 md:grid-cols-2">
               <FormField label="Customer" icon={FiUser} required>
-                <div className="relative">
-                  <select
-                    className={selectClass}
-                    value={form.customerId}
-                    onChange={(e) => update("customerId", e.target.value)}
-                    disabled={loadingOptions}
-                  >
-                    <option value="">Select customer</option>
-
-                    {customers
-                      .filter(
-                        (customer) =>
-                          !customer.deleted &&
-                          (!customer.status || customer.status === "active"),
-                      )
-                      .map((customer) => (
-                        <option key={customer._id} value={customer._id}>
-                          {customer.name} ({customer.customerId})
-                        </option>
-                      ))}
-                  </select>
-
-                  <FiChevronDown
-                    className="pointer-events-none absolute right-3 top-1/2 mt-1 -translate-y-1/2 text-gray-400"
-                    size={16}
-                  />
-                </div>
+                <CustomerSelector
+                  customers={customers}
+                  customerId={form.customerId}
+                  loading={customersLoading}
+                  error={customersError}
+                  onRetry={fetchCustomers}
+                  onChange={(customerId) => update("customerId", customerId)}
+                  onCustomerDetailsChange={(details) =>
+                    update("customerDetails", details)
+                  }
+                />
               </FormField>
 
               {role === "admin" && (
                 <FormField label="Created For" icon={FiUsers} required>
-                  <div className="relative">
-                    <select
-                      className={selectClass}
-                      value={form.employeeId}
-                      onChange={(e) => update("employeeId", e.target.value)}
-                      disabled={loadingOptions}
-                    >
-                      <option value="">Select employee</option>
-
-                      {employees
-                        .filter(
-                          (employee) =>
-                            employee.status === "active" && !employee.deleted,
-                        )
-                        .map((employee) => (
-                          <option key={employee._id} value={employee._id}>
-                            {employee.name} ({employee.empId})
-                          </option>
-                        ))}
-                    </select>
-
-                    <FiChevronDown
-                      className="pointer-events-none absolute right-3 top-1/2 mt-1 -translate-y-1/2 text-gray-400"
-                      size={16}
-                    />
-                  </div>
+                  <EmployeeSelector
+                    employees={employees}
+                    employeeId={form.employeeId}
+                    loading={employeesLoading}
+                    error={employeesError}
+                    onRetry={fetchEmployees}
+                    onChange={(employeeId) => update("employeeId", employeeId)}
+                  />
                 </FormField>
               )}
 
@@ -702,42 +457,14 @@ const AddQuotation = ({ role }) => {
             description="Add products and configure their pricing."
           >
             {/* Product selector */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="min-w-0 flex-1">
-                <FormField label="Add Product">
-                  <div className="relative">
-                    <select
-                      className={selectClass}
-                      value=""
-                      onChange={(e) => addProduct(e.target.value)}
-                      disabled={loadingOptions}
-                    >
-                      <option value="">
-                        {loadingOptions
-                          ? "Loading products..."
-                          : "Select a product to add"}
-                      </option>
-
-                      {products.map((product) => (
-                        <option key={product._id} value={product._id}>
-                          {product.name} — {formatCurrency(product.price)}
-                        </option>
-                      ))}
-                    </select>
-
-                    <FiChevronDown
-                      className="pointer-events-none absolute right-3 top-1/2 mt-1 -translate-y-1/2 text-gray-400"
-                      size={16}
-                    />
-                  </div>
-                </FormField>
-              </div>
-
-              <div className="hidden pb-0.5 text-xs text-gray-500 sm:block">
-                {form.items.length} {form.items.length === 1 ? "item" : "items"}{" "}
-                added
-              </div>
-            </div>
+            <ProductSelector
+              products={products}
+              loading={productsLoading}
+              error=""
+              onRetry={() => {}}
+              form={form}
+              update={update}
+            />
 
             {/* Empty state */}
             {form.items.length === 0 ? (

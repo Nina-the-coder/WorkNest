@@ -1,13 +1,27 @@
-import React from "react";
-import VariantButton from "../../../shared/components/buttons/VariantButton";
+import {
+  FiCheck,
+  FiEdit2,
+  FiFileText,
+  FiRefreshCw,
+  FiSend,
+  FiTrash2,
+  FiX,
+} from "react-icons/fi";
+import { formatCurrency, formatDate } from "../quotation.util";
+import StatusBadge from "./StatusBadge";
+import { hasPermission } from "../../../utils/permissions";
+import ActionButton from "./ActionButton";
 
 const QuotationTable = ({
   quotations,
-  editQuotation,
-  deleteQuotation,
-  approveQuotation,
-  rejectQuotation,
-  makeOrder,
+  role,
+  navigate,
+  run,
+  doReject,
+  submit,
+  approve,
+  reopen,
+  remove,
 }) => {
   if (!quotations || quotations.length === 0) {
     return (
@@ -18,173 +32,186 @@ const QuotationTable = ({
   }
 
   return (
-    <div className="w-full bg-card-bg/50 rounded-2xl shadow-md shadow-secondary-text/30 overflow-x-auto">
-      <table className="w-full table-fixed text-sm text-left text-secondary-text border-collapse">
-        {/* Header */}
-        <thead className="text-xs uppercase bg-card-bg text-text">
-          <tr>
-            <th className="w-[8%] px-4 py-3">Quotation</th>
-            <th className="w-[7%] px-4 py-3">Customer</th>
-            <th className="w-[7%] px-4 py-3">Added By</th>
-            <th className="w-[10%] px-4 py-3">Doctor</th>
-            <th className="w-[12%] px-4 py-3">Admin</th>
-            <th className="w-[30%] px-4 py-3">Products</th>
-            <th className="w-[10%] px-4 py-3 text-center">Actions</th>
-          </tr>
-        </thead>
+    <div className="hidden overflow-hidden rounded-2xl border border-border-color bg-card-bg xl:block">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1100px] text-left">
+          <thead className="bg-bg">
+            <tr className="border-b border-border-color text-xs uppercase tracking-wide text-gray-500">
+              <th className="px-5 py-4 font-medium">Quotation</th>
 
-        {/* Body */}
-        <tbody>
-          {quotations.map((quotation) => (
-            <tr
-              key={quotation.quotationId}
-              className="border-b border-gray-700 hover:bg-bg/50 transition align-top"
-            >
-              {/* Quotation ID */}
-              <td className="px-4 py-4 font-semibold text-text text-sm">
-                {quotation.quotationId}
-              </td>
+              <th className="px-4 py-4 font-medium">Customer</th>
 
-              {/* Customer */}
-              <td className="px-4 py-4">
-                <div className="flex flex-col">
-                  <span className="font-medium text-text text-sm">
-                    {quotation.customerId?.customerId}
-                  </span>
-                  <span className="text-xs text-secondary-text truncate">
-                    {quotation.customerId?.name}
-                  </span>
-                </div>
-              </td>
+              <th className="px-4 py-4 font-medium">Created By</th>
 
-              {/* Added By */}
-              <td className="px-4 py-4">
-                <div className="flex flex-col">
-                  <span className="font-medium text-text text-sm">
-                    {quotation.addedBy?.empId}
-                  </span>
-                  <span className="text-xs text-secondary-text truncate">
-                    {quotation.addedBy?.name}
-                  </span>
-                </div>
-              </td>
+              <th className="px-4 py-4 font-medium">Date</th>
 
-              {/* Doctor Status */}
-              <td className="px-4 py-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                    quotation.isApprovedByDoctor === "approved"
-                      ? "bg-green text-black"
-                      : quotation.isApprovedByDoctor === "pending"
-                      ? "bg-orange text-black"
-                      : "bg-red text-black"
-                  }`}
-                >
-                  {quotation.isApprovedByDoctor}
-                </span>
-              </td>
+              <th className="px-4 py-4 text-right font-medium">Total</th>
 
-              {/* Admin Status + Approve/Reject */}
-              <td className="px-4 py-4">
-                <div className="flex flex-col items-center justify-between gap-3">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold text-center ${
-                      quotation.status === "approved"
-                        ? "bg-green text-black"
-                        : quotation.status === "pending"
-                        ? "bg-orange text-black"
-                        : "bg-red text-black"
-                    }`}
-                  >
-                    {quotation.status}
-                  </span>
-                  <div className="flex gap-1">
-                    <VariantButton
-                      onClick={(e) => approveQuotation(e, quotation)}
-                      variant="ghostGreen"
-                      size="tiny"
-                      text=""
-                      icon="check"
-                    />
-                    <VariantButton
-                      onClick={(e) => rejectQuotation(e, quotation)}
-                      variant="ghostRed"
-                      size="tiny"
-                      text=""
-                      icon="x"
-                    />
-                  </div>
-                </div>
-              </td>
+              <th className="px-4 py-4 font-medium">Status</th>
 
-              {/* Products mini-table */}
-              <td className="px-4 py-4">
-                <div className="border rounded-md overflow-hidden">
-                  <table className="w-full text-xs border-collapse">
-                    <thead className="bg-bg/30">
-                      <tr className="text-text">
-                        <th className="text-left px-2 py-1">Product</th>
-                        <th className="text-center px-2 py-1">Qty</th>
-                        <th className="text-right px-2 py-1">Price</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {quotation.products.map((p, i) => (
-                        <tr key={i}>
-                          <td className="px-2 py-1">{p.name}</td>
-                          <td className="text-center px-2 py-1">{p.quantity}</td>
-                          <td className="text-right px-2 py-1">₹{p.price}</td>
-                        </tr>
-                      ))}
-                      {/* Total row */}
-                      <tr className="font-semibold text-text border-t bg-bg/20">
-                        <td colSpan={2} className="text-right pr-2 py-1">
-                          Total:
-                        </td>
-                        <td className="text-right px-2 py-1">
-                          ₹{quotation.total}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </td>
+              <th className="px-4 py-4 font-medium">Valid Until</th>
 
-              {/* Actions */}
-              <td className="px-4 py-4 text-center">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="flex gap-4">
-                    <VariantButton
-                      onClick={(e) => editQuotation(e, quotation)}
-                      variant="ghostCta"
-                      size="tiny"
-                      text=""
-                      icon="pencil"
-                    />
-                    <VariantButton
-                      onClick={(e) => deleteQuotation(e, quotation.quotationId)}
-                      variant="red"
-                      size="tiny"
-                      text=""
-                      icon="trash-2"
-                    />
-                  </div>
-                  <VariantButton
-                    onClick={(e) => makeOrder(e, quotation)}
-                    variant="cta"
-                    size="small"
-                    text="Order"
-                    icon="arrow-right"
-                    className={`w-full ${
-                      quotation.status !== "approved" ? "opacity-50" : ""
-                    }`}
-                  />
-                </div>
-              </td>
+              <th className="px-5 py-4 text-right font-medium">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {quotations.map((q) => (
+              <tr
+                key={q._id}
+                className="border-b border-border-color last:border-0 transition hover:bg-bg/60"
+              >
+                {/* Number */}
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cta/10 text-cta">
+                      <FiFileText size={16} />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-text">
+                        {q.quotationId || "—"}
+                      </p>
+
+                      <p className="mt-0.5 text-xs text-gray-500">
+                        {formatDate(q.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+
+                {/* Customer */}
+                <td className="px-4 py-4">
+                  <p className="max-w-[180px] truncate text-sm font-medium text-text">
+                    {q.customerId?.name || "—"}
+                  </p>
+
+                  {q.customerId?.contact && (
+                    <p className="mt-0.5 max-w-[180px] truncate text-xs text-gray-500">
+                      {q.customerId.contact}
+                    </p>
+                  )}
+                </td>
+
+                {/* Employee */}
+                <td className="px-4 py-4">
+                  <p className="text-sm text-text">
+                    {q.employeeId?.name || "—"}
+                  </p>
+                </td>
+
+                {/* Date */}
+                <td className="px-4 py-4">
+                  <p className="text-sm text-gray-500">
+                    {formatDate(q.createdAt)}
+                  </p>
+                </td>
+
+                {/* Total */}
+                <td className="px-4 py-4 text-right">
+                  <p className="whitespace-nowrap text-sm font-semibold text-text">
+                    {formatCurrency(q.grandTotal)}
+                  </p>
+                </td>
+
+                {/* Status */}
+                <td className="px-4 py-4">
+                  <StatusBadge status={q.status} />
+                </td>
+
+                {/* Valid Until */}
+                <td className="px-4 py-4">
+                  <p className="whitespace-nowrap text-sm text-gray-500">
+                    {q.validUntil ? formatDate(q.validUntil) : "—"}
+                  </p>
+                </td>
+
+                {/* Actions */}
+                <td className="px-5 py-4">
+                  <div className="flex flex-wrap justify-end gap-1.5">
+                    {q.status === "DRAFT" &&
+                      hasPermission("QUOTATION_UPDATE") && (
+                        <ActionButton
+                          icon={FiEdit2}
+                          label="Edit"
+                          variant="primary"
+                          onClick={() =>
+                            navigate(
+                              role === "admin"
+                                ? "/admin/add-quotation"
+                                : "/employee/quotation",
+                              {
+                                state: {
+                                  quotation: q,
+                                },
+                              },
+                            )
+                          }
+                        />
+                      )}
+
+                    {q.status === "DRAFT" &&
+                      hasPermission("QUOTATION_SUBMIT") && (
+                        <ActionButton
+                          icon={FiSend}
+                          label="Submit"
+                          variant="success"
+                          onClick={() => run(submit, q)}
+                        />
+                      )}
+
+                    {q.status === "SUBMITTED" &&
+                      hasPermission("QUOTATION_APPROVE") && (
+                        <ActionButton
+                          icon={FiCheck}
+                          label="Approve"
+                          variant="success"
+                          onClick={() => run(approve, q)}
+                        />
+                      )}
+
+                    {q.status === "SUBMITTED" &&
+                      hasPermission("QUOTATION_REJECT") && (
+                        <ActionButton
+                          icon={FiX}
+                          label="Reject"
+                          variant="danger"
+                          onClick={() => doReject(q)}
+                        />
+                      )}
+
+                    {q.status === "REJECTED" &&
+                      hasPermission("QUOTATION_UPDATE") && (
+                        <ActionButton
+                          icon={FiRefreshCw}
+                          label="Reopen"
+                          variant="primary"
+                          onClick={() => run(reopen, q)}
+                        />
+                      )}
+
+                    {q.status === "DRAFT" &&
+                      hasPermission("QUOTATION_ARCHIVE") && (
+                        <ActionButton
+                          icon={FiTrash2}
+                          label="Delete"
+                          variant="danger"
+                          onClick={() => run(remove, q)}
+                        />
+                      )}
+                  </div>
+
+                  {q.rejectionReason && (
+                    <p className="mt-2 max-w-[240px] text-right text-xs text-red">
+                      {q.rejectionReason}
+                    </p>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
