@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   FiArrowLeft,
@@ -58,14 +58,17 @@ const selectClass =
 
 const AddQuotation = ({ role }) => {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const editingId = location.state?.quotation?._id;
+  const { quotationId } = useParams();
+  // const location = useLocation();
+  // const editingId = location.state?.quotation?._id;
+  const editingId = quotationId;
+  const isEditMode = Boolean(editingId);
 
   const [form, setForm] = useState(blank);
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [quotationNumber, setQuotationNumber] = useState("");
 
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [productsLoading, setProductsLoading] = useState(true);
@@ -135,6 +138,7 @@ const AddQuotation = ({ role }) => {
       try {
         const { data } = await fetchQuotationAPI(editingId);
         const quotation = data.quotation;
+        setQuotationNumber(quotation.quotationId || "");
 
         setForm({
           customerId: quotation.customerId?._id || quotation.customerId || "",
@@ -173,6 +177,7 @@ const AddQuotation = ({ role }) => {
         setLoadingQuotation(false);
       }
     };
+    console.log("form", form);
 
     loadQuotation();
   }, [editingId]);
@@ -343,7 +348,17 @@ const AddQuotation = ({ role }) => {
           : "Draft saved successfully",
       );
 
-      navigate(role === "admin" ? "/admin/quotations" : "/employee/quotations");
+      if (editingId) {
+        navigate(
+          role === "admin"
+            ? `/admin/quotations/${editingId}`
+            : `/employee/quotations/${editingId}`,
+        );
+      } else {
+        navigate(
+          role === "admin" ? "/admin/quotations" : "/employee/quotations",
+        );
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Unable to save quotation");
     } finally {
@@ -374,22 +389,27 @@ const AddQuotation = ({ role }) => {
   /* ------------------------------------------------------------------------ */
   /* Render                                                                   */
   /* ------------------------------------------------------------------------ */
-
   return (
     <div className="flex min-w-0 flex-col gap-5 pb-8">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(role === "admin" ? "/admin/quotations" : "/employee/quotations")}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-color bg-card-bg text-gray-500 transition hover:text-text"
           title="Go back"
         >
           <FiArrowLeft size={18} />
         </button>
 
-        <div className="min-w-0 flex-1">
-          <Header title={editingId ? "Edit Quotation" : "New Quotation"} />
+        <div>
+          <Header title={isEditMode ? "Edit Quotation" : "New Quotation"} />
+
+          {isEditMode && (
+            <p className="mt-1 text-sm text-gray-500">
+              {quotationNumber} · Update quotation details
+            </p>
+          )}
         </div>
       </div>
 

@@ -6,7 +6,7 @@ import EmployeeLayout from "../layouts/EmployeeLayout";
 import EmployeeDashboard from "../modules/dashboard/EmployeeDashboard";
 import AddQuotation from "../modules/quotation/pages/addQuotation/AddQuotation";
 import QuotationManagement from "../modules/quotation/pages/QuotationManagement";
-import QuotationDetails from "../modules/quotation/pages/QuotationDetails";
+import QuotationDetails from "../modules/quotation/pages/quotationDetails/QuotationDetails";
 
 export const EmployeeRoutes = (
   <Route

@@ -9,7 +9,7 @@ import {
 } from "react-icons/fi";
 import { formatCurrency, formatDate } from "../quotation.util";
 import StatusBadge from "./StatusBadge";
-import {hasPermission} from "../../../utils/permissions";
+import { hasPermission } from "../../../utils/permissions";
 import ActionButton from "./ActionButton";
 
 const QuotationCard = ({
@@ -26,13 +26,22 @@ const QuotationCard = ({
   const q = quotation;
 
   return (
-    <div className="rounded-2xl border border-border-color bg-card-bg p-4">
+    <div
+      className="cursor-pointer rounded-2xl border border-border-color bg-card-bg p-4 transition hover:border-cta/30 hover:shadow-sm"
+      onClick={() =>
+        navigate(
+          role === "admin"
+            ? `/admin/quotations/${quotation._id}`
+            : `/employee/quotations/${quotation._id}`,
+        )
+      }
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cta/10 text-cta">
-              <FiFileText size={16} />
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cta/10 text-cta">
+              <FiFileText size={17} />
             </div>
 
             <div className="min-w-0">
@@ -51,7 +60,10 @@ const QuotationCard = ({
       </div>
 
       {/* Details */}
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div
+        className="mt-4 grid grid-cols-2 gap-3"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div>
           <p className="text-xs text-gray-500">Customer</p>
           <p className="mt-1 truncate text-sm font-medium text-text">
@@ -89,84 +101,74 @@ const QuotationCard = ({
       {/* Rejection reason */}
       {q.rejectionReason && (
         <div className="mt-4 rounded-lg bg-red/10 px-3 py-2">
-          <p className="text-xs font-medium text-red">
-            Rejection reason
-          </p>
+          <p className="text-xs font-medium text-red">Rejection reason</p>
 
-          <p className="mt-1 text-xs text-red/80">
-            {q.rejectionReason}
-          </p>
+          <p className="mt-1 text-xs text-red/80">{q.rejectionReason}</p>
         </div>
       )}
 
       {/* Actions */}
       <div className="mt-4 flex flex-wrap gap-2 border-t border-border-color pt-4">
-        {q.status === "DRAFT" &&
-          hasPermission("QUOTATION_UPDATE") && (
-            <ActionButton
-              icon={FiEdit2}
-              label="Edit"
-              variant="primary"
-              onClick={() =>
-                navigate(
-                  role === "admin"
-                    ? "/admin/add-quotation"
-                    : "/employee/quotation",
-                  { state: { quotation: q } },
-                )
-              }
-            />
-          )}
+        {q.status === "DRAFT" && hasPermission("QUOTATION_UPDATE") && (
+          <ActionButton
+            icon={FiEdit2}
+            label="Edit"
+            variant="primary"
+            onClick={(e) =>
+              navigate(
+                role === "admin"
+                  ? "/admin/add-quotation"
+                  : "/employee/quotation",
+                { state: { quotation: q } },
+              )
+            }
+          />
+        )}
 
-        {q.status === "DRAFT" &&
-          hasPermission("QUOTATION_SUBMIT") && (
-            <ActionButton
-              icon={FiSend}
-              label="Submit"
-              variant="success"
-              onClick={() => run(submit, q)}
-            />
-          )}
+        {q.status === "DRAFT" && hasPermission("QUOTATION_SUBMIT") && (
+          <ActionButton
+            icon={FiSend}
+            label="Submit"
+            variant="success"
+            onClick={() => run(submit, q)}
+          />
+        )}
 
-        {q.status === "SUBMITTED" &&
-          hasPermission("QUOTATION_APPROVE") && (
-            <ActionButton
-              icon={FiCheck}
-              label="Approve"
-              variant="success"
-              onClick={() => run(approve, q)}
-            />
-          )}
+        {q.status === "SUBMITTED" && hasPermission("QUOTATION_APPROVE") && (
+          <ActionButton
+            icon={FiCheck}
+            label="Approve"
+            variant="success"
+            onClick={() => run(approve, q)}
+          />
+        )}
 
-        {q.status === "SUBMITTED" &&
-          hasPermission("QUOTATION_REJECT") && (
-            <ActionButton
-              icon={FiX}
-              label="Reject"
-              variant="danger"
-              onClick={() => doReject(q)}
-            />
-          )}
+        {q.status === "SUBMITTED" && hasPermission("QUOTATION_REJECT") && (
+          <ActionButton
+            icon={FiX}
+            label="Reject"
+            variant="danger"
+            onClick={() => doReject(q)}
+          />
+        )}
 
-        {q.status === "REJECTED" &&
-          hasPermission("QUOTATION_UPDATE") && (
-            <ActionButton
-              icon={FiRefreshCw}
-              label="Reopen"
-              variant="primary"
-              onClick={() => run(reopen, q)}
-            />
-          )}
+        {q.status === "REJECTED" && hasPermission("QUOTATION_UPDATE") && (
+          <ActionButton
+            icon={FiRefreshCw}
+            label="Reopen"
+            variant="primary"
+            onClick={() => run(reopen, q)}
+          />
+        )}
 
-        {q.status === "DRAFT" &&
-          hasPermission("QUOTATION_ARCHIVE") && (
-            <ActionButton
-              icon={FiTrash2}
-              label="Delete"
-              variant="danger"
-              onClick={() => run(remove, q)}
-            />
-          )}
+        {q.status === "DRAFT" && hasPermission("QUOTATION_ARCHIVE") && (
+          <ActionButton
+            icon={FiTrash2}
+            label="Delete"
+            variant="danger"
+            onClick={() => run(remove, q)}
+          />
+        )}
       </div>
     </div>
   );

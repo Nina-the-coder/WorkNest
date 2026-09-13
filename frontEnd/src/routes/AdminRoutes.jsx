@@ -10,8 +10,8 @@ import CustomerManagement from "../modules/customer/pages/CustomerManagement";
 import ProductManagement from "../modules/product/pages/ProductManagement";
 import QuotationManagement from "../modules/quotation/pages/QuotationManagement";
 import OrderManagement from "../modules/order/pages/OrderManagement";
-import AddQuotation from "../modules/quotation/pages/addQuotation/AddQuotation"
-import QuotationDetails from "../modules/quotation/pages/QuotationDetails";
+import AddQuotation from "../modules/quotation/pages/addQuotation/AddQuotation";
+import QuotationDetails from "../modules/quotation/pages/quotationDetails/QuotationDetails";
 import Profile from "../modules/profile/Profile";
 
 export const AdminRoutes = (
@@ -27,15 +27,14 @@ export const AdminRoutes = (
     <Route path="/admin/tasks" element={<TaskManagement />} />
     <Route path="/admin/customers" element={<CustomerManagement />} />
     <Route path="/admin/products" element={<ProductManagement />} />
-    <Route path="/admin/quotations" element={<QuotationManagement />} />
-    <Route
-      path="/admin/add-quotation"
-      element={<AddQuotation role="admin" />}
-    />
-    <Route
-      path="/admin/quotations/:quotationId"
-      element={<QuotationDetails />}
-    />
+
+    {/* quotations */}
+    <Route path="/admin/quotations" element={<QuotationManagement role="admin" />} />
+    <Route path="/admin/add-quotation" element={<AddQuotation role="admin" />} />
+    <Route path="/admin/quotations/:quotationId" element={<QuotationDetails role="admin" />}/>
+    <Route path="/admin/quotations/:quotationId/edit" element={<AddQuotation role="admin" />} />
+    
+    {/* orders */}
     <Route path="/admin/orders" element={<OrderManagement />} />
     <Route path="/admin/profile" element={<Profile />} />
   </Route>

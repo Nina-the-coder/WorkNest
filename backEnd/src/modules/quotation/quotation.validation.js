@@ -133,8 +133,9 @@ exports.validateRejection = (quotation, reason) => {
  * Validate update draft quotation
  */
 exports.validateUpdateDraft = (quotation, updateData) => {
-  if (quotation.status !== "DRAFT") {
-    throw new AppError("Only DRAFT quotations can be updated", 400);
+  console.log(quotation, updateData);
+  if (quotation.status !== "DRAFT" && quotation.status !== "REJECTED") {
+    throw new AppError("Only DRAFT or REJECTED quotations can be updated", 400);
   }
 
   if (updateData.validUntil && (Number.isNaN(new Date(updateData.validUntil).getTime()) || new Date(updateData.validUntil) <= new Date())) {
