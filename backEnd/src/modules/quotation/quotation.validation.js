@@ -38,14 +38,22 @@ exports.validateCreateQuotation = (data) => {
       );
     }
 
-    if (item.unitPrice === undefined || !Number.isFinite(Number(item.unitPrice)) || Number(item.unitPrice) < 0) {
+    if (
+      item.unitPrice === undefined ||
+      !Number.isFinite(Number(item.unitPrice)) ||
+      Number(item.unitPrice) < 0
+    ) {
       throw new AppError(
         `Item ${index + 1}: Unit price must be a non-negative number`,
         400,
       );
     }
 
-    if (item.discountAmount !== undefined && (!Number.isFinite(Number(item.discountAmount)) || Number(item.discountAmount) < 0)) {
+    if (
+      item.discountAmount !== undefined &&
+      (!Number.isFinite(Number(item.discountAmount)) ||
+        Number(item.discountAmount) < 0)
+    ) {
       throw new AppError(
         `Item ${index + 1}: Discount amount cannot be negative`,
         400,
@@ -54,11 +62,18 @@ exports.validateCreateQuotation = (data) => {
 
     const lineSubtotal = Number(item.quantity) * Number(item.unitPrice);
     if (Number(item.discountAmount || 0) > lineSubtotal) {
-      throw new AppError(`Item ${index + 1}: Discount cannot exceed item subtotal`, 400);
+      throw new AppError(
+        `Item ${index + 1}: Discount cannot exceed item subtotal`,
+        400,
+      );
     }
 
     if (item.discountPercentage !== undefined) {
-      if (!Number.isFinite(Number(item.discountPercentage)) || item.discountPercentage < 0 || item.discountPercentage > 100) {
+      if (
+        !Number.isFinite(Number(item.discountPercentage)) ||
+        item.discountPercentage < 0 ||
+        item.discountPercentage > 100
+      ) {
         throw new AppError(
           `Item ${index + 1}: Discount percentage must be between 0 and 100`,
           400,
@@ -67,7 +82,11 @@ exports.validateCreateQuotation = (data) => {
     }
 
     if (item.gstRate !== undefined) {
-      if (!Number.isFinite(Number(item.gstRate)) || item.gstRate < 0 || item.gstRate > 100) {
+      if (
+        !Number.isFinite(Number(item.gstRate)) ||
+        item.gstRate < 0 ||
+        item.gstRate > 100
+      ) {
         throw new AppError(
           `Item ${index + 1}: GST rate must be between 0 and 100`,
           400,
@@ -76,7 +95,11 @@ exports.validateCreateQuotation = (data) => {
     }
   });
 
-  if (validUntil && (Number.isNaN(new Date(validUntil).getTime()) || new Date(validUntil) <= new Date())) {
+  if (
+    validUntil &&
+    (Number.isNaN(new Date(validUntil).getTime()) ||
+      new Date(validUntil) <= new Date())
+  ) {
     throw new AppError("Validity date must be in the future", 400);
   }
 
@@ -133,20 +156,33 @@ exports.validateRejection = (quotation, reason) => {
  * Validate update draft quotation
  */
 exports.validateUpdateDraft = (quotation, updateData) => {
-  console.log(quotation, updateData);
+  // console.log("Existing quotation:", quotation);
+  // console.log("Update data:", updateData);
+  console.log("========== UPDATE QUOTATION ==========");
+  console.log("OLD CUSTOMER:", quotation.customerId);
+  console.log("NEW CUSTOMER:", updateData.customerId);
+
+  console.log("OLD EMPLOYEE:", quotation.employeeId);
+  console.log("NEW EMPLOYEE:", updateData.employeeId);
+
+  console.log("======================================");
+
   if (quotation.status !== "DRAFT" && quotation.status !== "REJECTED") {
     throw new AppError("Only DRAFT or REJECTED quotations can be updated", 400);
   }
 
-  if (updateData.validUntil && (Number.isNaN(new Date(updateData.validUntil).getTime()) || new Date(updateData.validUntil) <= new Date())) {
+  if (
+    updateData.validUntil &&
+    (Number.isNaN(new Date(updateData.validUntil).getTime()) ||
+      new Date(updateData.validUntil) <= new Date())
+  ) {
     throw new AppError("Validity date must be in the future", 400);
   }
 
-  // Use the same item validation rules for edits as creation.
   if (updateData.items && Array.isArray(updateData.items)) {
     exports.validateCreateQuotation({
-      customerId: quotation.customerId,
-      employeeId: quotation.employeeId,
+      customerId: updateData.customerId || quotation.customerId,
+      employeeId: updateData.employeeId || quotation.employeeId,
       items: updateData.items,
       validUntil: updateData.validUntil || quotation.validUntil,
       notes: updateData.notes,

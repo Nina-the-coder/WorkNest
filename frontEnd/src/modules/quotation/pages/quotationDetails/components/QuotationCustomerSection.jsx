@@ -55,7 +55,7 @@ const QuotationCustomerSection = ({ quotation }) => {
       {/* Employee */}
       <div className="sm:text-right">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-          Created For
+          Created By
         </p>
 
         <div className="mt-3 flex gap-3 sm:justify-end">

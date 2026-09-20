@@ -114,13 +114,15 @@ exports.updateQuotation = async (req, res, next) => {
       req.params.quotationId,
     );
     ensureCanAccess(existing, req.user);
-    const { items, validUntil, notes } = req.body;
+    const { items, validUntil, notes, customerId, employeeId } = req.body;
     const quotation = await QuotationService.updateQuotation(
       req.params.quotationId,
       {
         items: items === undefined ? undefined : await enrichItems(items),
         validUntil,
         notes,
+        customerId,
+        employeeId,
       },
       req.user._id,
     );

@@ -38,8 +38,10 @@ const QuotationTable = ({
       : `/employee/quotations/${quotationId}`;
   };
 
-  const getEditRoute = () => {
-    return role === "admin" ? "/admin/add-quotation" : "/employee/quotation";
+  const getEditRoute = (quotationId) => {
+    return role === "admin"
+      ? `/admin/quotations/${quotationId}/edit`
+      : `/employee/quotations/${quotationId}/edit`;
   };
 
   return (
@@ -176,7 +178,7 @@ const QuotationTable = ({
                           label="Edit"
                           variant="primary"
                           onClick={() => {
-                            navigate(getEditRoute(), {
+                            navigate(getEditRoute(q._id), {
                               state: {
                                 quotation: q,
                               },

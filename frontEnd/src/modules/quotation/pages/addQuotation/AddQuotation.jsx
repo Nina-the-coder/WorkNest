@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import {
   FiArrowLeft,
   FiCalendar,
-  FiChevronDown,
   FiFileText,
   FiPackage,
   FiUser,
@@ -19,6 +18,7 @@ import {
   fetchQuotationAPI,
   submitQuotationAPI,
   updateQuotationAPI,
+  reopenQuotationAPI,
 } from "../../services/quotation.api";
 import Section from "./components/Section";
 import FormField from "./components/FormField";
@@ -69,6 +69,7 @@ const AddQuotation = ({ role }) => {
   const [products, setProducts] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [quotationNumber, setQuotationNumber] = useState("");
+  const [quotationStatus, setQuotationStatus] = useState("");
 
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [productsLoading, setProductsLoading] = useState(true);
@@ -138,6 +139,7 @@ const AddQuotation = ({ role }) => {
       try {
         const { data } = await fetchQuotationAPI(editingId);
         const quotation = data.quotation;
+        setQuotationStatus(quotation.status);
         setQuotationNumber(quotation.quotationId || "");
 
         setForm({
@@ -338,6 +340,10 @@ const AddQuotation = ({ role }) => {
         ? await updateQuotationAPI(editingId, payload)
         : await createQuotationAPI(payload);
 
+      if (quotationStatus === "REJECTED") {
+        await reopenQuotationAPI(editingId);
+      }
+
       if (submit) {
         await submitQuotationAPI(response.data.quotation._id);
       }
@@ -395,7 +401,11 @@ const AddQuotation = ({ role }) => {
       <div className="flex items-center gap-3">
         <button
           type="button"
-          onClick={() => navigate(role === "admin" ? "/admin/quotations" : "/employee/quotations")}
+          onClick={() =>
+            navigate(
+              role === "admin" ? "/admin/quotations" : "/employee/quotations",
+            )
+          }
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-color bg-card-bg text-gray-500 transition hover:text-text"
           title="Go back"
         >

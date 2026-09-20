@@ -17,7 +17,8 @@ const QUOTATION_STATUS = [
   "CONVERTED",
 ];
 
-const roundMoney = (value) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+const roundMoney = (value) =>
+  Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 
 /**
  * Calculate line total for an item
@@ -217,7 +218,26 @@ exports.updateQuotation = async (quotationId, updateData, userId) => {
   // Validate update is allowed
   validateUpdateDraft(quotation, updateData);
 
-  const { items, validUntil, notes } = updateData;
+  const { customerId, employeeId, items, validUntil, notes } = updateData;
+
+  // Update quotation metadata
+  if (customerId !== undefined) {
+    quotation.customerId = customerId;
+  }
+
+  if (employeeId !== undefined) {
+    quotation.employeeId = employeeId;
+  }
+
+  if (validUntil !== undefined) {
+    quotation.validUntil = validUntil;
+  }
+
+  if (notes !== undefined) {
+    quotation.notes = notes;
+  }
+
+  quotation.updatedBy = userId;
 
   // If items are provided, rebuild the quotation items
   if (items && Array.isArray(items)) {
@@ -227,26 +247,17 @@ exports.updateQuotation = async (quotationId, updateData, userId) => {
     // Calculate new totals
     const totals = calculateQuotationTotals(items);
 
-    // Update quotation with new totals
     quotation.subtotal = totals.subtotal;
     quotation.discountAmount = totals.discountAmount;
     quotation.taxableAmount = totals.taxableAmount;
     quotation.gstAmount = totals.gstAmount;
     quotation.grandTotal = totals.grandTotal;
 
-    if (validUntil !== undefined) {
-      quotation.validUntil = validUntil;
-    }
-
-    if (notes !== undefined) {
-      quotation.notes = notes;
-    }
-
-    quotation.updatedBy = userId;
     await quotationRepo.saveQuotation(quotation);
 
     // Create new items
     const savedItems = [];
+
     for (const item of items) {
       const calc = calculateLineTotal(item);
 
@@ -267,6 +278,7 @@ exports.updateQuotation = async (quotationId, updateData, userId) => {
       };
 
       const savedItem = await quotationRepo.createQuotationItem(itemData);
+
       savedItems.push(savedItem);
     }
 
@@ -274,26 +286,17 @@ exports.updateQuotation = async (quotationId, updateData, userId) => {
       ...quotation.toObject(),
       items: savedItems,
     };
-  } else {
-    // Just update metadata if no items provided
-    if (validUntil !== undefined) {
-      quotation.validUntil = validUntil;
-    }
-
-    if (notes !== undefined) {
-      quotation.notes = notes;
-    }
-
-    quotation.updatedBy = userId;
-    await quotationRepo.saveQuotation(quotation);
-
-    const items = await quotationRepo.findQuotationItems(quotationId);
-
-    return {
-      ...quotation.toObject(),
-      items,
-    };
   }
+
+  // Metadata-only update
+  await quotationRepo.saveQuotation(quotation);
+
+  const quotationItems = await quotationRepo.findQuotationItems(quotationId);
+
+  return {
+    ...quotation.toObject(),
+    items: quotationItems,
+  };
 };
 
 /**
@@ -328,7 +331,12 @@ exports.submitQuotation = async (quotationId, userId) => {
 exports.approveQuotation = async (quotationId, userId) => {
   const quotation = await quotationRepo.findById(quotationId);
 
-  console.log("Approving quotation:", quotationId, "Current status:", quotation ? quotation.status : "Not found");
+  console.log(
+    "Approving quotation:",
+    quotationId,
+    "Current status:",
+    quotation ? quotation.status : "Not found",
+  );
 
   if (!quotation) {
     throw new AppError("Quotation not found", 404);
