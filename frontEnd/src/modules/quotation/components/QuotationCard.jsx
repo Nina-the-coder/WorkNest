@@ -108,18 +108,20 @@ const QuotationCard = ({
       )}
 
       {/* Actions */}
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-border-color pt-4">
+      <div
+        className="mt-4 flex flex-wrap gap-2 border-t border-border-color pt-4"
+        onClick={(event) => event.stopPropagation()}
+      >
         {q.status === "DRAFT" && hasPermission("QUOTATION_UPDATE") && (
           <ActionButton
             icon={FiEdit2}
             label="Edit"
             variant="primary"
-            onClick={(e) =>
+            onClick={() =>
               navigate(
                 role === "admin"
-                  ? "/admin/add-quotation"
-                  : "/employee/quotation",
-                { state: { quotation: q } },
+                  ? `/admin/quotations/${q._id}/edit`
+                  : `/employee/quotations/${q._id}/edit`,
               )
             }
           />

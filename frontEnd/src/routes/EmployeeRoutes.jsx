@@ -17,14 +17,18 @@ export const EmployeeRoutes = (
     }
   >
     <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-    <Route path="/employee/quotation" element={<AddQuotation />} />
+    <Route path="/employee/quotation" element={<AddQuotation role="employee" />} />
     <Route
       path="/employee/quotations"
       element={<QuotationManagement role="employee" />}
     />
     <Route
       path="/employee/quotations/:quotationId"
-      element={<QuotationDetails />}
+      element={<QuotationDetails role="employee" />}
+    />
+    <Route
+      path="/employee/quotations/:quotationId/edit"
+      element={<AddQuotation role="employee" />}
     />
   </Route>
 );
