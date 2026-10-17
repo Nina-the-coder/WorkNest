@@ -4,6 +4,7 @@ const TaskService = require("../../src/modules/task/task.service");
 jest.mock("../../src/modules/task/task.service");
 
 describe("Task Controller", () => {
+  const user = { _id: "actor-user-id", role: "admin" };
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -12,7 +13,8 @@ describe("Task Controller", () => {
   test("addTask should create task", async () => {
 
     const req = {
-      body: { title: "New Task" }
+      body: { title: "New Task" },
+      user,
     };
 
     const res = {
@@ -24,14 +26,21 @@ describe("Task Controller", () => {
 
     await TaskController.addTask(req, res);
 
-    expect(TaskService.addTask).toHaveBeenCalledWith(req.body);
+    expect(TaskService.addTask).toHaveBeenCalledWith(req.body, user);
     expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({
+      message: "Task added successfully",
+      task: "New Task",
+    });
 
   });
 
   test("getAllTasks should return tasks", async () => {
 
-    const req = {};
+    const req = {
+      user,
+      query: { employeeId: "untrusted-user-id", assignedTo: "another-user-id" },
+    };
 
     const res = {
       status: jest.fn().mockReturnThis(),
@@ -44,9 +53,30 @@ describe("Task Controller", () => {
 
     await TaskController.getAllTasks(req, res);
 
+    expect(TaskService.getAllTasks).toHaveBeenCalledWith(user);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(tasks);
 
+  });
+
+  test("getTaskById should pass the authenticated actor and return the task", async () => {
+    const req = {
+      user,
+      params: { taskId: "TSK001" },
+      query: { employeeId: "untrusted-user-id" },
+    };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    const task = { taskId: "TSK001", title: "Assigned task" };
+    TaskService.getTaskById.mockResolvedValue(task);
+
+    await TaskController.getTaskById(req, res);
+
+    expect(TaskService.getTaskById).toHaveBeenCalledWith("TSK001", user);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ task });
   });
 
   test("deleteTask should delete task", async () => {
@@ -73,6 +103,7 @@ describe("Task Controller", () => {
 
     const req = {
       params: { taskId: "TSK001" },
+      user,
       body: { title: "Updated Task" }
     };
 
@@ -87,11 +118,23 @@ describe("Task Controller", () => {
 
     expect(TaskService.updateTask).toHaveBeenCalledWith(
       "TSK001",
-      req.body
+      req.body,
+      user,
     );
 
     expect(res.status).toHaveBeenCalledWith(200);
 
+  });
+
+  test("status action passes the trusted actor and preserves the response envelope", async () => {
+    const req = { params: { taskId: "TSK001" }, body: { status: "in-progress" }, user };
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    const task = { taskId: "TSK001", status: "in-progress" };
+    TaskService.updateTaskStatus.mockResolvedValue(task);
+    await TaskController.updateTaskStatus(req, res);
+    expect(TaskService.updateTaskStatus).toHaveBeenCalledWith("TSK001", req.body, user);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ message: "Task status updated", task });
   });
 
 });

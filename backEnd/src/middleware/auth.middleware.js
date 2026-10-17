@@ -12,8 +12,14 @@ const verifyToken = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("_id name email role");
+    const user = await User.findById(decoded.id).select(
+      "_id name email role status deleted",
+    );
     if (!user) return res.status(401).json({ message: "User not found" });
+
+    if (user.status !== "active" || user.deleted) {
+      return res.status(401).json({ message: "Account is inactive or deleted" });
+    }
 
     // Load permissions based on user's role
     const permissions = getPermissionsForRole(user.role);

@@ -15,8 +15,8 @@ export const STATUS_CONFIG = {
     label: "Rejected",
     className: "bg-red/10 text-red",
   },
-  EXPIRED: {
-    label: "Expired",
-    className: "bg-orange-500/10 text-orange-500",
+  CONVERTED: {
+    label: "Converted",
+    className: "bg-purple-500/10 text-purple-500",
   },
 };

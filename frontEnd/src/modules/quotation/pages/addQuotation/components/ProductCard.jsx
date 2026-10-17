@@ -1,5 +1,6 @@
 import { FiMinus, FiPlus, FiTrash2 } from "react-icons/fi";
-import { formatCurrency } from "../../../quotation.util";
+import { formatCurrency, getItemPricingPreview } from "../../../quotation.util";
+import DiscountInput from "./DiscountInput";
 
 /* -------------------------------------------------------------------------- */
 /* Product Card - Mobile                                                      */
@@ -8,32 +9,10 @@ import { formatCurrency } from "../../../quotation.util";
 const numberInputClass =
   "w-full rounded-lg border border-border-color bg-bg px-2.5 py-2 text-sm text-text outline-none transition focus:border-cta focus:ring-2 focus:ring-cta/10";
 
-const ProductCard = ({ item, index, updateItem, removeItem }) => {
-  /* ------------------------------------------------------------------------ */
-  /* Normalized values                                                        */
-  /* ------------------------------------------------------------------------ */
-
-  const quantity = Math.max(1, Number(item.quantity) || 1);
-
-  const unitPrice = Math.max(0, Number(item.unitPrice) || 0);
-
-  const discountAmount = Math.max(0, Number(item.discountAmount) || 0);
-
-  const gstRate = Math.min(100, Math.max(0, Number(item.gstRate ?? 18)));
-
-  /* ------------------------------------------------------------------------ */
-  /* Line calculation                                                         */
-  /* ------------------------------------------------------------------------ */
-
-  const subtotal = quantity * unitPrice;
-
-  const discount = Math.min(discountAmount, subtotal);
-
-  const taxableAmount = subtotal - discount;
-
-  const gstAmount = taxableAmount * (gstRate / 100);
-
-  const lineTotal = taxableAmount + gstAmount;
+const ProductCard = ({ item, originalItem, index, updateItem, removeItem, discountMode, onDiscountModeChange }) => {
+  const quantity = Number(item.quantity) || 1;
+  const pricing = getItemPricingPreview(item, originalItem);
+  const displayAmount = (field) => pricing.error ? "—" : formatCurrency(pricing[field]);
 
   /* ------------------------------------------------------------------------ */
   /* Render                                                                   */
@@ -124,30 +103,14 @@ const ProductCard = ({ item, index, updateItem, removeItem }) => {
         </label>
 
         {/* Discount */}
-        <label>
+        <div>
           <span className="text-xs font-medium text-gray-500">Discount</span>
-
-          <input
-            className={`${numberInputClass} mt-1.5`}
-            type="number"
-            min="0"
-            max={subtotal}
-            step="0.01"
-            value={item.discountAmount ?? 0}
-            onChange={(e) => {
-              const value = Number(e.target.value);
-
-              updateItem(
-                index,
-                "discountAmount",
-                Math.min(
-                  subtotal,
-                  Math.max(0, Number.isNaN(value) ? 0 : value),
-                ),
-              );
-            }}
-          />
-        </label>
+          <div className="mt-1.5">
+            <DiscountInput item={item} mode={discountMode} subtotal={pricing.subtotal}
+              onModeChange={onDiscountModeChange}
+              onChange={(field, value) => updateItem(index, field, value)} />
+          </div>
+        </div>
 
         {/* GST */}
         <label>
@@ -158,20 +121,14 @@ const ProductCard = ({ item, index, updateItem, removeItem }) => {
             type="number"
             min="0"
             max="100"
-            step="0.01"
+            step="any"
             value={item.gstRate ?? 18}
-            onChange={(e) => {
-              const value = Number(e.target.value);
-
-              updateItem(
-                index,
-                "gstRate",
-                Math.min(100, Math.max(0, Number.isNaN(value) ? 0 : value)),
-              );
-            }}
+            onChange={(e) => updateItem(index, "gstRate", e.target.value)}
           />
         </label>
       </div>
+
+      {pricing.error && <p role="alert" className="mt-3 text-xs text-red">{pricing.error}</p>}
 
       {/* ------------------------------------------------------------------ */}
       {/* Calculation Summary                                                 */}
@@ -181,26 +138,26 @@ const ProductCard = ({ item, index, updateItem, removeItem }) => {
         <div className="flex items-center justify-between text-xs">
           <span className="text-gray-500">Subtotal</span>
 
-          <span className="text-gray-600">{formatCurrency(subtotal)}</span>
+          <span className="text-gray-600">{displayAmount("subtotal")}</span>
         </div>
 
         <div className="flex items-center justify-between text-xs">
           <span className="text-gray-500">Discount</span>
 
-          <span className="text-red">- {formatCurrency(discount)}</span>
+          <span className="text-red">- {displayAmount("discountAmount")}</span>
         </div>
 
         <div className="flex items-center justify-between text-xs">
-          <span className="text-gray-500">GST ({gstRate}%)</span>
+          <span className="text-gray-500">GST ({item.gstRate ?? 18}%)</span>
 
-          <span className="text-gray-600">{formatCurrency(gstAmount)}</span>
+          <span className="text-gray-600">{displayAmount("gstAmount")}</span>
         </div>
 
         <div className="flex items-center justify-between border-t border-border-color pt-2">
           <span className="text-xs font-medium text-gray-500">Line Total</span>
 
           <span className="text-sm font-bold text-text">
-            {formatCurrency(lineTotal)}
+            {displayAmount("lineTotal")}
           </span>
         </div>
       </div>

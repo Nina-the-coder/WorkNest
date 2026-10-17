@@ -17,7 +17,6 @@ describe("Auth Service", () => {
   describe("registerUser", () => {
     test("should register a new user successfully", async () => {
       authRepository.findUserByEmail.mockResolvedValue(null);
-      bcrypt.hash.mockResolvedValue("hashedPassword");
       const userData = {
         email: "test@test.com",
         password: "123456",
@@ -26,10 +25,8 @@ describe("Auth Service", () => {
       expect(authRepository.findUserByEmail).toHaveBeenCalledWith(
         "test@test.com",
       );
-      expect(authRepository.createUser).toHaveBeenCalledWith({
-        ...userData,
-        password: "hashedPassword",
-      });
+      expect(authRepository.createUser).toHaveBeenCalledWith(userData);
+      expect(bcrypt.hash).not.toHaveBeenCalled();
       expect(result.message).toBe("User got registered successfully...");
     });
 
@@ -54,6 +51,8 @@ describe("Auth Service", () => {
         email: "test@test.com",
         password: "hashedPassword",
         role: "admin",
+        status: "active",
+        deleted: false,
       };
 
       authRepository.findUserByEmail.mockResolvedValue(fakeUser);
@@ -63,6 +62,10 @@ describe("Auth Service", () => {
       const result = await authService.loginUser("test@test.com", "123456");
 
       expect(bcrypt.compare).toHaveBeenCalledWith("123456", "hashedPassword");
+      expect(authRepository.findUserByEmail).toHaveBeenCalledWith(
+        "test@test.com",
+        { includePassword: true },
+      );
 
       expect(jwt.sign).toHaveBeenCalled();
 
@@ -82,6 +85,8 @@ describe("Auth Service", () => {
         _id: "123",
         email: "test@test.com",
         password: "hashedPassword",
+        status: "active",
+        deleted: false,
       };
 
       authRepository.findUserByEmail.mockResolvedValue(fakeUser);

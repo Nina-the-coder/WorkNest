@@ -1,101 +1,75 @@
+const mongoose = require("mongoose");
 const Quotation = require("./quotation.model");
 const QuotationItem = require("./quotationItem.model");
+const AppError = require("../../utils/AppError");
 
-/**
- * Find all active quotations (not deleted)
- */
-exports.findAllActive = (query = {}) => {
-  return Quotation.find({ deleted: false, ...query })
-    .populate("customerId", "customerId name email contact")
-    .populate("employeeId", "name email empId")
-    .populate("approvedBy", "name email")
-    .populate("rejectedBy", "name email")
-    .sort({ createdAt: -1 });
+const withSession = (query, session) => session ? query.session(session) : query;
+
+// D8 requires a verified replica set. Never silently fall back to partial writes.
+exports.runInTransaction = async (operation) => {
+  const session = await mongoose.startSession();
+  try {
+    return await session.withTransaction(() => operation(session), {
+      readConcern: { level: "snapshot" },
+      writeConcern: { w: "majority" },
+    });
+  } finally {
+    await session.endSession();
+  }
 };
 
-/**
- * Find quotation by MongoDB ID
- */
-exports.findById = (quotationId) => {
-  return Quotation.findOne({ _id: quotationId, deleted: false })
-    .populate("customerId", "customerId name email contact address gst")
-    .populate("employeeId", "name email empId")
-    .populate("approvedBy", "name email")
-    .populate("rejectedBy", "name email");
+// Populate serially within the transaction; MongoDB sessions do not support
+// parallel operations. All projections deliberately exclude identity secrets.
+const populateQuotation = query => query.populate([
+  { path: "customerId", select: "customerId name email contact address gst", ordered: true },
+  { path: "employeeId", select: "name email empId", ordered: true },
+  { path: "createdBy", select: "name email empId", ordered: true },
+  { path: "submittedBy", select: "name email", ordered: true },
+  { path: "approvedBy", select: "name email", ordered: true },
+  { path: "rejectedBy", select: "name email", ordered: true },
+]);
+
+exports.findAllActive = (query = {}, session) => populateQuotation(
+  withSession(Quotation.find({ ...query, deleted: false }), session),
+).sort({ createdAt: -1 });
+
+exports.findById = (quotationId, scope = {}, session) => populateQuotation(
+  withSession(Quotation.findOne({ ...scope, _id: quotationId, deleted: false }), session),
+);
+
+exports.find = quotationId => Quotation.findOne({ quotationId, deleted: false });
+exports.createQuotation = (data, session) => new Quotation(data).save(session ? { session } : {});
+exports.saveQuotation = (quotation, session) => quotation.save(session ? { session } : {});
+exports.createQuotationItem = (data, session) => new QuotationItem(data).save(session ? { session } : {});
+
+// All mutations write the same header, so concurrent edits, decisions and
+// reassignment conflict. Retried transactions reload and recheck the new state.
+exports.updateIfCurrent = async (quotation, scope, changes, session) => {
+  const filter = {
+    ...scope, _id: quotation._id, deleted: false, status: quotation.status,
+    employeeId: quotation.employeeId?._id || quotation.employeeId,
+    updatedAt: quotation.updatedAt,
+  };
+  const result = await Quotation.findOneAndUpdate(filter, {
+    $set: changes, $inc: { __v: 1 },
+  }, { new: true, runValidators: true, ...(session ? { session } : {}) });
+  if (!result) throw new AppError("Quotation changed; refresh and try again", 409);
+  return result;
 };
 
-/**
- * Find quotation by quotation ID
- */
-exports.find = (quotationId) => {
-  return Quotation.findOne({ quotationId, deleted: false });
-};
-
-/**
- * Create new quotation
- */
-exports.createQuotation = (quotationData) => {
-  const quotation = new Quotation(quotationData);
-  console.log("Quotation instance created:", quotation);
-  return quotation.save();
-};
-
-/**
- * Save/update quotation
- */
-exports.saveQuotation = (quotation) => {
-  return quotation.save();
-};
-
-/**
- * Create quotation item
- */
-exports.createQuotationItem = (itemData) => {
-  const item = new QuotationItem(itemData);
-  return item.save();
-};
-
-/**
- * Find quotation items by quotation ID
- */
-exports.findQuotationItems = (quotationId) => {
-  return QuotationItem.find({ quotationId }).populate(
-    "productId",
-    "productId name description price",
-  );
-};
-
-/**
- * Find single quotation item
- */
-exports.findQuotationItem = (itemId) => {
-  return QuotationItem.findById(itemId);
-};
-
-/**
- * Delete quotation item
- */
-exports.deleteQuotationItem = (itemId) => {
-  return QuotationItem.findByIdAndDelete(itemId);
-};
-
-/**
- * Delete all items for a quotation (used for bulk delete)
- */
-exports.deleteQuotationItemsByQuotationId = (quotationId) => {
-  return QuotationItem.deleteMany({ quotationId });
-};
-
-/**
- * Count active quotations
- */
-exports.countActive = (query = {}) => {
-  return Quotation.countDocuments({ deleted: false, ...query });
-};
-
-/**
- * Aggregate quotations with pagination and search
- */
-exports.aggregateQuotations = (pipeline) => {
-  return Quotation.aggregate(pipeline);
-};
+exports.findQuotationItems = (quotationId, session) => withSession(
+  QuotationItem.find({ quotationId }), session,
+).populate({
+  path: "productId", select: "productId name description price",
+  // Preserve the historical reference even if its catalog record was removed.
+  transform: (document, id) => document || id,
+});
+exports.findQuotationItem = itemId => QuotationItem.findById(itemId);
+exports.deleteQuotationItem = itemId => QuotationItem.findByIdAndDelete(itemId);
+exports.deleteQuotationItemsByQuotationId = (quotationId, session) => withSession(
+  QuotationItem.deleteMany({ quotationId }), session,
+);
+exports.countActive = (query = {}, session) => withSession(
+  Quotation.countDocuments({ ...query, deleted: false }), session,
+);
+exports.aggregateQuotations = pipeline => Quotation.aggregate(pipeline);

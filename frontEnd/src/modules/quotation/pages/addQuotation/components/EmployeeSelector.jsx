@@ -12,6 +12,7 @@ import {
 const EmployeeSelector = ({
   employees,
   employeeId,
+  currentEmployee,
   loading,
   error,
   onRetry,
@@ -40,10 +41,9 @@ const EmployeeSelector = ({
 
   const selectedEmployee = useMemo(
     () =>
-      activeEmployees.find(
-        (employee) => String(employee._id) === String(employeeId),
-      ),
-    [activeEmployees, employeeId],
+      employees.find((employee) => String(employee._id) === String(employeeId)) ||
+      (currentEmployee?._id && String(currentEmployee._id) === String(employeeId) ? currentEmployee : null),
+    [employees, currentEmployee, employeeId],
   );
 
   /* ------------------------------------------------------------------------ */
@@ -155,7 +155,7 @@ const EmployeeSelector = ({
   /* Empty state                                                              */
   /* ------------------------------------------------------------------------ */
 
-  if (activeEmployees.length === 0) {
+  if (activeEmployees.length === 0 && !selectedEmployee) {
     return (
       <div className="mt-2 rounded-xl border border-dashed border-border-color bg-bg px-4 py-5 text-center">
         <FiUser

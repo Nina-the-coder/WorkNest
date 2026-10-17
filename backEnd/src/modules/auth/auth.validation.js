@@ -12,12 +12,15 @@ const registerValidation = [
     .withMessage("Valid email is required"),
 
   body("password")
+    .isString()
+    .withMessage("Password must be text")
+    .bail()
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters"),
 
   body("role")
     .optional()
-    .isIn(["admin", "user"])
+    .isIn(["admin", "employee"])
     .withMessage("Invalid role"),
 
   body("phone")
@@ -40,6 +43,9 @@ const loginValidation = [
     .withMessage("Valid email is required"),
 
   body("password")
+    .isString()
+    .withMessage("Password must be text")
+    .bail()
     .notEmpty()
     .withMessage("Password is required"),
 

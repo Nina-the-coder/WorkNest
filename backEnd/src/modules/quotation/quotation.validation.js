@@ -1,111 +1,79 @@
 const AppError = require("../../utils/AppError");
+const mongoose = require("mongoose");
+const Customer = require("../customer/customer.model");
+const User = require("../../models/user.model");
+const { normalizeItemPricing } = require("./quotation.pricing");
+
+const referenceId = (value) => value?._id || value;
+const validateValidity = (value) => {
+  if (value === undefined) return;
+  if ((typeof value !== "string" && !(value instanceof Date)) ||
+      (typeof value === "string" && !value.trim()) ||
+      !Number.isFinite(new Date(value).getTime()) || new Date(value).getTime() <= Date.now()) {
+    throw new AppError("Validity date must be in the future", 400);
+  }
+};
+const validateNotes = (value) => {
+  if (value !== undefined && typeof value !== "string") throw new AppError("Notes must be text", 400);
+};
+
+exports.validateCustomerReference = async (customerId, session) => {
+  const id = referenceId(customerId);
+  if (!mongoose.isObjectIdOrHexString(id)) {
+    throw new AppError("Invalid customer ID", 400);
+  }
+  const query = Customer.findOne({ _id: id, deleted: false });
+  const customer = await (session ? query.session(session) : query);
+  if (!customer) throw new AppError("Customer not found", 404);
+  if (customer.status && customer.status.toLowerCase() !== "active") {
+    throw new AppError("Customer is not active", 400);
+  }
+};
+
+exports.validateEmployeeReference = async (employeeId, session) => {
+  const id = referenceId(employeeId);
+  if (!mongoose.isObjectIdOrHexString(id)) {
+    throw new AppError("Invalid employee ID", 400);
+  }
+  const query = User.findOne({ _id: id, deleted: false }).select("_id status");
+  const user = await (session ? query.session(session) : query);
+  if (!user) throw new AppError("Employee not found", 404);
+  if (user.status !== "active") {
+    throw new AppError("Employee is not active", 400);
+  }
+};
 
 /**
  * Validate quotation data structure
  */
 exports.validateCreateQuotation = (data) => {
+  if (!data || typeof data !== "object" || Array.isArray(data)) throw new AppError("Quotation data is required", 400);
   const { customerId, employeeId, items, validUntil, notes } = data;
-
-  if (!customerId) {
-    throw new AppError("Customer ID is required", 400);
+  for (const [field, label] of [[customerId, "Customer"], [employeeId, "Employee"]]) {
+    const id = referenceId(field);
+    if (!id) throw new AppError(`${label} ID is required`, 400);
+    if (!mongoose.isObjectIdOrHexString(id)) throw new AppError(`Invalid ${label.toLowerCase()} ID`, 400);
   }
-
-  if (!employeeId) {
-    throw new AppError("Employee ID is required", 400);
-  }
-
-  if (!items || !Array.isArray(items) || items.length === 0) {
+  if (!Array.isArray(items) || items.length === 0) {
     throw new AppError("Quotation must contain at least one item", 400);
   }
-
-  // Validate each item
+  const products = new Set();
   items.forEach((item, index) => {
-    if (!item.productId) {
-      throw new AppError(`Item ${index + 1}: Product ID is required`, 400);
-    }
-
-    if (!Number.isFinite(Number(item.quantity)) || Number(item.quantity) <= 0) {
-      throw new AppError(
-        `Item ${index + 1}: Quantity must be greater than 0`,
-        400,
-      );
-    }
-
-    if (Number(item.quantity) !== Math.floor(Number(item.quantity))) {
-      throw new AppError(
-        `Item ${index + 1}: Quantity must be a whole number`,
-        400,
-      );
-    }
-
-    if (
-      item.unitPrice === undefined ||
-      !Number.isFinite(Number(item.unitPrice)) ||
-      Number(item.unitPrice) < 0
-    ) {
-      throw new AppError(
-        `Item ${index + 1}: Unit price must be a non-negative number`,
-        400,
-      );
-    }
-
-    if (
-      item.discountAmount !== undefined &&
-      (!Number.isFinite(Number(item.discountAmount)) ||
-        Number(item.discountAmount) < 0)
-    ) {
-      throw new AppError(
-        `Item ${index + 1}: Discount amount cannot be negative`,
-        400,
-      );
-    }
-
-    const lineSubtotal = Number(item.quantity) * Number(item.unitPrice);
-    if (Number(item.discountAmount || 0) > lineSubtotal) {
-      throw new AppError(
-        `Item ${index + 1}: Discount cannot exceed item subtotal`,
-        400,
-      );
-    }
-
-    if (item.discountPercentage !== undefined) {
-      if (
-        !Number.isFinite(Number(item.discountPercentage)) ||
-        item.discountPercentage < 0 ||
-        item.discountPercentage > 100
-      ) {
-        throw new AppError(
-          `Item ${index + 1}: Discount percentage must be between 0 and 100`,
-          400,
-        );
-      }
-    }
-
-    if (item.gstRate !== undefined) {
-      if (
-        !Number.isFinite(Number(item.gstRate)) ||
-        item.gstRate < 0 ||
-        item.gstRate > 100
-      ) {
-        throw new AppError(
-          `Item ${index + 1}: GST rate must be between 0 and 100`,
-          400,
-        );
-      }
+    if (!item || typeof item !== "object" || Array.isArray(item)) throw new AppError(`Item ${index + 1}: Item must be an object`, 400);
+    const productId = referenceId(item.productId);
+    if (!productId) throw new AppError(`Item ${index + 1}: Product ID is required`, 400);
+    if (!mongoose.isObjectIdOrHexString(productId)) throw new AppError(`Item ${index + 1}: Invalid product ID`, 400);
+    const key = String(productId).toLowerCase();
+    if (products.has(key)) throw new AppError("Duplicate products are not allowed", 400);
+    products.add(key);
+    try { normalizeItemPricing(item); }
+    catch (error) {
+      if (error instanceof AppError) throw new AppError(`Item ${index + 1}: ${error.message}`, error.statusCode);
+      throw error;
     }
   });
-
-  if (
-    validUntil &&
-    (Number.isNaN(new Date(validUntil).getTime()) ||
-      new Date(validUntil) <= new Date())
-  ) {
-    throw new AppError("Validity date must be in the future", 400);
-  }
-
-  if (notes && typeof notes !== "string") {
-    throw new AppError("Notes must be text", 400);
-  }
+  validateValidity(validUntil);
+  validateNotes(notes);
 };
 
 /**
@@ -156,35 +124,19 @@ exports.validateRejection = (quotation, reason) => {
  * Validate update draft quotation
  */
 exports.validateUpdateDraft = (quotation, updateData) => {
-  // console.log("Existing quotation:", quotation);
-  // console.log("Update data:", updateData);
-  console.log("========== UPDATE QUOTATION ==========");
-  console.log("OLD CUSTOMER:", quotation.customerId);
-  console.log("NEW CUSTOMER:", updateData.customerId);
-
-  console.log("OLD EMPLOYEE:", quotation.employeeId);
-  console.log("NEW EMPLOYEE:", updateData.employeeId);
-
-  console.log("======================================");
-
   if (quotation.status !== "DRAFT" && quotation.status !== "REJECTED") {
     throw new AppError("Only DRAFT or REJECTED quotations can be updated", 400);
   }
-
-  if (
-    updateData.validUntil &&
-    (Number.isNaN(new Date(updateData.validUntil).getTime()) ||
-      new Date(updateData.validUntil) <= new Date())
-  ) {
-    throw new AppError("Validity date must be in the future", 400);
-  }
-
-  if (updateData.items && Array.isArray(updateData.items)) {
+  if (!updateData || typeof updateData !== "object" || Array.isArray(updateData)) throw new AppError("Quotation update is required", 400);
+  validateValidity(updateData.validUntil);
+  validateNotes(updateData.notes);
+  if (updateData.items !== undefined) {
     exports.validateCreateQuotation({
-      customerId: updateData.customerId || quotation.customerId,
-      employeeId: updateData.employeeId || quotation.employeeId,
+      customerId: updateData.customerId === undefined ? quotation.customerId : updateData.customerId,
+      employeeId: updateData.employeeId === undefined ? quotation.employeeId : updateData.employeeId,
       items: updateData.items,
-      validUntil: updateData.validUntil || quotation.validUntil,
+      // An omitted old date is not newly supplied. Submission validates it later.
+      validUntil: updateData.validUntil,
       notes: updateData.notes,
     });
   }

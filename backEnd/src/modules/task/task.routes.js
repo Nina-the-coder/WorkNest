@@ -22,6 +22,21 @@ router.get(
   TaskController.getAllTasks,
 );
 
+router.get(
+  "/:taskId",
+  verifyToken,
+  requirePermission(PERMISSIONS.TASK_READ),
+  TaskController.getTaskById,
+);
+
+// Status changes use the same task resource with a status-only permission.
+router.patch(
+  "/:taskId/status",
+  verifyToken,
+  requirePermission(PERMISSIONS.TASK_STATUS_UPDATE),
+  TaskController.updateTaskStatus,
+);
+
 // Delete task: Requires TASK_DELETE permission
 router.delete(
   "/:taskId",

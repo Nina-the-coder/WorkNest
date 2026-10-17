@@ -7,6 +7,11 @@ const quotationRoutes = require("../../src/modules/quotation/quotation.routes");
 
 jest.mock("../../src/models/user.model", () => ({ findById: jest.fn() }));
 jest.mock("../../src/modules/quotation/quotation.repository");
+jest.mock("../../src/modules/quotation/quotation.validation", () => ({
+  ...jest.requireActual("../../src/modules/quotation/quotation.validation"),
+  validateCustomerReference: jest.fn().mockResolvedValue(undefined),
+  validateEmployeeReference: jest.fn().mockResolvedValue(undefined),
+}));
 
 const ownerId = "507f1f77bcf86cd799439011";
 const otherId = "507f1f77bcf86cd799439012";
@@ -52,6 +57,11 @@ describe("Quotation routes for employees", () => {
       customerId: "507f1f77bcf86cd799439015",
       status: "DRAFT",
       notes: "Original notes",
+      subtotal: 100,
+      discountAmount: 0,
+      taxableAmount: 100,
+      gstAmount: 0,
+      grandTotal: 100,
       toObject() {
         const { toObject, ...data } = this;
         return data;
@@ -62,18 +72,26 @@ describe("Quotation routes for employees", () => {
       select: jest.fn().mockResolvedValue({
         _id: id,
         role: id === adminId ? "admin" : "employee",
+        status: "active",
+        deleted: false,
       }),
     }));
     quotationRepo.findById.mockResolvedValue(quotation);
+    quotationRepo.runInTransaction.mockImplementation((operation) => operation(null));
+    quotationRepo.updateIfCurrent.mockImplementation(async (current, _scope, changes) => Object.assign(current, changes));
     quotationRepo.findQuotationItems.mockResolvedValue([
-      { productId: "507f1f77bcf86cd799439016", quantity: 1, unitPrice: 100, gstRate: 0 },
+      {
+        productId: "507f1f77bcf86cd799439016", productName: "Stored quotation item",
+        quantity: 1, unitPrice: 100, discountAmount: 0, discountPercentage: 0,
+        gstRate: 0, gstAmount: 0, taxableAmount: 100, lineTotal: 100,
+      },
     ]);
     quotationRepo.saveQuotation.mockImplementation(async (value) => value);
   });
 
   test("requires authentication before submitting", async () => {
     await request(server).post(`${quotationUrl}/submit`).expect(401);
-    expect(quotationRepo.saveQuotation).not.toHaveBeenCalled();
+    expect(quotationRepo.updateIfCurrent).not.toHaveBeenCalled();
   });
 
   test("allows an employee to edit and submit their existing draft", async () => {
@@ -111,9 +129,9 @@ describe("Quotation routes for employees", () => {
       await request(server)[method](url)
         .set("Authorization", authorization(otherId))
         .send({ notes: "Unauthorized change" })
-        .expect(403)
-        .expect({ message: "You can only access your own quotations" });
-      expect(quotationRepo.saveQuotation).not.toHaveBeenCalled();
+        .expect(404)
+        .expect({ message: "Quotation not found" });
+      expect(quotationRepo.updateIfCurrent).not.toHaveBeenCalled();
     },
   );
 
@@ -126,7 +144,7 @@ describe("Quotation routes for employees", () => {
         .set("Authorization", authorization())
         .send({ reason: "Requested revision" })
         .expect(403);
-      expect(quotationRepo.saveQuotation).not.toHaveBeenCalled();
+      expect(quotationRepo.updateIfCurrent).not.toHaveBeenCalled();
     },
   );
 
@@ -139,7 +157,7 @@ describe("Quotation routes for employees", () => {
         .set("Authorization", authorization())
         .send({ notes: "Forbidden change" })
         .expect(400);
-      expect(quotationRepo.saveQuotation).not.toHaveBeenCalled();
+      expect(quotationRepo.updateIfCurrent).not.toHaveBeenCalled();
     },
   );
 
@@ -149,7 +167,7 @@ describe("Quotation routes for employees", () => {
       .post(`${quotationUrl}/submit`)
       .set("Authorization", authorization())
       .expect(400);
-    expect(quotationRepo.saveQuotation).not.toHaveBeenCalled();
+    expect(quotationRepo.updateIfCurrent).not.toHaveBeenCalled();
   });
 
   test("rejects a repeated submission without another save", async () => {
@@ -161,7 +179,7 @@ describe("Quotation routes for employees", () => {
       .post(`${quotationUrl}/submit`)
       .set("Authorization", authorization())
       .expect(400);
-    expect(quotationRepo.saveQuotation).toHaveBeenCalledTimes(1);
+    expect(quotationRepo.updateIfCurrent).toHaveBeenCalledTimes(1);
   });
 
   test("allows a rejected quotation to be reopened, edited, and resubmitted", async () => {
@@ -176,6 +194,7 @@ describe("Quotation routes for employees", () => {
       quotationId: "QT0101",
       status: "SUBMITTED",
       notes: "Clarified notes",
+      rejectionReason: "Clarify the notes",
     });
   });
 

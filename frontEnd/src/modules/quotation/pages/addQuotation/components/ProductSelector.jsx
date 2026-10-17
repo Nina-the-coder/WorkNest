@@ -184,7 +184,7 @@ const ProductSelector = ({
           </p>
 
           <p className="mt-1 text-xs text-gray-500">
-            Create an active product first before creating a quotation.
+            Ask an Admin to make an existing product available.
           </p>
 
           <button

@@ -1,8 +1,16 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import { useAuth } from "../modules/auth/useAuth";
+import { getHomePath } from "../modules/auth/auth.util";
+import SessionFeedback from "../modules/auth/SessionFeedback";
 
 const Unauthorized = () => {
   const navigate = useNavigate();
+  const { user, status, error, refreshSession, logout } = useAuth();
+
+  if (status === "loading" || status === "error") {
+    return <SessionFeedback error={error} onRetry={refreshSession} onLogout={logout} />;
+  }
+  if (!user) return <Navigate to="/" replace />;
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -16,7 +24,7 @@ const Unauthorized = () => {
         </p>
         <div className="flex gap-4 justify-center">
           <button
-            onClick={() => navigate("/admin/dashboard")}
+            onClick={() => navigate(getHomePath(user.role))}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
             Go to Dashboard

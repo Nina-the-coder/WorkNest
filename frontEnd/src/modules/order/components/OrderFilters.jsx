@@ -1,33 +1,14 @@
-// modules/order/components/OrderFilters.jsx
 import SearchBar from "../../../shared/components/SearchBar";
 import FilterDropdown from "../../../shared/components/FilterDropdown";
+import { ORDER_STATUS_LABELS } from "../order.util";
 
-const OrderFilters = ({
-  searchQuery,
-  setSearchQuery,
-  statusFilter,
-  setStatusFilter,
-}) => {
-  return (
-    <div className="flex gap-4">
-      <SearchBar
-        placeholder="Search order"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-      />
-
-      <FilterDropdown
-        value={statusFilter}
-        onChange={(e) => setStatusFilter(e.target.value)}
-      >
-        <option value="">All</option>
-        <option value="confirm">Confirm</option>
-        <option value="dispatched">Dispatched</option>
-        <option value="delivered">Delivered</option>
-        <option value="closed">Closed</option>
-      </FilterDropdown>
-    </div>
-  );
-};
-
+const OrderFilters = ({ searchQuery, setSearchQuery, statusFilter, setStatusFilter, statuses }) => (
+  <div className="flex flex-wrap gap-4">
+    <SearchBar placeholder="Search order, customer or quotation" value={searchQuery} onChange={event => setSearchQuery(event.target.value)} />
+    <FilterDropdown value={statusFilter} onChange={event => setStatusFilter(event.target.value)}>
+      <option value="">All statuses</option>
+      {statuses.map(status => <option key={status} value={status}>{ORDER_STATUS_LABELS[status] || status}</option>)}
+    </FilterDropdown>
+  </div>
+);
 export default OrderFilters;

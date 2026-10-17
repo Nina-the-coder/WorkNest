@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   FiArrowLeft,
@@ -10,9 +10,9 @@ import {
   FiUsers,
 } from "react-icons/fi";
 import Header from "../../../../shared/components/Header";
-import VariantButton from "../../../../shared/components/buttons/VariantButton";
+import { useAuth } from "../../../auth/useAuth";
 import api from "../../../../api/axios";
-import { calculateQuotationTotals, formatCurrency } from "../../quotation.util";
+import { calculateFormQuotationPricing, formatCurrency, getOriginalQuotationItem } from "../../quotation.util";
 import {
   createQuotationAPI,
   fetchQuotationAPI,
@@ -35,12 +35,20 @@ const blank = {
   notes: "",
   items: [],
 
-  customerDetails: {
-    contact: "",
-    address: "",
-    gst: "",
-  },
 };
+
+const referenceId = (value) => value?._id || value || "";
+const quotationForm = (quotation) => ({
+  customerId: referenceId(quotation.customerId),
+  employeeId: referenceId(quotation.employeeId),
+  validUntil: quotation.validUntil ? quotation.validUntil.slice(0, 10) : "",
+  notes: quotation.notes || "",
+  // Persisted snapshots are authoritative, even when the current Product changes.
+  items: (quotation.items || []).map((item) => ({
+    ...item,
+    productId: referenceId(item.productId),
+  })),
+});
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
@@ -49,8 +57,7 @@ const blank = {
 const inputClass =
   "mt-2 w-full rounded-xl border border-border-color bg-bg px-3.5 py-3 text-sm text-text outline-none transition placeholder:text-gray-400 focus:border-cta focus:ring-2 focus:ring-cta/10";
 
-const selectClass =
-  "mt-2 w-full appearance-none rounded-xl border border-border-color bg-bg px-3.5 py-3 pr-10 text-sm text-text outline-none transition focus:border-cta focus:ring-2 focus:ring-cta/10";
+const actionClass = "flex min-h-10 w-full items-center justify-center rounded-xl border-2 px-3 py-2 text-sm disabled:cursor-wait disabled:opacity-50";
 
 /* -------------------------------------------------------------------------- */
 /* Add Quotation                                                              */
@@ -59,19 +66,29 @@ const selectClass =
 const AddQuotation = ({ role }) => {
   const navigate = useNavigate();
   const { quotationId } = useParams();
-  // const location = useLocation();
-  // const editingId = location.state?.quotation?._id;
+  const { user } = useAuth();
   const editingId = quotationId;
   const isEditMode = Boolean(editingId);
 
   const [form, setForm] = useState(blank);
+  const [discountModes, setDiscountModes] = useState({});
+  const [formRoute, setFormRoute] = useState(editingId);
+  const routeVersion = useRef(0);
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [quotationNumber, setQuotationNumber] = useState("");
   const [quotationStatus, setQuotationStatus] = useState("");
+  const [loadedQuotation, setLoadedQuotation] = useState(null);
+  const [savedId, setSavedId] = useState(null);
+  const [quotationError, setQuotationError] = useState(null);
+  const [saveError, setSaveError] = useState("");
+  const [loadVersion, setLoadVersion] = useState(0);
+  const [productsError, setProductsError] = useState("");
+  const activeRoute = useRef(editingId);
+  activeRoute.current = editingId;
+  const savingRef = useRef(false);
 
-  const [loadingOptions, setLoadingOptions] = useState(true);
   const [productsLoading, setProductsLoading] = useState(true);
   const [employeesLoading, setEmployeesLoading] = useState(true);
   const [employeesError, setEmployeesError] = useState("");
@@ -79,119 +96,105 @@ const AddQuotation = ({ role }) => {
   const [customersError, setCustomersError] = useState("");
   const [loadingQuotation, setLoadingQuotation] = useState(Boolean(editingId));
   const [saving, setSaving] = useState(false);
+  const canAssign = role === "admin" && user?.permissions?.includes("EMPLOYEE_READ");
+  const canSave = user?.permissions?.includes(isEditMode || savedId ? "QUOTATION_UPDATE" : "QUOTATION_CREATE");
+  const canSubmit = user?.permissions?.includes("QUOTATION_SUBMIT");
+  const listPath = role === "admin" ? "/admin/quotations" : "/employee/quotations";
 
-  /* ------------------------------------------------------------------------ */
-  /* Load quotation options                                                   */
-  /* ------------------------------------------------------------------------ */
+  const fetchCustomers = useCallback(async () => {
+    setCustomersLoading(true);
+    setCustomersError("");
+    try {
+      const { data } = await api.get("/api/customers");
+      setCustomers(data || []);
+    } catch (error) {
+      setCustomersError(error.response?.data?.message || "Unable to load customers");
+    } finally {
+      setCustomersLoading(false);
+    }
+  }, []);
 
-  useEffect(() => {
-    const loadOptions = async () => {
-      setProductsLoading(true);
+  const fetchProducts = useCallback(async () => {
+    setProductsLoading(true);
+    setProductsError("");
+    try {
+      const { data } = await api.get("/api/products");
+      setProducts(data || []);
+    } catch (error) {
+      setProductsError(error.response?.data?.message || "Unable to load products");
+    } finally {
+      setProductsLoading(false);
+    }
+  }, []);
 
-      if (role === "admin") {
-        setEmployeesLoading(true);
-        setEmployeesError("");
-      }
-
-      try {
-        const requests = [
-          api.get("/api/products"),
-          role === "admin"
-            ? api.get("/api/employees")
-            : Promise.resolve({ data: [] }),
-        ];
-
-        const [productResponse, employeeResponse] = await Promise.all(requests);
-
-        setProducts(productResponse.data || []);
-        setEmployees(employeeResponse.data || []);
-      } catch (error) {
-        const message =
-          error.response?.data?.message || "Unable to load quotation options";
-
-        toast.error(message);
-
-        if (role === "admin") {
-          setEmployeesError(message);
-        }
-      } finally {
-        setProductsLoading(false);
-
-        if (role === "admin") {
-          setEmployeesLoading(false);
-        }
-      }
-    };
-
-    loadOptions();
-  }, [role]);
-
-  /* ------------------------------------------------------------------------ */
-  /* Load quotation when editing                                              */
-  /* ------------------------------------------------------------------------ */
+  const fetchEmployees = useCallback(async () => {
+    if (!canAssign) return;
+    setEmployeesLoading(true);
+    setEmployeesError("");
+    try {
+      const { data } = await api.get("/api/employees");
+      setEmployees(data || []);
+    } catch (error) {
+      setEmployeesError(error.response?.data?.message || "Unable to load employees");
+    } finally {
+      setEmployeesLoading(false);
+    }
+  }, [canAssign]);
 
   useEffect(() => {
-    if (!editingId) return;
+    void fetchCustomers();
+    void fetchProducts();
+    void fetchEmployees();
+  }, [fetchCustomers, fetchProducts, fetchEmployees]);
+
+  useEffect(() => {
+    let current = true;
+    routeVersion.current += 1;
+    setFormRoute(editingId);
+    setForm({ ...blank, items: [] });
+    setDiscountModes({});
+    setLoadedQuotation(null);
+    setQuotationError(null);
+    setSaveError("");
+    setSavedId(null);
+    setQuotationStatus("");
+    setQuotationNumber("");
+    setSaving(false);
+    savingRef.current = false;
+    setLoadingQuotation(Boolean(editingId));
+    if (!editingId) return () => { current = false; routeVersion.current += 1; };
 
     const loadQuotation = async () => {
-      setLoadingQuotation(true);
-
       try {
         const { data } = await fetchQuotationAPI(editingId);
-        const quotation = data.quotation;
-        setQuotationStatus(quotation.status);
-        setQuotationNumber(quotation.quotationId || "");
-
-        setForm({
-          customerId: quotation.customerId?._id || quotation.customerId || "",
-
-          employeeId: quotation.employeeId?._id || quotation.employeeId || "",
-
-          validUntil: quotation.validUntil
-            ? quotation.validUntil.slice(0, 10)
-            : "",
-
-          notes: quotation.notes || "",
-
-          customerDetails: {
-            contact: quotation.customerDetails?.contact || "",
-            address: quotation.customerDetails?.address || "",
-            gst: quotation.customerDetails?.gst || "",
-          },
-
-          items: (quotation.items || []).map((item) => ({
-            ...item,
-
-            productId: item.productId?._id || item.productId,
-
-            productName: item.productName || item.productId?.name || "",
-
-            sku: item.sku || item.productId?.productId || "",
-
-            description: item.description || item.productId?.description || "",
-          })),
-        });
+        if (!current) return;
+        setLoadedQuotation(data.quotation);
+        setQuotationStatus(data.quotation.status);
+        setQuotationNumber(data.quotation.quotationId || "");
+        setForm(quotationForm(data.quotation));
       } catch (error) {
-        toast.error(
-          error.response?.data?.message || "Unable to load quotation",
-        );
+        if (!current) return;
+        setQuotationError({
+          status: error.response?.status,
+          message: error.response?.data?.message || "Unable to load quotation",
+        });
       } finally {
-        setLoadingQuotation(false);
+        if (current) setLoadingQuotation(false);
       }
     };
-    console.log("form", form);
-
-    loadQuotation();
-  }, [editingId]);
+    void loadQuotation();
+    return () => { current = false; routeVersion.current += 1; };
+  }, [editingId, loadVersion]);
 
   /* ------------------------------------------------------------------------ */
   /* Calculations                                                             */
   /* ------------------------------------------------------------------------ */
 
-  const totals = useMemo(
-    () => calculateQuotationTotals(form.items),
-    [form.items],
-  );
+  const pricing = useMemo(() => {
+    try { return { totals: calculateFormQuotationPricing(form.items, loadedQuotation?.items), error: "" }; }
+    catch (error) { return { totals: null, error: error.message }; }
+  }, [form.items, loadedQuotation]);
+  const previewAmount = (field) => pricing.totals ? formatCurrency(pricing.totals[field]) : "—";
 
   /* ------------------------------------------------------------------------ */
   /* Form helpers                                                             */
@@ -205,17 +208,28 @@ const AddQuotation = ({ role }) => {
   };
 
   const updateItem = (index, field, value) => {
-    update(
-      "items",
-      form.items.map((item, itemIndex) =>
+    const changes = typeof field === "string" ? { [field]: value } : field;
+    if (field === "discountPercentage") {
+      // Keep zero in percentage mode and prevent an old stored amount from
+      // becoming a hidden fallback when the percentage is cleared.
+      setDiscountModes((previous) => ({ ...previous, [referenceId(form.items[index].productId)]: "percentage" }));
+      changes.discountAmount = 0;
+    }
+    setForm((previous) => ({
+      ...previous,
+      items: previous.items.map((item, itemIndex) =>
         itemIndex === index
-          ? {
-              ...item,
-              [field]: value === "" ? "" : Number(value),
-            }
+          ? { ...item, ...changes }
           : item,
       ),
-    );
+    }));
+  };
+
+  const discountMode = (item) => discountModes[referenceId(item.productId)] ||
+    (Number(item.discountPercentage) > 0 ? "percentage" : "amount");
+  const changeDiscountMode = (index, mode) => {
+    setDiscountModes((previous) => ({ ...previous, [referenceId(form.items[index].productId)]: mode }));
+    updateItem(index, { discountAmount: 0, discountPercentage: 0 });
   };
 
   const removeItem = (index) => {
@@ -225,150 +239,112 @@ const AddQuotation = ({ role }) => {
     );
   };
 
-  const fetchCustomers = async () => {
-    setCustomersLoading(true);
-    setCustomersError("");
-
-    try {
-      const response = await api.get("/api/customers");
-
-      setCustomers(response.data || []);
-    } catch (error) {
-      const message =
-        error.response?.data?.message || "Unable to load customers";
-
-      setCustomersError(message);
-
-      toast.error(message);
-    } finally {
-      setCustomersLoading(false);
-    }
-  };
-
-  const fetchProducts = async () => {
-    setProductsLoading(true);
-
-    try {
-      const response = await api.get("/api/products");
-      setProducts(response.data || []);
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to load products");
-    } finally {
-      setProductsLoading(false);
-    }
-  };
-
-  const fetchEmployees = async () => {
-    setEmployeesLoading(true);
-    setEmployeesError("");
-
-    try {
-      const response = await api.get("/api/employees");
-
-      setEmployees(response.data || []);
-    } catch (error) {
-      const message =
-        error.response?.data?.message || "Unable to load employees";
-
-      setEmployeesError(message);
-      toast.error(message);
-    } finally {
-      setEmployeesLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCustomers();
-    fetchProducts();
-    fetchEmployees();
-  }, []);
-
   /* ------------------------------------------------------------------------ */
   /* Save quotation                                                           */
   /* ------------------------------------------------------------------------ */
 
   const save = async (submit) => {
-    if (!form.customerId) {
-      return toast.error("Please select a customer.");
+    if (savingRef.current || !canSave || (submit && !canSubmit)) return;
+    setSaveError("");
+    const fail = (message) => { setSaveError(message); };
+    if (quotationStatus && !["DRAFT", "REJECTED"].includes(quotationStatus)) {
+      return fail("This quotation is locked and cannot be edited.");
+    }
+    if (!form.customerId) return fail("Please select a customer.");
+    const unchangedCustomer = loadedQuotation && String(referenceId(loadedQuotation.customerId)) === String(form.customerId);
+    const validCustomer = customers.some((customer) =>
+      String(customer._id) === String(form.customerId) && !customer.deleted &&
+      (!customer.status || customer.status === "active"));
+    if (!unchangedCustomer && !validCustomer) return fail("Please select a valid existing customer.");
+
+    const employeeId = role === "admin" ? form.employeeId || (!canAssign ? user?._id : "") : undefined;
+    if (role === "admin") {
+      const unchangedEmployee = loadedQuotation && String(referenceId(loadedQuotation.employeeId)) === String(employeeId);
+      const validEmployee = employees.some((employee) =>
+        String(employee._id) === String(employeeId) && !employee.deleted &&
+        (!employee.status || employee.status === "active"));
+      if (!employeeId || (!unchangedEmployee && !validEmployee && String(employeeId) !== String(user?._id))) {
+        return fail("Please select a valid existing employee.");
+      }
+    }
+    if (!form.validUntil) return fail("Please select a validity date.");
+    if (!Number.isFinite(new Date(form.validUntil).getTime()) || new Date(form.validUntil).getTime() <= Date.now()) {
+      return fail("Please select a future validity date.");
+    }
+    if (!form.items.length) return fail("Please add at least one product.");
+    if (pricing.error) return fail(pricing.error);
+    const meaningfulNumber = (value) => value !== "" && value !== null && value !== undefined &&
+      typeof value !== "boolean" && Number.isFinite(Number(value));
+    for (const item of form.items) {
+      if (!meaningfulNumber(item.quantity) || !Number.isSafeInteger(Number(item.quantity)) || Number(item.quantity) <= 0) {
+        return fail("Product quantities must be positive whole numbers.");
+      }
+      if (!meaningfulNumber(item.unitPrice) || Number(item.unitPrice) < 0) return fail("Product prices must be zero or greater.");
+      for (const field of ["discountAmount", "discountPercentage", "gstRate"]) {
+        if (item[field] !== undefined && (!meaningfulNumber(item[field]) || Number(item[field]) < 0 ||
+          (field !== "discountAmount" && Number(item[field]) > 100))) {
+          return fail("Enter valid discounts and GST rates between 0 and 100%.");
+        }
+      }
+      if (!(Number(item.discountPercentage) > 0) && Number(item.discountAmount || 0) > Number(item.quantity) * Number(item.unitPrice)) {
+        return fail("An item discount cannot exceed its subtotal.");
+      }
     }
 
-    const isValidCustomer = customers.some(
-      (customer) =>
-        String(customer._id) === String(form.customerId) &&
-        !customer.deleted &&
-        (!customer.status || customer.status === "active"),
-    );
-
-    if (!isValidCustomer) {
-      return toast.error("Please select a valid existing customer.");
-    }
-
-    const isValidEmployee =
-      role !== "admin" ||
-      employees.some(
-        (employee) =>
-          String(employee._id) === String(form.employeeId) &&
-          !employee.deleted &&
-          (!employee.status || employee.status === "active"),
-      );
-
-    if (!isValidEmployee) {
-      return toast.error("Please select a valid existing employee.");
-    }
-
-    if (!form.validUntil) {
-      return toast.error("Please select a validity date.");
-    }
-
-    if (form.items.length === 0) {
-      return toast.error("Please add at least one product.");
-    }
-
-    if (role === "admin" && !form.employeeId) {
-      return toast.error("Please select an employee.");
-    }
-
+    savingRef.current = true;
     setSaving(true);
-
+    const version = routeVersion.current;
+    const isCurrent = () => version === routeVersion.current && activeRoute.current === editingId;
+    let persistedId = savedId || editingId;
     try {
       const payload = {
-        ...form,
-        employeeId: role === "admin" ? form.employeeId : undefined,
+        customerId: form.customerId,
+        validUntil: form.validUntil,
+        notes: form.notes,
+        items: form.items,
+        ...(role === "admin" ? { employeeId } : {}),
       };
-
-      const response = editingId
-        ? await updateQuotationAPI(editingId, payload)
+      const { data } = persistedId
+        ? await updateQuotationAPI(persistedId, payload)
         : await createQuotationAPI(payload);
-
-      if (quotationStatus === "REJECTED") {
-        await reopenQuotationAPI(editingId);
+      persistedId = data.quotation._id;
+      if (!isCurrent()) return;
+      // Retain the saved identity if a later reopen/submit request fails.
+      setSavedId(persistedId);
+      setLoadedQuotation((previous) => {
+        const complete = { ...data.quotation };
+        // Mutation responses can contain raw refs; keep matching display data
+        // if a later workflow request fails and the form remains open.
+        for (const field of ["customerId", "employeeId"]) {
+          if (previous?.[field]?._id && String(referenceId(previous[field])) === String(referenceId(complete[field]))) {
+            complete[field] = previous[field];
+          }
+        }
+        return complete;
+      });
+      setQuotationStatus(data.quotation.status);
+      setQuotationNumber(data.quotation.quotationId || "");
+      setForm(quotationForm(data.quotation));
+      if (data.quotation.status === "REJECTED") {
+        await reopenQuotationAPI(persistedId);
+        if (!isCurrent()) return;
+        setQuotationStatus("DRAFT");
       }
-
-      if (submit) {
-        await submitQuotationAPI(response.data.quotation._id);
-      }
-
-      toast.success(
-        submit
-          ? "Quotation submitted successfully"
-          : "Draft saved successfully",
-      );
-
-      if (editingId) {
-        navigate(
-          role === "admin"
-            ? `/admin/quotations/${editingId}`
-            : `/employee/quotations/${editingId}`,
-        );
-      } else {
-        navigate(
-          role === "admin" ? "/admin/quotations" : "/employee/quotations",
-        );
-      }
+      if (submit) await submitQuotationAPI(persistedId);
+      if (!isCurrent()) return;
+      toast.success(submit ? "Quotation submitted successfully" : "Draft saved successfully");
+      navigate(isEditMode || submit ? `${listPath}/${persistedId}` : listPath);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to save quotation");
+      if (!isCurrent()) return;
+      const message = error.response?.data?.message || "Unable to save quotation";
+      setSaveError(persistedId && !editingId
+        ? `Draft ${quotationNumber || "saved"} is saved. ${message} Retry will update this draft.`
+        : message);
     } finally {
-      setSaving(false);
+      if (isCurrent()) {
+        savingRef.current = false;
+        setSaving(false);
+      }
     }
   };
 
@@ -376,7 +352,7 @@ const AddQuotation = ({ role }) => {
   /* Loading state                                                             */
   /* ------------------------------------------------------------------------ */
 
-  if (loadingQuotation) {
+  if (formRoute !== editingId || loadingQuotation) {
     return (
       <div className="flex flex-col gap-5">
         <Header title={editingId ? "Edit Quotation" : "New Quotation"} />
@@ -387,6 +363,24 @@ const AddQuotation = ({ role }) => {
 
             <p className="mt-3 text-sm text-gray-500">Loading quotation...</p>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (quotationError || (quotationStatus && !["DRAFT", "REJECTED"].includes(quotationStatus))) {
+    return (
+      <div className="flex flex-col gap-5">
+        <Header title="Edit Quotation" />
+        <div role="alert" className="rounded-2xl border border-border-color bg-card-bg p-6 text-text">
+          <p>{quotationError
+            ? quotationError.status === 404 ? "Quotation not found or unavailable to you."
+              : quotationError.status === 403 ? "You do not have permission to edit this quotation." : quotationError.message
+            : "This quotation is locked and cannot be edited."}</p>
+          {quotationError && <button type="button" className="mt-3 mr-4 underline" onClick={() => setLoadVersion((value) => value + 1)}>Retry</button>}
+          <button type="button" className="mt-3 underline" onClick={() => navigate(quotationError ? listPath : `${listPath}/${editingId || savedId}`)}>
+            {quotationError ? "Back to quotations" : "View quotation"}
+          </button>
         </div>
       </div>
     );
@@ -424,6 +418,7 @@ const AddQuotation = ({ role }) => {
       </div>
 
       {/* Main content */}
+      <fieldset disabled={saving} className="min-w-0" aria-busy={saving}>
       <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* Left column */}
         <div className="min-w-0 space-y-5">
@@ -438,21 +433,20 @@ const AddQuotation = ({ role }) => {
                 <CustomerSelector
                   customers={customers}
                   customerId={form.customerId}
+                  currentCustomer={loadedQuotation?.customerId}
                   loading={customersLoading}
                   error={customersError}
                   onRetry={fetchCustomers}
                   onChange={(customerId) => update("customerId", customerId)}
-                  onCustomerDetailsChange={(details) =>
-                    update("customerDetails", details)
-                  }
                 />
               </FormField>
 
-              {role === "admin" && (
+              {canAssign && (
                 <FormField label="Created For" icon={FiUsers} required>
                   <EmployeeSelector
                     employees={employees}
                     employeeId={form.employeeId}
+                    currentEmployee={loadedQuotation?.employeeId || (String(form.employeeId) === String(user?._id) ? user : null)}
                     loading={employeesLoading}
                     error={employeesError}
                     onRetry={fetchEmployees}
@@ -470,6 +464,7 @@ const AddQuotation = ({ role }) => {
                 <input
                   className={inputClass}
                   type="date"
+                  aria-label="Valid Until"
                   min={new Date(Date.now() + 86400000)
                     .toISOString()
                     .slice(0, 10)}
@@ -490,8 +485,8 @@ const AddQuotation = ({ role }) => {
             <ProductSelector
               products={products}
               loading={productsLoading}
-              error=""
-              onRetry={() => {}}
+              error={productsError}
+              onRetry={fetchProducts}
               form={form}
               update={update}
             />
@@ -536,9 +531,12 @@ const AddQuotation = ({ role }) => {
                           <ProductTableRow
                             key={`${item.productId}-${index}`}
                             item={item}
+                            originalItem={getOriginalQuotationItem(item, loadedQuotation?.items)}
                             index={index}
                             updateItem={updateItem}
                             removeItem={removeItem}
+                            discountMode={discountMode(item)}
+                            onDiscountModeChange={(mode) => changeDiscountMode(index, mode)}
                           />
                         ))}
                       </tbody>
@@ -552,9 +550,12 @@ const AddQuotation = ({ role }) => {
                     <ProductCard
                       key={`${item.productId}-${index}`}
                       item={item}
+                      originalItem={getOriginalQuotationItem(item, loadedQuotation?.items)}
                       index={index}
                       updateItem={updateItem}
                       removeItem={removeItem}
+                      discountMode={discountMode(item)}
+                      onDiscountModeChange={(mode) => changeDiscountMode(index, mode)}
                     />
                   ))}
                 </div>
@@ -571,6 +572,7 @@ const AddQuotation = ({ role }) => {
             <textarea
               className={`${inputClass} min-h-[120px] resize-y`}
               placeholder="Add notes or special terms..."
+              aria-label="Additional notes"
               value={form.notes}
               onChange={(e) => update("notes", e.target.value)}
             />
@@ -606,7 +608,7 @@ const AddQuotation = ({ role }) => {
                   <span className="text-gray-500">Subtotal</span>
 
                   <span className="font-medium text-text">
-                    {formatCurrency(totals.subtotal)}
+                    {previewAmount("subtotal")}
                   </span>
                 </div>
 
@@ -614,7 +616,7 @@ const AddQuotation = ({ role }) => {
                   <span className="text-gray-500">Discount</span>
 
                   <span className="font-medium text-red">
-                    - {formatCurrency(totals.discountAmount)}
+                    - {previewAmount("discountAmount")}
                   </span>
                 </div>
 
@@ -622,7 +624,7 @@ const AddQuotation = ({ role }) => {
                   <span className="text-gray-500">GST</span>
 
                   <span className="font-medium text-text">
-                    {formatCurrency(totals.gstAmount)}
+                    {previewAmount("gstAmount")}
                   </span>
                 </div>
               </div>
@@ -633,44 +635,42 @@ const AddQuotation = ({ role }) => {
                     <p className="text-xs text-gray-500">Grand Total</p>
 
                     <p className="mt-1 text-xl font-bold text-text sm:text-2xl">
-                      {formatCurrency(totals.grandTotal)}
+                      {previewAmount("grandTotal")}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-1">
-                <VariantButton
+              {saveError && <p role="alert" className="text-sm text-red">{saveError}</p>}
+              {pricing.error && <p role="alert" className="text-sm text-red">Correct the item pricing: {pricing.error}</p>}
+              {!canSave && <p role="alert" className="text-sm text-red">You do not have permission to save this quotation.</p>}
+              {canSubmit && <div className="pt-1">
+                <button type="button" disabled={saving || !canSave || Boolean(pricing.error)}
                   onClick={() => save(true)}
-                  variant="cta"
-                  size="medium"
-                  text={
+                  className={`${actionClass} border-cta bg-cta text-white`}
+                >{
                     saving
                       ? "Submitting..."
-                      : editingId
+                      : editingId || savedId
                         ? "Update & Submit"
                         : "Save & Submit"
-                  }
-                />
-              </div>
+                  }</button>
+              </div>}
 
-              <VariantButton
+              <button type="button" disabled={saving || !canSave || Boolean(pricing.error)}
                 onClick={() => save(false)}
-                variant="ghostCta"
-                size="medium"
-                text={saving ? "Saving..." : "Save as Draft"}
-              />
+                className={`${actionClass} border-cta/60 text-text`}
+              >{saving ? "Saving..." : "Save as Draft"}</button>
 
-              <VariantButton
+              <button type="button" disabled={saving}
                 onClick={() => navigate(-1)}
-                variant="ghostRed"
-                size="medium"
-                text="Cancel"
-              />
+                className={`${actionClass} border-red/60 text-text`}
+              >Cancel</button>
             </div>
           </div>
         </aside>
       </div>
+      </fieldset>
     </div>
   );
 };

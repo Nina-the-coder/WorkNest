@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { Navigate, useNavigate } from "react-router-dom";
+import { useAuth } from "../useAuth";
+import { getHomePath } from "../auth.util";
+import SessionFeedback from "../SessionFeedback";
 import ThemeToggle from "../../../shared/components/buttons/ThemeToggle";
 import Icon from "../../../shared/components/Icons";
 import WorkNestDark from "../../../assets/WorkNest-dark.svg";
 import WorkNestLight from "../../../assets/WorkNest-light.svg";
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login, user, status, error: sessionError, refreshSession, logout } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -30,23 +32,19 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await axios.post(`${BASE_URL}/api/auth/login`, formData);
-      console.log(res.data);
-
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      if (res.data.user.role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/employee/dashboard");
-      }
+      const currentUser = await login(formData);
+      if (currentUser) navigate(getHomePath(currentUser.role), { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.message || err.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
+
+  if (status === "loading" || status === "error") {
+    return <SessionFeedback error={sessionError} onRetry={refreshSession} onLogout={logout} />;
+  }
+  if (status === "authenticated") return <Navigate to={getHomePath(user.role)} replace />;
 
   return (
     <div className="h-screen w-full bg-gradient-to-r from-[#304352] to-[#d7d2cc]">

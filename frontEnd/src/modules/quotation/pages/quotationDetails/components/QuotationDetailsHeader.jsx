@@ -5,14 +5,15 @@ import Header from "../../../../../shared/components/Header";
 import VariantButton from "../../../../../shared/components/buttons/VariantButton";
 
 import { STATUS_CONFIG } from "../../../constants/quotation.constants";
+import { quotationActions } from "../../../quotation.access";
 
-const QuotationDetailsHeader = ({ quotation, role, onBack }) => {
+const QuotationDetailsHeader = ({ quotation, role, onBack, user, busy }) => {
   const navigate = useNavigate();
-  const status = quotation?.status?.toLowerCase();
+  const status = quotation?.status;
 
   const statusConfig = STATUS_CONFIG[status];
 
-  const canEdit = status === "draft" || status === "rejected";
+  const canEdit = quotationActions(user, quotation).edit;
 
   const handleEdit = () => {
     if (!quotation) return;
@@ -62,7 +63,7 @@ const QuotationDetailsHeader = ({ quotation, role, onBack }) => {
 
       {/* Actions */}
       {quotation && (
-        <div className="flex shrink-0 items-center gap-2">
+        <fieldset disabled={busy} className="flex shrink-0 items-center gap-2 disabled:opacity-50">
           {canEdit && (
             <VariantButton
               onClick={handleEdit}
@@ -72,16 +73,7 @@ const QuotationDetailsHeader = ({ quotation, role, onBack }) => {
               icon="edit"
             />
           )}
-
-          <VariantButton
-            onClick={() => {
-              // PDF implementation later
-            }}
-            variant="cta"
-            size="medium"
-            text="Download PDF"
-          />
-        </div>
+        </fieldset>
       )}
     </div>
   );

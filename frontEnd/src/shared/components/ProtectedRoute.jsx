@@ -1,12 +1,16 @@
-import React from "react";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../../modules/auth/useAuth";
+import SessionFeedback from "../../modules/auth/SessionFeedback";
 
 const ProtectedRoute = ({ children, allowedRoles, requiredPermissions }) => {
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { user, status, error, refreshSession, logout } = useAuth();
+
+  if (status === "loading" || status === "error") {
+    return <SessionFeedback error={error} onRetry={refreshSession} onLogout={logout} />;
+  }
 
   // Not authenticated: redirect to login
-  if (!token || !user) {
+  if (status !== "authenticated" || !user) {
     return <Navigate to="/" replace />;
   }
 

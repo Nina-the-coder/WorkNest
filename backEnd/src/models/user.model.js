@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const auditPlugin = require("../utils/auditPlugin");
 
+const removePassword = (_document, user) => {
+  delete user.password;
+  return user;
+};
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -18,7 +23,9 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: 6,
+      minlength: [6, "Password must be at least 6 characters"],
+      cast: "Password must be text",
+      select: false,
     },
     role: {
       type: String,
@@ -45,7 +52,11 @@ const userSchema = new mongoose.Schema(
     deleted: { type: Boolean, default: false },
     deletedAt: { type: Date },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { transform: removePassword },
+    toObject: { transform: removePassword },
+  }
 );
 
 // password hash
@@ -56,7 +67,6 @@ userSchema.pre("save", async function (next) {
     this.password = await bcrypt.hash(this.password, salt);
     return next();
   } catch (err) {
-    console.error("error found", err);
     return next(err);
   }
 });

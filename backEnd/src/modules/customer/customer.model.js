@@ -33,6 +33,10 @@ const customerSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    // Optional retry metadata. Legacy records need no migration, and these
+    // implementation details are never part of a business API response.
+    createRequestKey: { type: String, select: false },
+    createRequestHash: { type: String, select: false },
     deleted: {
       type: Boolean,
       default: false,
@@ -43,7 +47,22 @@ const customerSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { transform: (_document, customer) => {
+      delete customer.createRequestKey;
+      delete customer.createRequestHash;
+      return customer;
+    } },
+    toObject: { transform: (_document, customer) => {
+      delete customer.createRequestKey;
+      delete customer.createRequestHash;
+      return customer;
+    } },
   }
 );
+
+customerSchema.index({ addedBy: 1, createRequestKey: 1 }, {
+  unique: true,
+  partialFilterExpression: { createRequestKey: { $type: "string" } },
+});
 
 module.exports = mongoose.model("Customer", customerSchema);

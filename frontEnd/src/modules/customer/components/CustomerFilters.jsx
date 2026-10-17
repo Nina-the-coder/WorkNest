@@ -11,10 +11,11 @@ const CustomerFilters = ({
   companyTypeFilter,
   setCompanyTypeFilter,
   openModal,
+  canCreate,
 }) => {
   return (
-          <div className="flex gap-8 my-10">
-      <div className="flex gap-4">
+    <div className="flex flex-wrap gap-8 my-10">
+      <div className="flex flex-wrap gap-4">
         <SearchBar
           placeholder="Search customer"
           value={searchQuery}
@@ -40,9 +41,9 @@ const CustomerFilters = ({
         </FilterDropdown>
       </div>
 
-      <CTAButton onClick={openModal} icon="plus">
+      {canCreate && <CTAButton onClick={openModal} icon="plus">
         Add Customer
-      </CTAButton>
+      </CTAButton>}
     </div>
   );
 };

@@ -1,22 +1,9 @@
-// modules/order/services/order.api.js
 import api from "../../../api/axios";
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-
-export const getOrdersAPI = () =>
-  api.get(`${BASE_URL}/api/orders`);
-
-export const deleteOrderAPI = (id) =>
-  api.delete(`${BASE_URL}/api/orders/${id}`);
-
-export const updateOrderStatusAPI = (id, status) =>
-  api.put(`${BASE_URL}/api/orders/${id}`, { status });
-
-export const downloadOrderAPI = (id, type) => {
-  const endpoint =
-    type === "csv"
-      ? `${BASE_URL}/api/orders/${id}/download-csv`
-      : `${BASE_URL}/api/orders/${id}/download-pdf`;
-
-  return api.get(endpoint, { responseType: "blob" });
-};
+export const getOrdersAPI = () => api.get("/api/orders");
+export const getOrderAPI = (id) => api.get(`/api/orders/${encodeURIComponent(id)}`);
+export const deleteOrderAPI = (id) => api.delete(`/api/orders/${encodeURIComponent(id)}`);
+export const updateOrderStatusAPI = (id, status, expectedStatus, reason) =>
+  api.put(`/api/orders/${encodeURIComponent(id)}`, { status, expectedStatus, ...(reason ? { reason } : {}) });
+export const downloadOrderAPI = (id, type) =>
+  api.get(`/api/orders/${encodeURIComponent(id)}/download-${type === "csv" ? "csv" : "pdf"}`, { responseType: "blob" });

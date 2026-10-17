@@ -10,7 +10,7 @@ import {
 
 import { formatCurrency, formatDate } from "../quotation.util";
 import StatusBadge from "./StatusBadge";
-import { hasPermission } from "../../../utils/permissions";
+import { quotationActions } from "../quotation.access";
 import ActionButton from "./ActionButton";
 
 const QuotationTable = ({
@@ -23,6 +23,8 @@ const QuotationTable = ({
   approve,
   reopen,
   remove,
+  user,
+  pending,
 }) => {
   if (!quotations || quotations.length === 0) {
     return (
@@ -119,7 +121,7 @@ const QuotationTable = ({
 
                 <td className="px-4 py-4">
                   <p className="text-sm text-text">
-                    {q.employeeId?.name || "—"}
+                    {q.createdBy?.name || "Unavailable"}
                   </p>
                 </td>
 
@@ -169,10 +171,9 @@ const QuotationTable = ({
                   className="px-5 py-4"
                   onClick={(event) => event.stopPropagation()}
                 >
-                  <div className="flex flex-wrap justify-end gap-1.5">
+                  <fieldset disabled={pending} className="flex flex-wrap justify-end gap-1.5">
                     {/* Edit */}
-                    {q.status === "DRAFT" &&
-                      hasPermission("QUOTATION_UPDATE") && (
+                    {quotationActions(user, q).edit && (
                         <ActionButton
                           icon={FiEdit2}
                           label="Edit"
@@ -188,8 +189,7 @@ const QuotationTable = ({
                       )}
 
                     {/* Submit */}
-                    {q.status === "DRAFT" &&
-                      hasPermission("QUOTATION_SUBMIT") && (
+                    {quotationActions(user, q).submit && (
                         <ActionButton
                           icon={FiSend}
                           label="Submit"
@@ -199,8 +199,7 @@ const QuotationTable = ({
                       )}
 
                     {/* Approve */}
-                    {q.status === "SUBMITTED" &&
-                      hasPermission("QUOTATION_APPROVE") && (
+                    {quotationActions(user, q).approve && (
                         <ActionButton
                           icon={FiCheck}
                           label="Approve"
@@ -210,8 +209,7 @@ const QuotationTable = ({
                       )}
 
                     {/* Reject */}
-                    {q.status === "SUBMITTED" &&
-                      hasPermission("QUOTATION_REJECT") && (
+                    {quotationActions(user, q).reject && (
                         <ActionButton
                           icon={FiX}
                           label="Reject"
@@ -221,8 +219,7 @@ const QuotationTable = ({
                       )}
 
                     {/* Reopen */}
-                    {q.status === "REJECTED" &&
-                      hasPermission("QUOTATION_UPDATE") && (
+                    {quotationActions(user, q).reopen && (
                         <ActionButton
                           icon={FiRefreshCw}
                           label="Reopen"
@@ -232,8 +229,7 @@ const QuotationTable = ({
                       )}
 
                     {/* Delete */}
-                    {q.status === "DRAFT" &&
-                      hasPermission("QUOTATION_ARCHIVE") && (
+                    {quotationActions(user, q).archive && (
                         <ActionButton
                           icon={FiTrash2}
                           label="Delete"
@@ -241,11 +237,11 @@ const QuotationTable = ({
                           onClick={() => run(remove, q)}
                         />
                       )}
-                  </div>
+                  </fieldset>
 
                   {q.rejectionReason && (
                     <p className="mt-2 max-w-[240px] text-right text-xs text-red">
-                      {q.rejectionReason}
+                      {q.status === "REJECTED" ? "Rejection" : "Most recent rejection"}: {q.rejectionReason}
                     </p>
                   )}
                 </td>

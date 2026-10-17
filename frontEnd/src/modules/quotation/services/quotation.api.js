@@ -9,3 +9,4 @@ export const approveQuotationAPI = (id) => api.post(`/api/quotations/${id}/appro
 export const rejectQuotationAPI = (id, reason) => api.post(`/api/quotations/${id}/reject`, { reason });
 export const reopenQuotationAPI = (id) => api.post(`/api/quotations/${id}/reopen`);
 export const deleteQuotationAPI = (id) => api.delete(`/api/quotations/${id}`);
+export const convertQuotationAPI = (id) => api.post(`/api/quotations/${id}/convert`, {});

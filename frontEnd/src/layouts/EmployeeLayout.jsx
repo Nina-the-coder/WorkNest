@@ -4,9 +4,9 @@ import Sidebar from "../shared/components/Sidebar";
 
 const EmployeeLayout = () => {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar role="employee" />
-      <div className="flex-1">
+    <div className="flex min-h-screen bg-bg">
+      <Sidebar />
+      <div className="min-w-0 flex-1 p-4">
         <Outlet />
       </div>
     </div>

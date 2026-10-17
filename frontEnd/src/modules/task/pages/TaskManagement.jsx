@@ -1,5 +1,5 @@
 // modules/task/pages/TaskManagement.jsx
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Header from "../../../shared/components/Header";
 import CTAButton from "../../../shared/components/buttons/CTAButton";
 import SkeletonLoader from "../../../shared/components/SkeletonLoader";
@@ -10,11 +10,16 @@ import TaskFilters from "../components/TaskFilters";
 import { useTasks } from "../hooks/useTasks";
 
 const TaskManagement = () => {
-  const { tasks, loading, addTask, editTask, removeTask } = useTasks();
+  const { tasks, loading, error, refreshTasks, addTask, editTask, removeTask } = useTasks();
 
   const [modal, setModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editTaskId, setEditTaskId] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [pending, setPending] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const savePending = useRef(false);
 
   const [formData, setFormData] = useState({
     assignedTo: "",
@@ -28,7 +33,7 @@ const TaskManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
-  const [tableView, setTableView] = useState(false);
+  const [tableView] = useState(false);
 
   const resetForm = () => {
     setFormData({
@@ -41,6 +46,8 @@ const TaskManagement = () => {
     });
     setIsEdit(false);
     setEditTaskId(null);
+    setSelectedEmployee(null);
+    setFormError("");
   };
 
   const handleChange = (e) => {
@@ -51,16 +58,43 @@ const TaskManagement = () => {
   };
 
   const handleSave = async () => {
-    const currentUser = JSON.parse(localStorage.getItem("user"));
-    const payload = { ...formData, assignedBy: currentUser._id };
-
-    if (isEdit) {
-      await editTask(editTaskId, payload);
-    } else {
-      await addTask(payload);
+    if (savePending.current) return;
+    savePending.current = true;
+    setPending(true);
+    setFormError("");
+    try {
+      if (isEdit) await editTask(editTaskId, formData);
+      else await addTask(formData);
+      resetForm();
+      setModal(false);
+    } catch (failure) {
+      setFormError(failure.response?.data?.message || "Unable to save task. Please try again.");
+    } finally {
+      savePending.current = false;
+      setPending(false);
     }
-    resetForm();
-    setModal(false);
+  };
+
+  const openEdit = (task) => {
+    setIsEdit(true);
+    setEditTaskId(task.taskId);
+    setSelectedEmployee(typeof task.assignedTo === "object" ? task.assignedTo : null);
+    setFormError("");
+    setFormData({
+      title: task.title,
+      description: task.description,
+      assignedTo: task.assignedTo?._id || task.assignedTo || "",
+      dueDate: task.dueDate ? task.dueDate.slice(0, 10) : "",
+      status: task.status,
+      priority: task.priority,
+    });
+    setModal(true);
+  };
+
+  const handleDelete = async (taskId) => {
+    setActionError("");
+    try { await removeTask(taskId); }
+    catch (failure) { setActionError(failure.response?.data?.message || "Unable to delete task. Please try again."); }
   };
 
   const filteredTasks = tasks.filter((task) => {
@@ -91,6 +125,10 @@ const TaskManagement = () => {
           }}
           isEdit={isEdit}
           setFormData={setFormData}
+          selectedEmployee={selectedEmployee}
+          onEmployeeSelect={setSelectedEmployee}
+          pending={pending}
+          formError={formError}
         />
       ) : (
         <>
@@ -107,20 +145,22 @@ const TaskManagement = () => {
             <CTAButton icon={"plus"} onClick={() => setModal(true)}>
               Add Task
             </CTAButton>
+            <button type="button" onClick={refreshTasks} disabled={loading}
+              className="rounded-xl border border-cta px-4 text-text disabled:opacity-50">Refresh</button>
           </div>
+
+          {(error || actionError) && <div role="alert" className="mb-5 rounded-xl border border-red p-4 text-text">
+            <p>{actionError || error.message}</p>
+            {error && <button type="button" onClick={refreshTasks} disabled={loading} className="mt-2 underline">Retry</button>}
+          </div>}
 
           {loading ? (
             <SkeletonLoader count={6} />
           ) : tableView ? (
             <TaskTable
               tasks={filteredTasks}
-              handleEdit={(task) => {
-                setIsEdit(true);
-                setEditTaskId(task.taskId);
-                setFormData(task);
-                setModal(true);
-              }}
-              handleDelete={(id) => removeTask(id)}
+              handleEdit={openEdit}
+              handleDelete={handleDelete}
             />
           ) : (
             <div className="flex flex-wrap gap-4">
@@ -128,15 +168,11 @@ const TaskManagement = () => {
                 <TaskCard
                   key={task.taskId}
                   task={task}
-                  handleEdit={() => {
-                    setIsEdit(true);
-                    setEditTaskId(task.taskId);
-                    setFormData(task);
-                    setModal(true);
-                  }}
-                  handleDelete={() => removeTask(task.taskId)}
+                  handleEdit={() => openEdit(task)}
+                  handleDelete={() => handleDelete(task.taskId)}
                 />
               ))}
+              {!error && filteredTasks.length === 0 && <p className="text-secondary-text">No tasks found.</p>}
             </div>
           )}
         </>

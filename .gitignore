@@ -14,6 +14,9 @@ countloc.py
 .env
 .env.local
 
+# Private local MongoDB data, backups and connection setup.
+.worknest-local/
+
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

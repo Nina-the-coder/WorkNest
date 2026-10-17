@@ -1,47 +1,65 @@
-import React from "react";
-import Sidebar from "../../shared/components/Sidebar";
+import { useAuth } from "../auth/useAuth";
 import Header from "../../shared/components/Header";
 
+const formatDate = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? null
+    : date.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+};
+
 const Profile = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { user, status, error, refreshSession } = useAuth();
+
+  if (status === "loading") {
+    return <p role="status" className="p-6 text-text">Loading profile...</p>;
+  }
+
+  if (status === "error") {
+    return (
+      <div className="p-6 text-text">
+        <p role="alert">{error || "Unable to load your profile."}</p>
+        <button type="button" onClick={refreshSession} className="mt-3 text-cta hover:underline">
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  const role = user.role === "admin" ? "Admin" : user.role === "employee" ? "Employee" : null;
+  const accountStatus = user.status === "active" ? "Active" : user.status === "inactive" ? "Inactive" : null;
+  const fields = [
+    ["Name", user.name],
+    ["Email", user.email],
+    ["Phone", user.phone],
+    ["Role", role],
+    ["Employee identifier", user.empId],
+    ["Designation", user.designation],
+    ["Account created", formatDate(user.createdAt)],
+    ["Account status", accountStatus],
+  ].filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== "");
 
   return (
-
-      <div className="flex flex-col">
-        {/* header */}
-        <Header title="Profile" />
-
-        {/* profile */}
-        <div className="m-8 p-4 rounded-md bg-card-bg shadow-md space-y-2 w-96">
-          <div className="text-secondary-text">
-            <div>
-              Name : <span className="text-text">{user.name}</span>
+    <div className="flex flex-col">
+      <Header title="Profile" />
+      <div className="m-6 max-w-xl rounded-md bg-card-bg p-6 shadow-md">
+        <dl className="space-y-4">
+          {fields.map(([label, value]) => (
+            <div key={label} className="flex flex-wrap gap-x-3 gap-y-1">
+              <dt className="text-secondary-text">{label}</dt>
+              <dd className="break-words text-text">{value}</dd>
             </div>
-            <div>
-              EmployeeId : <span className="text-text">{user.empId}</span>
-            </div>
-            <div>
-              Email : <span className="text-text">{user.email}</span>
-            </div>
-            <div>
-              Phone : <span className="text-text">{user.phone}</span>
-            </div>
-            <div>
-              Role : <span className="text-text">{user.role}</span>
-            </div>
-            <div>
-              Join Date :{" "}
-              <span className="text-text">
-                {new Date(user.createdAt).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </span>
-            </div>
-          </div>
-        </div>
+          ))}
+        </dl>
       </div>
+    </div>
   );
 };
 

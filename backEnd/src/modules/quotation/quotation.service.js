@@ -1,420 +1,215 @@
 const quotationRepo = require("./quotation.repository");
+const Product = require("../product/product.model");
+const mongoose = require("mongoose");
 const AppError = require("../../utils/AppError");
 const getNextSequence = require("../../utils/getNextSequence");
+const { getResourceScope } = require("../../utils/resourceAccess");
 const {
-  validateCreateQuotation,
-  validateStatusTransition,
-  validateApproval,
-  validateRejection,
-  validateUpdateDraft,
+  validateCreateQuotation, validateStatusTransition, validateApproval,
+  validateRejection, validateUpdateDraft, validateCustomerReference,
+  validateEmployeeReference,
 } = require("./quotation.validation");
+const {
+  normalizeItemPricing, calculateLineTotal, calculateQuotationTotals,
+  calculateStoredQuotationTotals,
+} = require("./quotation.pricing");
 
-const QUOTATION_STATUS = [
-  "DRAFT",
-  "SUBMITTED",
-  "APPROVED",
-  "REJECTED",
-  "CONVERTED",
-];
+const referenceId = reference => String(reference?._id || reference).toLowerCase();
+const sessionArgs = session => session ? [session] : [];
+const plain = document => document.toObject ? document.toObject() : { ...document };
 
-const roundMoney = (value) =>
-  Math.round((Number(value) + Number.EPSILON) * 100) / 100;
-
-/**
- * Calculate line total for an item
- * lineTotal = (quantity × unitPrice - discountAmount) + gstAmount
- */
-const calculateLineTotal = (item) => {
-  const subtotalBeforeDiscount = Number(item.quantity) * Number(item.unitPrice);
-
-  let discountAmount = Number(item.discountAmount) || 0;
-
-  // If discount percentage is provided, calculate discount amount
-  if (item.discountPercentage && item.discountPercentage > 0) {
-    discountAmount = (subtotalBeforeDiscount * item.discountPercentage) / 100;
-  }
-
-  const taxableAmount = subtotalBeforeDiscount - discountAmount;
-  const gstRate = item.gstRate ?? 0;
-  const gstAmount = (taxableAmount * gstRate) / 100;
-
-  return {
-    taxableAmount: roundMoney(taxableAmount),
-    gstAmount: roundMoney(gstAmount),
-    discountAmount: roundMoney(discountAmount),
-    lineTotal: roundMoney(taxableAmount + gstAmount),
-  };
-};
-
-/**
- * Calculate quotation totals from items
- */
-const calculateQuotationTotals = (items) => {
-  let subtotal = 0;
-  let totalDiscount = 0;
-  let totalTaxable = 0;
-  let totalGst = 0;
-
-  items.forEach((item) => {
-    const itemSubtotal = Number(item.quantity) * Number(item.unitPrice);
-    subtotal += itemSubtotal;
-
-    const calc = calculateLineTotal(item);
-    totalDiscount += calc.discountAmount;
-    totalTaxable += calc.taxableAmount;
-    totalGst += calc.gstAmount;
-  });
-
-  // Round to 2 decimal places
-  const grandTotal = roundMoney(totalTaxable + totalGst);
-
-  return {
-    subtotal: roundMoney(subtotal),
-    discountAmount: roundMoney(totalDiscount),
-    taxableAmount: roundMoney(totalTaxable),
-    gstAmount: roundMoney(totalGst),
-    grandTotal: grandTotal,
-  };
-};
-
-/**
- * Get all quotations with pagination and filters
- */
-exports.getAllQuotations = async (filters = {}) => {
-  const { page = 1, limit = 10, search = "", status } = filters;
-
-  const skip = (page - 1) * limit;
-
-  // Build query
-  const query = {};
-
-  if (status) {
-    query.status = status;
-  }
-
-  if (filters.employeeId) query.employeeId = filters.employeeId;
-
-  // Search by quotation number. Customer-name search requires an aggregate and is
-  // deliberately omitted until customer search is shared across modules.
-  if (search && search.trim()) {
-    query.quotationId = { $regex: search.trim(), $options: "i" };
-  }
-
-  const total = await quotationRepo.countActive(query);
-
-  // Fetch quotations
-  const quotations = await quotationRepo
-    .findAllActive(query)
-    .skip(skip)
-    .limit(limit);
-
-  return {
-    quotations,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-  };
-};
-
-/**
- * Get quotation by ID with items
- */
-exports.getQuotationById = async (quotationId) => {
-  const quotation = await quotationRepo.findById(quotationId);
-
-  if (!quotation) {
+const findAccessibleQuotation = async (id, user, session) => {
+  const scope = getResourceScope(user, "employeeId");
+  const quotation = await quotationRepo.findById(id, scope, ...sessionArgs(session));
+  if (!quotation || (scope.employeeId && referenceId(quotation.employeeId) !== referenceId(scope.employeeId))) {
     throw new AppError("Quotation not found", 404);
   }
-
-  // Fetch items for this quotation
-  const items = await quotationRepo.findQuotationItems(quotationId);
-
-  return {
-    ...quotation.toObject(),
-    items,
-  };
+  return quotation;
 };
 
-/**
- * Create new quotation with items
- */
-exports.createQuotation = async (data, userId) => {
-  // Validate input
-
-  validateCreateQuotation(data);
-  console.log("Validated quotation data:", data);
-  const { customerId, employeeId, items, validUntil, notes } = data;
-
-  // Check if customer exists (basic check - should be done by controller after populating)
-  // Check if all products exist and are valid (should be done by controller)
-
-  // Generate quotation number
-  const nextNumber = await getNextSequence("quotation");
-  const quotationId = `QT${String(nextNumber).padStart(4, "0")}`;
-  console.log("Generated quotation ID:", quotationId);
-  // Calculate totals
-  const totals = calculateQuotationTotals(items);
-
-  // Create quotation
-  const quotationData = {
-    quotationId,
-    customerId,
-    employeeId,
-    status: "DRAFT",
-    ...totals,
-    validUntil,
-    notes: notes || "",
-    createdBy: userId,
-    updatedBy: userId,
-  };
-
-  console.log("Creating quotation with data:", quotationData);
-  const quotation = await quotationRepo.createQuotation(quotationData);
-
-  console.log("Quotation created with ID:", quotation._id);
-
-  // Create quotation items
-  const savedItems = [];
+// Catalog data is resolved only for newly added products. Existing commercial
+// snapshots survive catalog renames, price changes and removed product records.
+const prepareItems = async (items, existingItems, session) => {
+  const prepared = [];
   for (const item of items) {
-    const calc = calculateLineTotal(item);
-
-    const itemData = {
-      quotationId: quotation._id,
-      productId: item.productId,
-      productName: item.productName,
-      sku: item.sku || "",
-      description: item.description || "",
-      quantity: Number(item.quantity),
-      unitPrice: Number(item.unitPrice),
-      discountAmount: calc.discountAmount,
-      discountPercentage: item.discountPercentage || 0,
-      gstRate: item.gstRate ?? 18,
-      gstAmount: calc.gstAmount,
-      taxableAmount: calc.taxableAmount,
-      lineTotal: calc.lineTotal,
-    };
-
-    const savedItem = await quotationRepo.createQuotationItem(itemData);
-    savedItems.push(savedItem);
-  }
-
-  return {
-    ...quotation.toObject(),
-    items: savedItems,
-  };
-};
-
-/**
- * Update draft quotation with new items
- */
-exports.updateQuotation = async (quotationId, updateData, userId) => {
-  const quotation = await quotationRepo.findById(quotationId);
-
-  if (!quotation) {
-    throw new AppError("Quotation not found", 404);
-  }
-
-  // Validate update is allowed
-  validateUpdateDraft(quotation, updateData);
-
-  const { customerId, employeeId, items, validUntil, notes } = updateData;
-
-  // Update quotation metadata
-  if (customerId !== undefined) {
-    quotation.customerId = customerId;
-  }
-
-  if (employeeId !== undefined) {
-    quotation.employeeId = employeeId;
-  }
-
-  if (validUntil !== undefined) {
-    quotation.validUntil = validUntil;
-  }
-
-  if (notes !== undefined) {
-    quotation.notes = notes;
-  }
-
-  quotation.updatedBy = userId;
-
-  // If items are provided, rebuild the quotation items
-  if (items && Array.isArray(items)) {
-    // Delete old items
-    await quotationRepo.deleteQuotationItemsByQuotationId(quotationId);
-
-    // Calculate new totals
-    const totals = calculateQuotationTotals(items);
-
-    quotation.subtotal = totals.subtotal;
-    quotation.discountAmount = totals.discountAmount;
-    quotation.taxableAmount = totals.taxableAmount;
-    quotation.gstAmount = totals.gstAmount;
-    quotation.grandTotal = totals.grandTotal;
-
-    await quotationRepo.saveQuotation(quotation);
-
-    // Create new items
-    const savedItems = [];
-
-    for (const item of items) {
-      const calc = calculateLineTotal(item);
-
-      const itemData = {
-        quotationId: quotation._id,
-        productId: item.productId,
-        productName: item.productName,
-        sku: item.sku || "",
-        description: item.description || "",
-        quantity: Number(item.quantity),
-        unitPrice: Number(item.unitPrice),
-        discountAmount: calc.discountAmount,
-        discountPercentage: item.discountPercentage || 0,
-        gstRate: item.gstRate ?? 18,
-        gstAmount: calc.gstAmount,
-        taxableAmount: calc.taxableAmount,
-        lineTotal: calc.lineTotal,
-      };
-
-      const savedItem = await quotationRepo.createQuotationItem(itemData);
-
-      savedItems.push(savedItem);
+    const byId = item._id && existingItems.find(existing => referenceId(existing._id) === referenceId(item._id));
+    const byProduct = existingItems.find(existing => referenceId(existing.productId) === referenceId(item.productId));
+    if (item._id && (!byId || referenceId(byId.productId) !== referenceId(item.productId))) {
+      throw new AppError("Quotation item does not match its product", 400);
     }
-
-    return {
-      ...quotation.toObject(),
-      items: savedItems,
-    };
+    const existing = byId || byProduct;
+    let snapshot = existing;
+    if (!snapshot) {
+      if (!mongoose.isObjectIdOrHexString(item.productId)) throw new AppError("Invalid product ID", 400);
+      const query = Product.findById(item.productId);
+      const product = await (session ? query.session(session) : query);
+      if (!product || product.deleted || (product.status && product.status !== "active")) {
+        throw new AppError("Product not found", 404);
+      }
+      snapshot = { productName: product.name, sku: product.productId, description: product.description };
+    }
+    const sameCommercialInputs = existing && ["quantity", "unitPrice", "discountAmount", "discountPercentage", "gstRate"].every(field => {
+      // A positive percentage owns the effective discount; its stored amount is
+      // derived, so omitting or changing that amount does not reprice the line.
+      if (field === "discountAmount" && Number(item.discountPercentage) > 0) return true;
+      const input = item[field] === undefined ? (field === "gstRate" ? existing.gstRate : 0) : item[field];
+      return Number(input) === existing[field];
+    });
+    // A normal form save must not repair legacy rounding silently. Reprice only
+    // a deliberately changed commercial line, keeping untouched stored amounts.
+    const pricing = sameCommercialInputs
+      ? Object.fromEntries(["quantity", "unitPrice", "discountAmount", "discountPercentage", "gstRate", "taxableAmount", "gstAmount", "lineTotal"].map(field => [field, existing[field]]))
+      : normalizeItemPricing(item, { defaultGstRate: existing?.gstRate ?? 18 });
+    prepared.push({
+      productId: item.productId,
+      productName: snapshot.productName,
+      sku: snapshot.sku || "", description: snapshot.description || "", ...pricing,
+    });
   }
-
-  // Metadata-only update
-  await quotationRepo.saveQuotation(quotation);
-
-  const quotationItems = await quotationRepo.findQuotationItems(quotationId);
-
-  return {
-    ...quotation.toObject(),
-    items: quotationItems,
-  };
+  return prepared;
 };
 
-/**
- * Submit quotation for approval
- */
-exports.submitQuotation = async (quotationId, userId) => {
-  const quotation = await quotationRepo.findById(quotationId);
-
-  if (!quotation) {
-    throw new AppError("Quotation not found", 404);
+const saveItems = async (quotationId, items, session) => {
+  const saved = [];
+  // MongoDB does not support parallel operations inside a transaction.
+  for (const item of items) {
+    saved.push(await quotationRepo.createQuotationItem({ ...item, quotationId }, ...sessionArgs(session)));
   }
+  return saved;
+};
 
-  // Validate transition
+const changeHeader = (quotation, user, changes, session) => quotationRepo.updateIfCurrent(
+  quotation, getResourceScope(user, "employeeId"), { ...changes, updatedBy: user._id }, ...sessionArgs(session),
+);
+
+exports.getAllQuotations = (filters = {}, user) => quotationRepo.runInTransaction(async session => {
+  const { page = 1, limit = 10, search = "", status } = filters;
+  const query = getResourceScope(user, "employeeId");
+  if (status) query.status = status;
+  if (search && search.trim()) query.quotationId = { $regex: search.trim(), $options: "i" };
+  const total = await quotationRepo.countActive(query, ...sessionArgs(session));
+  const quotations = await quotationRepo.findAllActive(query, ...sessionArgs(session)).skip((page - 1) * limit).limit(limit);
+  return { quotations, total, page, limit, totalPages: Math.ceil(total / limit) };
+});
+
+exports.getQuotationById = (id, user) => quotationRepo.runInTransaction(async session => {
+  const quotation = await findAccessibleQuotation(id, user, session);
+  const items = await quotationRepo.findQuotationItems(id, ...sessionArgs(session));
+  return { ...plain(quotation), items };
+});
+
+exports.createQuotation = (input, user) => quotationRepo.runInTransaction(async session => {
+  const data = { ...input, ...getResourceScope(user, "employeeId") };
+  validateCreateQuotation(data);
+  await validateCustomerReference(data.customerId, ...sessionArgs(session));
+  await validateEmployeeReference(data.employeeId, ...sessionArgs(session));
+  const items = await prepareItems(data.items, [], session);
+  const totals = calculateQuotationTotals(items);
+  // Sequence gaps after a rollback/retry are acceptable; numbers remain unique.
+  const number = await getNextSequence("quotation");
+  const quotation = await quotationRepo.createQuotation({
+    quotationId: `QT${String(number).padStart(4, "0")}`, customerId: data.customerId,
+    employeeId: data.employeeId, status: "DRAFT", ...totals,
+    validUntil: data.validUntil, notes: data.notes || "", createdBy: user._id, updatedBy: user._id,
+  }, ...sessionArgs(session));
+  const savedItems = await saveItems(quotation._id, items, session);
+  return { ...plain(quotation), items: savedItems };
+});
+
+exports.updateQuotation = (id, data, user) => quotationRepo.runInTransaction(async session => {
+  const quotation = await findAccessibleQuotation(id, user, session);
+  const scope = getResourceScope(user, "employeeId");
+  if (scope.employeeId && data.employeeId !== undefined && referenceId(data.employeeId) !== referenceId(scope.employeeId)) {
+    throw new AppError("Quotation ownership cannot be changed", 403);
+  }
+  // Check the lock before resolving commercial data. Existing zero GST must be
+  // resolved before validation as well as before calculation/persistence.
+  validateUpdateDraft(quotation, { ...data, items: undefined });
+  const existingItems = await quotationRepo.findQuotationItems(id, ...sessionArgs(session));
+  const validationItems = Array.isArray(data.items) ? data.items.map(item => {
+    if (!item || typeof item !== "object" || item.gstRate !== undefined) return item;
+    const existing = existingItems.find(saved => referenceId(saved.productId) === referenceId(item.productId));
+    return existing ? { ...item, gstRate: existing.gstRate } : item;
+  }) : data.items;
+  validateUpdateDraft(quotation, { ...data, items: validationItems });
+  if (data.customerId !== undefined && referenceId(data.customerId) !== referenceId(quotation.customerId)) {
+    await validateCustomerReference(data.customerId, ...sessionArgs(session));
+  }
+  if (data.employeeId !== undefined && referenceId(data.employeeId) !== referenceId(quotation.employeeId)) {
+    await validateEmployeeReference(data.employeeId, ...sessionArgs(session));
+  }
+  const changes = {};
+  for (const key of ["customerId", "employeeId", "validUntil", "notes"]) {
+    if (data[key] !== undefined) changes[key] = data[key];
+  }
+  let items;
+  if (data.items !== undefined) {
+    items = await prepareItems(data.items, existingItems, session);
+    Object.assign(changes, calculateStoredQuotationTotals(items));
+  }
+  const updated = await changeHeader(quotation, user, changes, session);
+  if (items) {
+    await quotationRepo.deleteQuotationItemsByQuotationId(id, ...sessionArgs(session));
+    items = await saveItems(quotation._id, items, session);
+  }
+  return { ...plain(updated), items: items || existingItems };
+});
+
+const validateSubmission = async (quotation, items, session) => {
+  validateCreateQuotation({
+    customerId: quotation.customerId?._id || quotation.customerId,
+    employeeId: quotation.employeeId?._id || quotation.employeeId,
+    items, notes: quotation.notes, validUntil: quotation.validUntil,
+  });
+  await validateCustomerReference(quotation.customerId?._id || quotation.customerId, ...sessionArgs(session));
+  await validateEmployeeReference(quotation.employeeId, ...sessionArgs(session));
+  for (const item of items) {
+    if (!item.productName?.trim()) throw new AppError("Quotation item snapshot is incomplete", 400);
+    const pricing = normalizeItemPricing(item);
+    for (const field of ["unitPrice", "discountAmount", "taxableAmount", "gstAmount", "lineTotal"]) {
+      if (item[field] !== pricing[field]) throw new AppError("Quotation pricing is inconsistent; review and revise the affected item before submitting", 400);
+    }
+  }
+  const totals = calculateQuotationTotals(items);
+  for (const [field, amount] of Object.entries(totals)) {
+    if (quotation[field] !== amount) throw new AppError("Quotation totals are inconsistent; save the draft again", 400);
+  }
+};
+
+exports.submitQuotation = (id, user) => quotationRepo.runInTransaction(async session => {
+  const quotation = await findAccessibleQuotation(id, user, session);
   validateStatusTransition(quotation.status, "SUBMITTED");
+  const items = await quotationRepo.findQuotationItems(id, ...sessionArgs(session));
+  if (!items?.length) throw new AppError("Cannot submit empty quotation", 400);
+  await validateSubmission(quotation, items, session);
+  return changeHeader(quotation, user, { status: "SUBMITTED", submittedBy: user._id, submittedAt: new Date() }, session);
+});
 
-  // Verify quotation has items
-  const items = await quotationRepo.findQuotationItems(quotationId);
-  if (!items || items.length === 0) {
-    throw new AppError("Cannot submit empty quotation", 400);
-  }
-
-  quotation.status = "SUBMITTED";
-  quotation.updatedBy = userId;
-  await quotationRepo.saveQuotation(quotation);
-
-  return quotation;
-};
-
-/**
- * Approve quotation
- */
-exports.approveQuotation = async (quotationId, userId) => {
-  const quotation = await quotationRepo.findById(quotationId);
-
-  console.log(
-    "Approving quotation:",
-    quotationId,
-    "Current status:",
-    quotation ? quotation.status : "Not found",
-  );
-
-  if (!quotation) {
-    throw new AppError("Quotation not found", 404);
-  }
-
-  console.log("Current quotation:-----------------------", quotation);
-  // Validate approval
+exports.approveQuotation = (id, user) => quotationRepo.runInTransaction(async session => {
+  const quotation = await findAccessibleQuotation(id, user, session);
   validateApproval(quotation);
+  return changeHeader(quotation, user, { status: "APPROVED", approvedBy: user._id, approvedAt: new Date() }, session);
+});
 
-  console.log("Validation passed. Approving quotation:", quotationId);
-
-  quotation.status = "APPROVED";
-  quotation.approvedBy = userId;
-  quotation.approvedAt = new Date();
-  quotation.updatedBy = userId;
-
-  await quotationRepo.saveQuotation(quotation);
-
-  return quotation;
-};
-
-/**
- * Reject quotation
- */
-exports.rejectQuotation = async (quotationId, reason, userId) => {
-  const quotation = await quotationRepo.findById(quotationId);
-
-  if (!quotation) {
-    throw new AppError("Quotation not found", 404);
-  }
-
-  // Validate rejection
+exports.rejectQuotation = (id, reason, user) => quotationRepo.runInTransaction(async session => {
+  const quotation = await findAccessibleQuotation(id, user, session);
   validateRejection(quotation, reason);
+  return changeHeader(quotation, user, {
+    status: "REJECTED", rejectionReason: reason.trim(), rejectedBy: user._id, rejectedAt: new Date(),
+  }, session);
+});
 
-  quotation.status = "REJECTED";
-  quotation.rejectionReason = reason;
-  quotation.rejectedBy = userId;
-  quotation.rejectedAt = new Date();
-  quotation.updatedBy = userId;
-
-  await quotationRepo.saveQuotation(quotation);
-
-  return quotation;
-};
-
-/** Return a rejected quotation to its editable draft state. */
-exports.reopenQuotation = async (quotationId, userId) => {
-  const quotation = await quotationRepo.findById(quotationId);
-  if (!quotation) throw new AppError("Quotation not found", 404);
-
+exports.reopenQuotation = (id, user) => quotationRepo.runInTransaction(async session => {
+  const quotation = await findAccessibleQuotation(id, user, session);
   validateStatusTransition(quotation.status, "DRAFT");
-  quotation.status = "DRAFT";
-  quotation.rejectionReason = null;
-  quotation.rejectedBy = null;
-  quotation.rejectedAt = null;
-  quotation.updatedBy = userId;
-  await quotationRepo.saveQuotation(quotation);
-  return quotation;
-};
+  // Retain the most recent rejection; do not invent a full revision history.
+  return changeHeader(quotation, user, { status: "DRAFT" }, session);
+});
 
-/**
- * Delete quotation (soft delete)
- */
-exports.deleteQuotation = async (quotationId, userId) => {
-  const quotation = await quotationRepo.findById(quotationId);
-
-  if (!quotation) {
-    throw new AppError("Quotation not found", 404);
-  }
-
-  quotation.deleted = true;
-  quotation.deletedAt = new Date();
-  quotation.updatedBy = userId;
-
-  await quotationRepo.saveQuotation(quotation);
-
-  return quotation;
-};
+exports.deleteQuotation = (id, user) => quotationRepo.runInTransaction(async session => {
+  const quotation = await findAccessibleQuotation(id, user, session);
+  return changeHeader(quotation, user, { deleted: true, deletedAt: new Date() }, session);
+});
 
 exports.calculateQuotationTotals = calculateQuotationTotals;
 exports.calculateLineTotal = calculateLineTotal;

@@ -99,6 +99,17 @@ const quotationSchema = new mongoose.Schema(
       default: "",
     },
 
+    // Optional for quotations created before submission metadata was recorded.
+    submittedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    submittedAt: {
+      type: Date,
+      default: null,
+    },
+
     // Approval tracking
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,

@@ -1,81 +1,57 @@
 // modules/customer/components/CustomerModal.jsx
-import EmployeeComboBox from "../../../shared/components/combobox/EmployeeComboBox";
 import VariantButton from "../../../shared/components/buttons/VariantButton";
-import LabelInput from "../../../shared/components/Labelnput";
 
 const CustomerModal = ({
   formData,
-  setFormData,
   handleChange,
   handleSave,
   handleCancel,
   isEdit,
+  pending,
+  error,
 }) => {
+  const fields = [
+    ["Name", "name", "text"], ["Address", "address", "text"],
+    ["Contact", "contact", "text"], ["GST", "gst", "text"], ["Email", "email", "email"],
+  ];
   return (
-    <div className="w-fit rounded-2xl mx-auto mt-16 p-8 bg-card-bg">
+    <div className="w-full max-w-xl rounded-2xl mx-auto mt-16 p-8 bg-card-bg">
       <div className="text-[20px] flex justify-center mb-8">
         {isEdit ? "Edit Customer" : "Add New Customer"}
       </div>
 
-      <form className="flex flex-col items-center gap-4">
-        <EmployeeComboBox
-          labelName="Select the connected Employee"
-          onSelect={(emp) =>
-            setFormData((prev) => ({
-              ...prev,
-              addedBy: emp._id,
-            }))
-          }
-        />
-        <LabelInput
-          labelName="Name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-        />
-
-        <LabelInput
-          labelName="Address"
-          name="address"
-          value={formData.address}
-          onChange={handleChange}
-        />
-
-        <LabelInput
-          labelName="Contact"
-          name="contact"
-          value={formData.contact}
-          onChange={handleChange}
-        />
-
-        <LabelInput
-          labelName="GST"
-          name="gst"
-          value={formData.gst}
-          onChange={handleChange}
-        />
-
-        <LabelInput
-          labelName="Email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-        />
-
-        <div className="flex gap-6 mt-8">
-          <VariantButton
-            onClick={handleCancel}
-            variant="ghostRed"
-            size="medium"
-            text="Cancel"
-          />
-          <VariantButton
-            onClick={handleSave}
-            variant="cta"
-            size="medium"
-            text="Save"
-          />
-        </div>
+      <form noValidate onSubmit={(event) => { event.preventDefault(); void handleSave(); }}>
+        <fieldset disabled={pending} aria-busy={pending} className="flex flex-col items-center gap-4">
+          {fields.map(([label, name, type]) => (
+            <div key={name} className="w-full flex flex-col">
+              <label htmlFor={`customer-${name}`} className="ml-2 mb-0.5 text-secondary-text">{label}{name === "name" ? " *" : ""}</label>
+              <input id={`customer-${name}`} type={type} name={name} value={formData[name]}
+                aria-required={name === "name"} onChange={handleChange}
+                className="w-full h-[30px] bg-bg rounded-xl px-2" />
+            </div>
+          ))}
+          <div className="w-full flex flex-col">
+            <label htmlFor="customer-status" className="ml-2 mb-0.5 text-secondary-text">Status</label>
+            <select id="customer-status" name="status" value={formData.status} onChange={handleChange} className="h-[30px] rounded-xl bg-bg px-2">
+              <option value="active">Active</option><option value="inactive">Inactive</option>
+              {!["active", "inactive"].includes(formData.status) && <option value={formData.status}>{formData.status || "Not specified"}</option>}
+            </select>
+          </div>
+          <div className="w-full flex flex-col">
+            <label htmlFor="customer-company-type" className="ml-2 mb-0.5 text-secondary-text">Company Type</label>
+            <select id="customer-company-type" name="companyType" value={formData.companyType} onChange={handleChange} className="h-[30px] rounded-xl bg-bg px-2">
+              <option value="dealer">Dealer</option><option value="doctor">Doctor</option>
+              {!["dealer", "doctor"].includes(formData.companyType) && <option value={formData.companyType}>{formData.companyType || "Not specified"}</option>}
+            </select>
+          </div>
+          {error && <p role="alert" className="text-red">{error}</p>}
+          <div className="flex gap-6 mt-8">
+            <VariantButton onClick={handleCancel} variant="ghostRed" size="medium" text="Cancel" />
+            <button type="submit" className="h-[28px] w-[100px] rounded-xl border-2 border-cta bg-cta text-white disabled:opacity-50">
+              {pending ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </fieldset>
       </form>
     </div>
   );

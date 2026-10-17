@@ -5,6 +5,13 @@ const { requirePermission } = require("../../middleware/permission.middleware");
 const PERMISSIONS = require("../../utils/permissions");
 const QuotationController = require("./quotation.controller");
 
+router.post(
+  "/:quotationId/convert",
+  verifyToken,
+  requirePermission(PERMISSIONS.ORDER_CREATE),
+  QuotationController.convertQuotation,
+);
+
 /**
  * GET /api/quotations
  * List all quotations with pagination and filters

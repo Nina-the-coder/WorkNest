@@ -1,14 +1,6 @@
+import { formatDate } from "../../../quotation.util";
 
 const QuotationCompanyHeader = ({ quotation }) => {
-  const formatQuotationDate = (date) => {
-    if (!date) return "—";
-
-    return new Date(date).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
 
   return (
     <div className="border-b border-border-color px-6 py-7 sm:px-10 sm:py-9">
@@ -38,14 +30,14 @@ const QuotationCompanyHeader = ({ quotation }) => {
             <p className="text-sm text-gray-500">
               Date:{" "}
               <span className="font-medium text-text">
-                {formatQuotationDate(quotation.createdAt)}
+                {formatDate(quotation.createdAt)}
               </span>
             </p>
 
             <p className="text-sm text-gray-500">
               Valid Until:{" "}
               <span className="font-medium text-text">
-                {formatQuotationDate(quotation.validUntil)}
+                {formatDate(quotation.validUntil)}
               </span>
             </p>
           </div>

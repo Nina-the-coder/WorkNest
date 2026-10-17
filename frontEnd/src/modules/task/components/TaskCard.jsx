@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import VariantButton from "../../../shared/components/buttons/VariantButton";
 import Icon from "../../../shared/components/Icons";
+import { formatTaskDate, formatTaskAssignee } from "../task.util";
 
-const TaskCard = ({ task, handleEdit, handleDelete }) => {
+const TaskCard = ({ task, handleEdit, handleDelete, onView }) => {
   const [expanded, setExpanded] = useState(false);
 
   const toggleReadMore = () => setExpanded(!expanded);
@@ -10,14 +11,14 @@ const TaskCard = ({ task, handleEdit, handleDelete }) => {
   const isLong = task.description?.length > previewLength;
 
   return (
-    <div className="w-[460px] p-8 bg-card-bg text-secondary-text rounded-2xl bg-gradient-to-r from-bg/80 to-card-bg/10 hover:shadow-xl transition-all duration-300">
+    <article aria-label={`Task ${task.taskId}`} data-task-id={task.taskId} className="w-[460px] p-8 bg-card-bg text-secondary-text rounded-2xl bg-gradient-to-r from-bg/80 to-card-bg/10 hover:shadow-xl transition-all duration-300">
       <div className="flex justify-between mb-4">
         {/* top left */}
         <div className="flex flex-col mb-2">
           <div className="text-[20px] mb-1 text-text font-semibold">
             {task.title}
           </div>
-          <div className="underline">{`${task.assignedTo?.name} (${task.assignedTo?.empId})`}</div>
+          <div className="underline">{formatTaskAssignee(task.assignedTo)}</div>
         </div>
 
         {/* top right */}
@@ -51,13 +52,7 @@ const TaskCard = ({ task, handleEdit, handleDelete }) => {
           <div className="text-text/90">
             Due Date:{" "}
             <Icon name="calendar" className="inline h-[16px] w-[16px] mr-1" />
-            {new Date(task.dueDate)
-              .toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })
-              .toUpperCase()}
+            {formatTaskDate(task.dueDate)}
           </div>
         </div>
       </div>
@@ -85,23 +80,24 @@ const TaskCard = ({ task, handleEdit, handleDelete }) => {
 
       {/* bottom */}
       <div className="align-baseline flex justify-end mr-4 mt-4">
-        <VariantButton
+        {onView && <VariantButton onClick={onView} variant="ghostCta" size="medium" text="View task" />}
+        {handleEdit && <VariantButton
           onClick={handleEdit}
           variant="ghostCta"
           size="small"
           text="Edit"
           icon="pen"
           className="mr-4"
-        />
-        <VariantButton
+        />}
+        {handleDelete && <VariantButton
           variant="ghostRed"
           onClick={handleDelete}
           size="small"
           text="Delete"
           icon="trash-2"
-        />
+        />}
       </div>
-    </div>
+    </article>
   );
 };
 

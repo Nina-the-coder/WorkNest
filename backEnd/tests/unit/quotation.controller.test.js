@@ -1,5 +1,6 @@
 const controller = require("../../src/modules/quotation/quotation.controller");
 const quotationService = require("../../src/modules/quotation/quotation.service");
+const AppError = require("../../src/utils/AppError");
 
 jest.mock("../../src/modules/quotation/quotation.service");
 
@@ -12,15 +13,20 @@ describe("Quotation Controller", () => {
     quotationService.getAllQuotations.mockResolvedValue({ quotations: [], total: 0, page: 1, limit: 10, totalPages: 0 });
     const res = response();
     await controller.listQuotations({ query: {}, user: { _id: "admin", role: "admin" } }, res, next);
-    expect(quotationService.getAllQuotations).toHaveBeenCalledWith(expect.objectContaining({ page: 1, limit: 10 }));
+    expect(quotationService.getAllQuotations).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, limit: 10 }),
+      { _id: "admin", role: "admin" },
+    );
     expect(res.status).toHaveBeenCalledWith(200);
   });
 
   test("does not expose another employee's quotation", async () => {
-    quotationService.getQuotationById.mockResolvedValue({ employeeId: "owner" });
+    quotationService.getQuotationById.mockRejectedValue(new AppError("Quotation not found", 404));
     const res = response();
     await controller.getQuotation({ params: { quotationId: "q1" }, user: { _id: "other", role: "employee" } }, res, next);
-    expect(next.mock.calls[0][0].statusCode).toBe(403);
+    expect(quotationService.getQuotationById).toHaveBeenCalledWith("q1", { _id: "other", role: "employee" });
+    expect(next.mock.calls[0][0].statusCode).toBe(404);
+    expect(res.json).not.toHaveBeenCalled();
   });
 
   test("submits through the service action instead of accepting a status field", async () => {
@@ -28,7 +34,7 @@ describe("Quotation Controller", () => {
     quotationService.submitQuotation.mockResolvedValue({ _id: "q1", status: "SUBMITTED" });
     const res = response();
     await controller.submitQuotation({ params: { quotationId: "q1" }, body: {}, user: { _id: "employee", role: "employee" } }, res, next);
-    expect(quotationService.submitQuotation).toHaveBeenCalledWith("q1", "employee");
+    expect(quotationService.submitQuotation).toHaveBeenCalledWith("q1", { _id: "employee", role: "employee" });
     expect(res.status).toHaveBeenCalledWith(200);
   });
 });

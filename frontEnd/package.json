@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "test": "node ../backEnd/node_modules/jest/bin/jest.js --config tests/jest.config.cjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

@@ -2,7 +2,6 @@ import { FiMapPin, FiPhone, FiUser, FiUsers } from "react-icons/fi";
 
 const QuotationCustomerSection = ({ quotation }) => {
 
-  console.log("quotation", quotation);
   return (
     <div className="grid gap-8 border-b border-border-color pb-8 sm:grid-cols-2">
       {/* Customer */}
@@ -65,14 +64,15 @@ const QuotationCustomerSection = ({ quotation }) => {
 
           <div>
             <p className="text-base font-semibold text-text">
-              {quotation.employeeId?.name || "—"}
+              {quotation.createdBy?.name || "Unavailable"}
             </p>
 
-            {quotation.employeeId?.empId && (
+            {quotation.createdBy?.empId && (
               <p className="mt-1 text-sm text-gray-500">
-                {quotation.employeeId.empId}
+                {quotation.createdBy.empId}
               </p>
             )}
+            <p className="mt-2 text-sm text-gray-500">Quotation owner: {quotation.employeeId?.name || "Unavailable"}</p>
           </div>
         </div>
       </div>

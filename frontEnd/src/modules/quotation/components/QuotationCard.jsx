@@ -9,7 +9,7 @@ import {
 } from "react-icons/fi";
 import { formatCurrency, formatDate } from "../quotation.util";
 import StatusBadge from "./StatusBadge";
-import { hasPermission } from "../../../utils/permissions";
+import { quotationActions } from "../quotation.access";
 import ActionButton from "./ActionButton";
 
 const QuotationCard = ({
@@ -22,8 +22,11 @@ const QuotationCard = ({
   approve,
   reopen,
   remove,
+  user,
+  pending,
 }) => {
   const q = quotation;
+  const actions = quotationActions(user, q);
 
   return (
     <div
@@ -79,7 +82,7 @@ const QuotationCard = ({
         <div>
           <p className="text-xs text-gray-500">Created by</p>
           <p className="mt-1 truncate text-sm font-medium text-text">
-            {q.employeeId?.name || "—"}
+            {q.createdBy?.name || "Unavailable"}
           </p>
         </div>
 
@@ -101,18 +104,18 @@ const QuotationCard = ({
       {/* Rejection reason */}
       {q.rejectionReason && (
         <div className="mt-4 rounded-lg bg-red/10 px-3 py-2">
-          <p className="text-xs font-medium text-red">Rejection reason</p>
+          <p className="text-xs font-medium text-red">{q.status === "REJECTED" ? "Rejection" : "Most recent rejection"}</p>
 
           <p className="mt-1 text-xs text-red/80">{q.rejectionReason}</p>
         </div>
       )}
 
       {/* Actions */}
-      <div
+      <fieldset disabled={pending}
         className="mt-4 flex flex-wrap gap-2 border-t border-border-color pt-4"
         onClick={(event) => event.stopPropagation()}
       >
-        {q.status === "DRAFT" && hasPermission("QUOTATION_UPDATE") && (
+        {actions.edit && (
           <ActionButton
             icon={FiEdit2}
             label="Edit"
@@ -127,7 +130,7 @@ const QuotationCard = ({
           />
         )}
 
-        {q.status === "DRAFT" && hasPermission("QUOTATION_SUBMIT") && (
+        {actions.submit && (
           <ActionButton
             icon={FiSend}
             label="Submit"
@@ -136,7 +139,7 @@ const QuotationCard = ({
           />
         )}
 
-        {q.status === "SUBMITTED" && hasPermission("QUOTATION_APPROVE") && (
+        {actions.approve && (
           <ActionButton
             icon={FiCheck}
             label="Approve"
@@ -145,7 +148,7 @@ const QuotationCard = ({
           />
         )}
 
-        {q.status === "SUBMITTED" && hasPermission("QUOTATION_REJECT") && (
+        {actions.reject && (
           <ActionButton
             icon={FiX}
             label="Reject"
@@ -154,7 +157,7 @@ const QuotationCard = ({
           />
         )}
 
-        {q.status === "REJECTED" && hasPermission("QUOTATION_UPDATE") && (
+        {actions.reopen && (
           <ActionButton
             icon={FiRefreshCw}
             label="Reopen"
@@ -163,7 +166,7 @@ const QuotationCard = ({
           />
         )}
 
-        {q.status === "DRAFT" && hasPermission("QUOTATION_ARCHIVE") && (
+        {actions.archive && (
           <ActionButton
             icon={FiTrash2}
             label="Delete"
@@ -171,7 +174,7 @@ const QuotationCard = ({
             onClick={() => run(remove, q)}
           />
         )}
-      </div>
+      </fieldset>
     </div>
   );
 };

@@ -1,27 +1,14 @@
 import { FiMinus, FiPlus, FiTrash2 } from "react-icons/fi";
-import { formatCurrency } from "../../../quotation.util";
+import { formatCurrency, getItemPricingPreview } from "../../../quotation.util";
+import DiscountInput from "./DiscountInput";
 
 const numberInputClass =
   "w-full rounded-lg border border-border-color bg-bg px-2.5 py-2 text-sm text-text outline-none transition focus:border-cta focus:ring-2 focus:ring-cta/10";
 
-const ProductTableRow = ({ item, index, updateItem, removeItem }) => {
-  const quantity = Math.max(1, Number(item.quantity) || 1);
-
-  const unitPrice = Math.max(0, Number(item.unitPrice) || 0);
-
-  const discountAmount = Math.max(0, Number(item.discountAmount) || 0);
-
-  const gstRate = Math.min(100, Math.max(0, Number(item.gstRate ?? 18)));
-
-  const subtotal = quantity * unitPrice;
-
-  const discount = Math.min(discountAmount, subtotal);
-
-  const taxableAmount = subtotal - discount;
-
-  const gstAmount = taxableAmount * (gstRate / 100);
-
-  const lineTotal = taxableAmount + gstAmount;
+const ProductTableRow = ({ item, originalItem, index, updateItem, removeItem, discountMode, onDiscountModeChange }) => {
+  const quantity = Number(item.quantity) || 1;
+  const pricing = getItemPricingPreview(item, originalItem);
+  const subtotal = pricing.subtotal;
 
   return (
     <tr className="border-t border-border-color">
@@ -42,6 +29,7 @@ const ProductTableRow = ({ item, index, updateItem, removeItem }) => {
           <input
             className={numberInputClass}
             type="number"
+            aria-label={`Unit price for ${item.productName}`}
             min="0"
             step="0.01"
             value={item.unitPrice}
@@ -66,6 +54,7 @@ const ProductTableRow = ({ item, index, updateItem, removeItem }) => {
           <input
             className="h-9 min-w-0 flex-1 border-x border-border-color bg-transparent text-center text-sm text-text outline-none"
             type="number"
+            aria-label={`Quantity for ${item.productName}`}
             min="1"
             step="1"
             value={item.quantity}
@@ -84,22 +73,10 @@ const ProductTableRow = ({ item, index, updateItem, removeItem }) => {
 
       {/* Discount */}
       <td className="px-3 py-4">
-        <div className="w-24">
-          <input
-            className={numberInputClass}
-            type="number"
-            min="0"
-            step="0.01"
-            max={subtotal}
-            value={item.discountAmount ?? 0}
-            onChange={(e) =>
-              updateItem(
-                index,
-                "discountAmount",
-                Math.min(subtotal, Math.max(0, Number(e.target.value) || 0)),
-              )
-            }
-          />
+        <div className="w-28">
+          <DiscountInput item={item} mode={discountMode} subtotal={subtotal}
+            onModeChange={onDiscountModeChange}
+            onChange={(field, value) => updateItem(index, field, value)} />
         </div>
       </td>
 
@@ -111,22 +88,17 @@ const ProductTableRow = ({ item, index, updateItem, removeItem }) => {
             type="number"
             min="0"
             max="100"
-            step="0.01"
+            step="any"
+            aria-label={`GST for ${item.productName}`}
             value={item.gstRate ?? 18}
-            onChange={(e) =>
-              updateItem(
-                index,
-                "gstRate",
-                Math.min(100, Math.max(0, Number(e.target.value) || 0)),
-              )
-            }
+            onChange={(e) => updateItem(index, "gstRate", e.target.value)}
           />
         </div>
       </td>
 
       {/* Total */}
       <td className="whitespace-nowrap px-3 py-4 text-right font-semibold text-text">
-        {formatCurrency(lineTotal)}
+        {pricing.error ? <span title={pricing.error}>—</span> : formatCurrency(pricing.lineTotal)}
       </td>
 
       {/* Remove */}
@@ -134,6 +106,7 @@ const ProductTableRow = ({ item, index, updateItem, removeItem }) => {
         <button
           type="button"
           title="Remove product"
+          aria-label={`Remove ${item.productName || "product"}`}
           className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition hover:bg-red/10 hover:text-red"
           onClick={() => removeItem(index)}
         >

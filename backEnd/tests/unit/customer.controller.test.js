@@ -8,6 +8,27 @@ describe("Customer Controller", () => {
     jest.clearAllMocks();
   });
 
+  test("create passes authenticated identity and retry key to the shared service", async () => {
+    const req = { body: { name: "Customer", addedBy: "forged" }, user: { _id: "real", role: "employee" }, get: jest.fn().mockReturnValue("request-key") };
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    const customer = { customerId: "CUST101", name: "Customer" };
+    CustomerService.createCustomer.mockResolvedValue(customer);
+    await CustomerController.createCustomer(req, res);
+    expect(CustomerService.createCustomer).toHaveBeenCalledWith(req.body, req.user, "request-key");
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({ message: "Customer added successfully", customer });
+  });
+
+  test("detail returns the shared customer shape", async () => {
+    const req = { params: { customerId: "CUST101" } };
+    const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    const customer = { customerId: "CUST101" };
+    CustomerService.getCustomerById.mockResolvedValue(customer);
+    await CustomerController.getCustomerById(req, res);
+    expect(CustomerService.getCustomerById).toHaveBeenCalledWith("CUST101");
+    expect(res.json).toHaveBeenCalledWith(customer);
+  });
+
   test("getAllCustomers should return customers", async () => {
     const req = {};
 

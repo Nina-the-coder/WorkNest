@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FiChevronDown, FiSearch } from "react-icons/fi";
@@ -8,7 +8,7 @@ import PaginationControls from "../../../shared/components/PaginationControls";
 import SkeletonLoader from "../../../shared/components/SkeletonLoader";
 import NoItemFoundModal from "../../../shared/components/NoItemFoundModal";
 import useDebounce from "../../../shared/hooks/useDebounce";
-import { hasPermission } from "../../../utils/permissions";
+import { useAuth } from "../../auth/useAuth";
 import { useQuotations } from "../hooks/useQuotations";
 import QuotationCard from "../components/QuotationCard";
 import { STATUS_CONFIG } from "../constants/quotation.constants";
@@ -17,6 +17,7 @@ const STATUSES = Object.keys(STATUS_CONFIG);
 
 const QuotationManagement = ({ role = "admin" }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
@@ -29,6 +30,9 @@ const QuotationManagement = ({ role = "admin" }) => {
     totalPages,
     totalItems,
     loading,
+    error,
+    pending,
+    refresh,
     approve,
     reject,
     submit,
@@ -41,12 +45,18 @@ const QuotationManagement = ({ role = "admin" }) => {
     status,
   });
 
+  useEffect(() => {
+    if (!loading && !error && page > totalPages) setPage(totalPages);
+  }, [loading, error, page, totalPages]);
+
   /* ------------------------------------------------------------------------ */
   /* Actions                                                                  */
   /* ------------------------------------------------------------------------ */
 
   const doReject = async (quotation) => {
     const reason = window.prompt("Why is this quotation being rejected?");
+
+    if (reason === null) return;
 
     if (!reason?.trim()) {
       return toast.warn("A rejection reason is required");
@@ -84,7 +94,7 @@ const QuotationManagement = ({ role = "admin" }) => {
   return (
     <div className="flex min-w-0 flex-col gap-5 pb-8">
       {/* Header */}
-      <Header title="Quotation Management" />
+      <Header title={role === "employee" ? "My Quotations" : "Quotation Management"} />
 
       {/* Toolbar */}
       <div className="rounded-2xl border border-border-color bg-card-bg p-4 sm:p-5">
@@ -136,7 +146,10 @@ const QuotationManagement = ({ role = "admin" }) => {
           </div>
 
           {/* Create */}
-          {hasPermission("QUOTATION_CREATE") && (
+          <div className="flex items-center gap-3">
+          <button type="button" onClick={refresh} disabled={loading || pending}
+            className="rounded-xl border border-border-color px-4 py-2 text-sm text-text disabled:opacity-50">Refresh</button>
+          {user?.permissions?.includes("QUOTATION_CREATE") && (
             <VariantButton
               onClick={handleCreate}
               variant="cta"
@@ -145,6 +158,7 @@ const QuotationManagement = ({ role = "admin" }) => {
               icon="plus"
             />
           )}
+          </div>
         </div>
 
         {/* Results count */}
@@ -160,16 +174,21 @@ const QuotationManagement = ({ role = "admin" }) => {
         )}
       </div>
 
+      {error && <div role="alert" className="rounded-xl border border-red p-4 text-sm text-text">
+        <p>{error.status === 403 ? "You do not have permission to view quotations." : error.message}</p>
+        <button type="button" onClick={refresh} disabled={loading || pending} className="mt-2 underline">Retry</button>
+      </div>}
+
       {/* Content */}
       {loading ? (
         <div className="rounded-2xl border border-border-color bg-card-bg p-4 sm:p-6">
           <SkeletonLoader count={6} />
         </div>
-      ) : quotations.length === 0 ? (
+      ) : quotations.length === 0 && !error ? (
         <div className="rounded-2xl border border-border-color bg-card-bg p-4 sm:p-6">
           <NoItemFoundModal message="No quotations found" />
         </div>
-      ) : (
+      ) : quotations.length > 0 ? (
         <>
           {/* ---------------------------------------------------------------- */}
           {/* Desktop Table                                                   */}
@@ -185,6 +204,8 @@ const QuotationManagement = ({ role = "admin" }) => {
             approve={approve}
             reopen={reopen}
             remove={remove}
+            user={user}
+            pending={pending}
           />
 
           {/* ---------------------------------------------------------------- */}
@@ -204,6 +225,8 @@ const QuotationManagement = ({ role = "admin" }) => {
                 approve={approve}
                 reopen={reopen}
                 remove={remove}
+                user={user}
+                pending={pending}
               />
             ))}
           </div>
@@ -223,7 +246,7 @@ const QuotationManagement = ({ role = "admin" }) => {
             />
           </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 };

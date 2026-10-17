@@ -33,33 +33,9 @@ const QuotationItemsTable = ({ items = [] }) => {
 
           <tbody>
             {items.map((item, index) => {
-              const quantity = Math.max(1, Number(item.quantity) || 1);
-
-              const unitPrice = Math.max(0, Number(item.unitPrice) || 0);
-
-              const discountAmount = Math.max(
-                0,
-                Number(item.discountAmount) || 0,
-              );
-
-              const gstRate = Math.min(
-                100,
-                Math.max(0, Number(item.gstRate ?? 18)),
-              );
-
-              const subtotal = quantity * unitPrice;
-
-              const discount = Math.min(discountAmount, subtotal);
-
-              const taxableAmount = subtotal - discount;
-
-              const gstAmount = taxableAmount * (gstRate / 100);
-
-              const lineTotal = taxableAmount + gstAmount;
-
               return (
                 <tr
-                  key={`${item.productId}-${index}`}
+                  key={item._id || index}
                   className="border-t border-border-color"
                 >
                   <td className="px-4 py-4">
@@ -73,23 +49,25 @@ const QuotationItemsTable = ({ items = [] }) => {
                   </td>
 
                   <td className="px-3 py-4 text-center text-sm text-text">
-                    {quantity}
+                    {item.quantity}
                   </td>
 
                   <td className="px-3 py-4 text-right text-sm text-text">
-                    {formatCurrency(unitPrice)}
+                    {formatCurrency(item.unitPrice)}
                   </td>
 
                   <td className="px-3 py-4 text-right text-sm text-text">
-                    {formatCurrency(discount)}
+                    {formatCurrency(item.discountAmount)}
+                    {Number(item.discountPercentage) > 0 && <span className="block text-xs text-gray-500">{item.discountPercentage}%</span>}
                   </td>
 
                   <td className="px-3 py-4 text-right text-sm text-text">
-                    {gstRate}%
+                    {item.gstRate ?? "—"}{item.gstRate != null ? "%" : ""}
+                    <span className="block text-xs text-gray-500">{formatCurrency(item.gstAmount)}</span>
                   </td>
 
                   <td className="px-4 py-4 text-right text-sm font-semibold text-text">
-                    {formatCurrency(lineTotal)}
+                    {formatCurrency(item.lineTotal)}
                   </td>
                 </tr>
               );

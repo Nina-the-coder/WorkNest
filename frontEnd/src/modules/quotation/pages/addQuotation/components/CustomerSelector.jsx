@@ -14,11 +14,11 @@ import CustomerInformation from "./CustomerInformation";
 const CustomerSelector = ({
   customers,
   customerId,
+  currentCustomer,
   loading,
   error,
   onRetry,
   onChange,
-  onCustomerDetailsChange,
 }) => {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -43,10 +43,9 @@ const CustomerSelector = ({
 
   const selectedCustomer = useMemo(
     () =>
-      activeCustomers.find(
-        (customer) => String(customer._id) === String(customerId),
-      ),
-    [activeCustomers, customerId],
+      customers.find((customer) => String(customer._id) === String(customerId)) ||
+      (currentCustomer?._id && String(currentCustomer._id) === String(customerId) ? currentCustomer : null),
+    [customers, currentCustomer, customerId],
   );
 
   /* ------------------------------------------------------------------------ */
@@ -82,12 +81,6 @@ const CustomerSelector = ({
   const handleSelect = (customer) => {
     onChange(customer._id);
 
-    onCustomerDetailsChange({
-      contact: customer.contact || "",
-      address: customer.address || "",
-      gst: customer.gstNumber || customer.gst || "",
-    });
-
     setSearch("");
     setOpen(false);
   };
@@ -98,12 +91,6 @@ const CustomerSelector = ({
 
   const handleClear = () => {
     onChange("");
-
-    onCustomerDetailsChange({
-      contact: "",
-      address: "",
-      gst: "",
-    });
 
     setSearch("");
     setOpen(false);
@@ -179,7 +166,7 @@ const CustomerSelector = ({
   /* Empty state                                                              */
   /* ------------------------------------------------------------------------ */
 
-  if (activeCustomers.length === 0) {
+  if (activeCustomers.length === 0 && !selectedCustomer) {
     return (
       <div className="mt-2 rounded-xl border border-dashed border-border-color bg-bg px-4 py-5 text-center">
         <FiUser
@@ -192,7 +179,7 @@ const CustomerSelector = ({
         </p>
 
         <p className="mt-1 text-xs text-gray-500">
-          Create a customer first before creating a quotation.
+          Ask an Admin to make an existing customer available.
         </p>
 
         <button
@@ -250,7 +237,6 @@ const CustomerSelector = ({
           {/* Customer information */}
           <CustomerInformation
             customer={selectedCustomer}
-            onChange={onCustomerDetailsChange}
           />
         </>
       ) : (

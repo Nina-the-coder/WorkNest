@@ -1,132 +1,59 @@
-import React from "react";
-import VariantButton from "../../../shared/components/buttons/VariantButton";
-import FilterDropdown from "../../../shared/components/FilterDropdown";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../auth/useAuth";
+import OrderActions from "./OrderActions";
+import { formatOrderDate, formatOrderMoney, orderStatusLabel, orderSourceNumber, orderQuotationId } from "../order.util";
 
-const OrderPreviewCard = ({
-  order,
-  downloadOrder,
-  editOrder,
-  delteOrder,
-  updateStatus,
-}) => {
+const OrderPreviewCard = ({ order, downloadOrder, removeOrder, updateStatus, disabled, showDetailsLink = true }) => {
+  const { user } = useAuth();
+  const quotationId = orderQuotationId(order);
+  const customer = order.customerSnapshot || {};
+  const totals = [["Subtotal", order.subtotal], ["Discount", order.discountAmount], ["Taxable amount", order.taxableAmount], ["GST", order.gstAmount], ["Grand total", order.totalSnapshot]];
+  const dates = [["Created", order.createdAt], ["Confirmed", order.confirmedAt], ["Dispatch due", order.dispatchDate], ["Dispatched", order.dispatchedDate], ["Delivered", order.deliveredAt], ["Closed", order.closedAt], ["Cancelled", order.cancelledAt]];
   return (
-    <div className="w-[450px] h-fit mr-16">
-      {/* buttons */}
-      <div className="flex justify-end mt-4 gap-4 mr-4">
-        <VariantButton
-          variant="ghostCta"
-          text=""
-          icon="arrow-down-to-line"
-          size="tiny"
-          onClick={downloadOrder}
-        />
-        <VariantButton
-          onClick={editOrder}
-          variant="ghostCta"
-          text=""
-          icon="pencil"
-          size="tiny"
-        />
-        <VariantButton
-          onClick={delteOrder}
-          variant="red"
-          text=""
-          icon="trash-2"
-          size="tiny"
-        />
+    <section aria-label="Order information" className="min-w-0 flex-1 space-y-6 rounded-2xl bg-card-bg p-6 text-text shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xl font-bold">{order.orderId}</h2>
+        <span className="rounded-xl bg-bg px-3 py-1">{orderStatusLabel(order.status)}</span>
       </div>
-
-      {/* main card */}
-      <div className=" w-[450px] h-fit p-8 bg-card-bg text-secondary-text rounded-2xl my-2 shadow-xl">
-        {/* heading details */}
-        <div className="flex justify-between">
-          <div className="text-text text-[18px] font-bold">
-            {order.orderId} - {order.quotationId?.quotationId}
-          </div>
-          <select
-            onChange={updateStatus}
-            className={`h-[24px] w-[120px]
-              ${order.status === "confirm"
-                ? "bg-green"
-                : order.status === "dispatched" ? "bg-orange/80"
-                : order.status === "delivered" ? "bg-cta/80"
-                : "bg-gray-400"
-              }
-              rounded-2xl text-[14px] flex justify-center items-center text-black py-0.5 px-2 hover:cursor-pointer`}
-            value={order.status}
-          >
-            <option value="confirm">Confirm</option>
-            <option value="dispatched">Dispatched</option>
-            <option value="delivered">Delivered</option>
-            <option value="closed">Closed</option>
-          </select>
-        </div>
-        <div className="mt-1">
-          <div>
-            Added By: {order?.addedBy?.name} ({order?.addedBy?.empId})
-          </div>
-          <div>
-            Dispatch Date: {/* if date is not found provide date not set */}
-            {order?.dispatchDate
-              ? new Date(order?.dispatchDate)
-                  .toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })
-                  .toUpperCase()
-              : "Date not set"}
-          </div>
-        </div>
-
-        {/* products */}
-        <div className="mt-8">
-          <div className="font-semibold text-text text-[18px] mb-2">
-            {" "}
-            Products:
-          </div>
-          <div className="border-b-2 mb-2"></div>
-          {order?.productsSnapshot?.map((prod, index) => (
-            <div key={index} className="flex justify-between">
-              <div>
-                {prod?.name} (x{prod.quantity})
-              </div>
-              <div>₹ {prod?.price * prod.quantity}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* total */}
-        <div>
-          <div className="border-b-2 my-2"></div>
-          <div className="flex justify-end mt-2 mb-2 font-bold text-text text-[16px]">
-            <div>Total : ₹ {order?.totalSnapshot}</div>
-          </div>
-        </div>
-
-        {/* dispatch details */}
-        <div className="mt-8">
-          <div className="font-semibold text-text text-[18px] mb-2">
-            {" "}
-            Dispatch Details:
-          </div>
-          <div className="border-b-2 mb-2"></div>
-          <div>Name: {order?.customerSnapshot?.name || "Not Set"}</div>
-          <div>
-            Company: {order?.customerSnapshot?.companyType || "Not Set"}
-          </div>
-          <div>
-            Contact: {order?.customerSnapshot?.contact || "Not Set"}
-          </div>
-          <div>
-            Address: {order?.customerSnapshot?.address || "Not Set"}
-          </div>
-          <div>GST: {order?.customerSnapshot?.gst || "Not Set"}</div>
-          <div>Email: {order?.customerSnapshot?.email || "Not Set"}</div>
-        </div>
+      {showDetailsLink && <Link to={`/admin/orders/${encodeURIComponent(order.orderId)}`} className="inline-block underline">Open Order Details</Link>}
+      <dl className="grid gap-2 text-sm sm:grid-cols-2">
+        <div><dt className="text-secondary-text">Source quotation</dt><dd>{quotationId ? <Link to={`/admin/quotations/${quotationId}`} className="underline">{orderSourceNumber(order)}</Link> : orderSourceNumber(order)}</dd></div>
+        <div><dt className="text-secondary-text">Order source</dt><dd>{order.sourceType === "quotation_conversion" ? "Approved quotation conversion" : "Legacy order"}</dd></div>
+        <div><dt className="text-secondary-text">Created by</dt><dd>{order.addedBy?.name || "Unavailable"}{order.addedBy?.empId ? ` (${order.addedBy.empId})` : ""}</dd></div>
+        {order.statusUpdatedAt && <div><dt className="text-secondary-text">Status updated</dt><dd>{formatOrderDate(order.statusUpdatedAt)}{order.statusUpdatedBy?.name ? ` · ${order.statusUpdatedBy.name}` : ""}</dd></div>}
+        {dates.filter(([label, date]) => label === "Created" || date).map(([label, date]) => <div key={label}><dt className="text-secondary-text">{label}</dt><dd>{formatOrderDate(date)}</dd></div>)}
+      </dl>
+      <div>
+        <h3 className="mb-2 font-semibold">Customer at order creation</h3>
+        <dl className="grid gap-2 text-sm sm:grid-cols-2">
+          {[["Name", customer.name], ["Customer number", customer.customerId], ["Company type", customer.companyType], ["Contact", customer.contact], ["Email", customer.email], ["GST", customer.gst], ["Address", customer.address]].map(([label, value]) => <div key={label}><dt className="text-secondary-text">{label}</dt><dd className="whitespace-pre-wrap break-words">{typeof value === "string" && value.trim() ? value : "Unavailable"}</dd></div>)}
+        </dl>
       </div>
-    </div>
+      <div>
+        <h3 className="mb-2 font-semibold">Order items</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead><tr>{["Product", "Quantity", "Unit price", "Discount", "GST", "Taxable", "Line total"].map(label => <th key={label} className="whitespace-nowrap border-b border-border-color p-2">{label}</th>)}</tr></thead>
+            <tbody>{order.productsSnapshot?.map((item, index) => <tr key={item._id || index}>
+              <td className="min-w-32 p-2"><p>{item.name || "Unavailable"}</p>{item.sku && <p className="text-xs text-secondary-text">{item.sku}</p>}{item.description && <p className="text-xs text-secondary-text">{item.description}</p>}</td>
+              <td className="p-2">{item.quantity ?? "Unavailable"}</td>
+              <td className="whitespace-nowrap p-2">{formatOrderMoney(item.unitPrice ?? item.price)}</td>
+              <td className="whitespace-nowrap p-2">{formatOrderMoney(item.discountAmount)}{typeof item.discountPercentage === "number" ? ` (${item.discountPercentage}%)` : ""}</td>
+              <td className="whitespace-nowrap p-2">{formatOrderMoney(item.gstAmount)}{typeof item.gstRate === "number" ? ` (${item.gstRate}%)` : ""}</td>
+              <td className="whitespace-nowrap p-2">{formatOrderMoney(item.taxableAmount)}</td>
+              <td className="whitespace-nowrap p-2">{formatOrderMoney(item.lineTotal)}</td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+        {!order.productsSnapshot?.length && <p className="text-sm text-secondary-text">Historical item details are unavailable.</p>}
+        {order.sourceType !== "quotation_conversion" && <p className="mt-3 text-sm text-secondary-text">Unavailable amounts were not recorded in this legacy order. Historical pricing has not been recalculated.</p>}
+      </div>
+      <dl className="ml-auto max-w-sm space-y-2 border-t border-border-color pt-4 text-sm">
+        {totals.map(([label, value]) => <div key={label} className="flex justify-between gap-4"><dt>{label}</dt><dd>{formatOrderMoney(value)}</dd></div>)}
+      </dl>
+      {order.cancellationReason && <div className="rounded-xl border border-border-color p-4"><h3 className="font-semibold">Cancellation</h3><p className="whitespace-pre-wrap">{order.cancellationReason}</p><p className="text-sm text-secondary-text">{order.cancelledBy?.name || "Reviewer unavailable"} · {formatOrderDate(order.cancelledAt)}</p></div>}
+      <OrderActions order={order} user={user} disabled={disabled} updateStatus={updateStatus} removeOrder={removeOrder} downloadOrder={downloadOrder} />
+    </section>
   );
 };
-
 export default OrderPreviewCard;

@@ -1,13 +1,18 @@
 const TaskService = require("./task.service");
 
 exports.addTask = async (req, res) => {
-  const task = await TaskService.addTask(req.body);
+  const task = await TaskService.addTask(req.body, req.user);
   res.status(201).json({ message: "Task added successfully", task: task.title });
 };
 
 exports.getAllTasks = async (req, res) => {
-    const tasks = await TaskService.getAllTasks();
+    const tasks = await TaskService.getAllTasks(req.user);
     res.status(200).json(tasks);
+};
+
+exports.getTaskById = async (req, res) => {
+    const task = await TaskService.getTaskById(req.params.taskId, req.user);
+    res.status(200).json({ task });
 };
 
 exports.deleteTask = async (req, res) => {
@@ -16,6 +21,11 @@ exports.deleteTask = async (req, res) => {
 };
 
 exports.updateTasks = async (req, res) => {
-    const updatedTask = await TaskService.updateTask(req.params.taskId, req.body);
+    const updatedTask = await TaskService.updateTask(req.params.taskId, req.body, req.user);
     res.status(200).json({ message: "Task Updated", task: updatedTask });
+};
+
+exports.updateTaskStatus = async (req, res) => {
+    const task = await TaskService.updateTaskStatus(req.params.taskId, req.body, req.user);
+    res.status(200).json({ message: "Task status updated", task });
 };

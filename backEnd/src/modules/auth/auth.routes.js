@@ -20,4 +20,7 @@ router.post(
 // Login: Public endpoint (no authentication required)
 router.post("/login", authValidation.loginValidation, authController.loginUser);
 
+// Self profile uses the authenticated identity, without directory permissions.
+router.get("/me", verifyToken, authController.getCurrentUser);
+
 module.exports = router;

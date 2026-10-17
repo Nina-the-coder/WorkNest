@@ -1,24 +1,14 @@
-module.exports = (order) => {
-  const rows = [
-    ["Order ID", order.orderId],
-    ["Quotation ID", order.quotationId?.quotationId],
-    ["Status", order.status],
-    [
-      "Added By",
-      `${order.addedBy?.name || "N/A"} (${order.addedBy?.empId || ""})`,
-    ],
-    [],
-    ["Products"],
-    ["Name", "Quantity", "Price", "Total"],
-    ...order.quotationId.products.map((p) => [
-      p.name,
-      p.quantity,
-      p.price,
-      p.price * p.quantity,
-    ]),
-    [],
-    ["Grand Total", order.quotationId.total],
-  ];
+const AppError = require("../AppError");
+const orderExportRows = require("../orderExportRows");
 
-  return rows.map((row) => row.join(",")).join("\n");
+const escapeCell = (input) => {
+  let cell = String(input);
+  // Keep customer/product text from becoming a spreadsheet formula.
+  if (/^\s*[=+@-]/.test(cell)) cell = `'${cell}`;
+  return /[",\r\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell;
+};
+
+module.exports = (order) => {
+  if (!order) throw new AppError("Order not found", 404);
+  return orderExportRows(order).map((row) => row.map(escapeCell).join(",")).join("\r\n");
 };

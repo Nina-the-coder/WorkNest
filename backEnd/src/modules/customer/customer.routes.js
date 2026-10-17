@@ -6,12 +6,26 @@ const PERMISSIONS = require("../../utils/permissions");
 
 const router = express.Router();
 
+router.post(
+  "/",
+  verifyToken,
+  requirePermission(PERMISSIONS.CUSTOMER_CREATE),
+  CustomerController.createCustomer,
+);
+
 // Get all customers: Requires CUSTOMER_READ permission
 router.get(
   "/",
   verifyToken,
   requirePermission(PERMISSIONS.CUSTOMER_READ),
   CustomerController.getAllCustomers,
+);
+
+router.get(
+  "/:customerId",
+  verifyToken,
+  requirePermission(PERMISSIONS.CUSTOMER_READ),
+  CustomerController.getCustomerById,
 );
 
 // Delete customer: Requires CUSTOMER_ARCHIVE permission

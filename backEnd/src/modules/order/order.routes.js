@@ -14,6 +14,13 @@ router.get(
 );
 
 // Update order status: Requires ORDER_UPDATE permission
+router.get(
+  "/:orderId",
+  verifyToken,
+  requirePermission(PERMISSIONS.ORDER_READ),
+  OrderController.getOrder,
+);
+
 router.put(
   "/:orderId",
   verifyToken,
